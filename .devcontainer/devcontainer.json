@@ -1,0 +1,20 @@
+{
+  "name": "Laravel Dev",
+  "build": {
+    "dockerfile": "../Dockerfile"
+  },
+  "workspaceFolder": "/var/www",
+
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/var/www,type=bind"
+  ],
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "bmewburn.vscode-intelephense-client",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  }
+}

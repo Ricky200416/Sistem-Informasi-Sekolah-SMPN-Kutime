@@ -1,0 +1,155 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Sans:wght@400;500;600;700&display=swap');
+
+@layer base {
+    :root {
+        --color-primary:   rgb(30, 84, 233);   /* indigo-600 */
+        --color-primary-dark: rgb(67 56 202); /* indigo-700 */
+        --color-primary-light: rgb(99 102 241); /* indigo-500 */
+
+        --color-surface:   rgb(255 255 255);
+        --color-surface-2: rgb(248 250 252);
+        --color-border:    rgb(226 232 240);
+
+        --color-text:      rgb(30 41 59);
+        --color-text-muted: rgb(100 116 139);
+        --color-text-light: rgb(148 163 184);
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        @apply font-['Inter'] bg-slate-50 text-slate-800 antialiased;
+        color: var(--color-text);
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        @apply font-['Instrument_Sans'] tracking-tight;
+    }
+
+    input, textarea, select, button {
+        @apply transition-all duration-150;
+    }
+
+    input:focus, textarea:focus, select:focus {
+        @apply ring-2 ring-[var(--color-primary)]/40 border-[var(--color-primary)] outline-none;
+    }
+}
+
+@layer components {
+
+    /* Sidebar Item */
+    .sidebar-link {
+        @apply flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200;
+    }
+
+    .sidebar-link-active {
+        @apply bg-[var(--color-primary-light)] text-[var(--color-primary)] shadow-sm;
+    }
+
+    .sidebar-link-inactive {
+        @apply text-slate-700 hover:bg-slate-100/70 hover:text-slate-900;
+    }
+
+    /* Card Utama */
+    .card-base {
+        @apply bg-white rounded-2xl border border-slate-200/70 shadow-sm overflow-hidden;
+    }
+
+    .card-header {
+        @apply px-6 py-4 border-b border-slate-100 bg-slate-50/40;
+    }
+
+    /* Form Elements */
+    .form-group {
+        @apply space-y-1.5;
+    }
+
+    .form-label {
+        @apply block text-sm font-medium text-slate-700;
+    }
+
+    .form-input {
+        @apply block w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm
+               placeholder:text-slate-400 focus:border-indigo-500 focus:ring-indigo-500/30;
+    }
+
+    .form-error {
+        @apply text-xs text-red-600 mt-1.5;
+    }
+
+    /* Button Variants */
+    .btn {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+    }
+
+    .btn-primary {
+        @apply bg-[var(--color-primary)] text-white shadow-sm hover:bg-[var(--color-primary-dark)] focus:ring-[var(--color-primary)];
+        padding: 0.625rem 1.25rem;
+    }
+
+    .btn-outline {
+        @apply border border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400 focus:ring-slate-300;
+        padding: 0.625rem 1.25rem;
+    }
+
+    .btn-ghost {
+        @apply text-slate-600 hover:bg-slate-100/70 focus:ring-slate-200;
+        padding: 0.5rem 1rem;
+    }
+
+    /* Pill Navigation (tab kecil) */
+    .pill-tab {
+        @apply inline-flex rounded-xl border border-slate-200 bg-white p-1 text-sm font-medium;
+    }
+
+    .pill-tab-btn {
+        @apply px-4 py-2 rounded-lg transition-colors;
+    }
+
+    .pill-tab-active {
+        @apply bg-[var(--color-primary)] text-[var(--color-primary-dark)] shadow-sm;
+    }
+
+    .pill-tab-inactive {
+        @apply text-slate-600 hover:bg-slate-50;
+    }
+
+    /* Alert */
+    .alert {
+        @apply flex items-center gap-3 rounded-xl px-5 py-4 text-sm border;
+    }
+
+    .alert-success {
+        @apply bg-green-50 text-green-800 border-green-200;
+    }
+
+    .alert-danger {
+        @apply bg-red-50 text-red-800 border-red-200;
+    }
+}
+
+@layer utilities {
+    .scrollbar-thin {
+        scrollbar-width: thin;
+        scrollbar-color: rgb(203 213 225) transparent;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+        background-color: rgb(203 213 225);
+        border-radius: 9999px;
+    }
+}

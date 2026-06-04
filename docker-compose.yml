@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: laravel_app
+
+    working_dir: /var/www
+
+    volumes:
+      - .:/var/www
+
+    ports:
+      - "8000:8000"
+
+    depends_on:
+      - db
+
+    command: sh -c "php artisan config:clear && php artisan serve --host=0.0.0.0 --port=8000"
+
+    stdin_open: true
+    tty: true
+
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    restart: always
+
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: smpn_kutime
+
+    ports:
+      - "3306:3306"
+
+    volumes:
+      - dbdata:/var/lib/mysql
+
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+
+    ports:
+      - "8080:80"
+
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: ""
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  dbdata:

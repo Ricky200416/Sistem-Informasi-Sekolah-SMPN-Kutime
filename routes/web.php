@@ -312,6 +312,14 @@ Route::prefix('guru')->name('guru.')->middleware(['auth', 'role:guru'])->group(f
          ->names('study-subject')
          ->only(['store', 'update', 'destroy']);
 
+    Route::get('absensi-foto', [AbsensiFotoController::class, 'index'])->name('absensi-foto.index');
+    Route::post('absensi-foto/masuk', [AbsensiFotoController::class, 'storeMasuk'])->name('absensi-foto.masuk');
+    Route::post('absensi-foto/pulang', [AbsensiFotoController::class, 'storePulang'])->name('absensi-foto.pulang');
+    Route::post('absensi-foto/kantor', [AbsensiFotoController::class, 'storeKantor'])->name('absensi-foto.kantor');
+
+    Route::get('perizinan', [PerizinanController::class, 'index'])->name('perizinan.index');
+    Route::post('perizinan', [PerizinanController::class, 'store'])->name('perizinan.store');
+
     
 });
 

@@ -55,4 +55,14 @@ class Siswa extends Model
     {
         return $this->belongsTo(StudyGroup::class, 'study_group_id');
     }
+
+    public function alumni()
+{
+    return $this->hasOne(\App\Models\Alumni::class);
+}
+
+public function scopeAktif($query)
+{
+    return $query->where('status', 'aktif');
+}
 }

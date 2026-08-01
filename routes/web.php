@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Guru\AbsensiFotoController;
 use App\Http\Controllers\Guru\PerizinanController;
 use App\Http\Controllers\Admin\PerizinanController as AdminPerizinanController;
+use App\Http\Controllers\Admin\AlumniController;
 
 // =================================================================
 // PUBLIC
@@ -83,9 +84,20 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
         Route::delete('bulk-destroy', [UserController::class, 'bulkDestroy'])->name('bulk-destroy');
     });
 
+    // PERIZINAN
     Route::get('perizinan', [AdminPerizinanController::class, 'index'])->name('perizinan.index');
     Route::post('perizinan/{perizinan}/setujui', [AdminPerizinanController::class, 'approve'])->name('perizinan.setujui');
     Route::post('perizinan/{perizinan}/tolak', [AdminPerizinanController::class, 'reject'])->name('perizinan.tolak');
+
+    // ALUMNI
+    Route::get('/', [AlumniController::class, 'index'])->name('index');
+    Route::get('/siswa-aktif', [AlumniController::class, 'daftarSiswaAktif'])->name('siswa-aktif');
+    Route::post('/luluskan', [AlumniController::class, 'graduate'])->name('graduate');
+    Route::get('/export/excel', [AlumniController::class, 'exportExcel'])->name('export-excel');
+    Route::get('/export/pdf', [AlumniController::class, 'exportPdf'])->name('export-pdf');
+    Route::get('/{alumni}', [AlumniController::class, 'show'])->name('show');
+    Route::post('/{alumni}/batalkan', [AlumniController::class, 'batalkan'])->name('batalkan');
+    Route::delete('/{alumni}', [AlumniController::class, 'destroy'])->name('destroy');
 
 
 

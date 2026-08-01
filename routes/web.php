@@ -153,7 +153,7 @@ Route::delete('/admin/users/{id}', [UserController::class, 'destroy'])->name('ad
 
 
     // ── Kelola Website ────────────────────────────────────────────
-    Route::get('/kelola-website',                               [WebsiteController::class, 'kelolaWebsite'])->name('kelola-website.index');
+    Route::get('/kelola-website',                               [WebsiteController::class, 'kelolaWebsite'])->name('kelola-website');
     Route::patch('/kelola-website/home',                        [WebsiteController::class, 'updateHome'])->name('kelola-website.update-home');
     Route::post('/kelola-website/hero-media',                   [WebsiteController::class, 'updateHeroMedia'])->name('kelola-website.update-hero-media');
     Route::delete('/kelola-website/hero-media/file',            [WebsiteController::class, 'deleteHeroFile'])->name('kelola-website.delete-hero-file');

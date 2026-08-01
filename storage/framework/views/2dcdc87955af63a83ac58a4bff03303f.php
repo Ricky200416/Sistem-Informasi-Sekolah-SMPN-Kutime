@@ -93,7 +93,7 @@
     .ag-be:hover { background:#eef2ff; color:#4f46e5; transform:scale(1.15); }
     .ag-rc { border-radius:4px; padding:1px 4px; font-size:9px; font-weight:700; display:inline-block; }
 
-    
+    /* UPDATE: indikator kamera untuk sel absensi berbasis foto */
     .ag-cam-dot {
         position:absolute; top:-3px; right:-3px; width:9px; height:9px; border-radius:50%;
         background:#4f46e5; border:1.5px solid #fff; display:flex; align-items:center; justify-content:center;
@@ -107,7 +107,7 @@
     .ag-mov { display:none; position:fixed; inset:0; z-index:1000; background:rgba(15,23,42,.45); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:16px; }
     .ag-mov.show { display:flex; }
     .ag-mbox { background:#fff; border-radius:14px; padding:20px; width:275px; box-shadow:0 24px 60px rgba(0,0,0,.18); animation:agPop .2s cubic-bezier(.34,1.56,.64,1); max-height:90vh; overflow-y:auto; }
-    
+    /* UPDATE: modal lebih lebar ketika menampilkan foto */
     .ag-mbox.ag-mbox-wide { width:340px; }
     @keyframes agPop { from{transform:scale(.88);opacity:0} to{transform:scale(1);opacity:1} }
     .ag-mh { display:flex; align-items:center; gap:10px; margin-bottom:13px; }
@@ -115,7 +115,7 @@
     .ag-mn  { font-size:13px; font-weight:700; color:#1e293b; line-height:1.2; }
     .ag-ms  { font-size:10px; color:#64748b; margin-top:2px; }
 
-    
+    /* UPDATE: blok preview foto absensi */
     .ag-photo-block { margin-bottom:14px; }
     .ag-photo-badge {
         display:inline-flex; align-items:center; gap:5px; background:#eef2ff; color:#4338ca;
@@ -162,7 +162,7 @@
     .ag-empty i { font-size:36px; display:block; margin-bottom:10px; color:#cbd5e1; }
     .ag-empty p { font-size:12px; margin:0; line-height:1.7; }
 
-    
+    /* UPDATE: lightbox zoom foto */
     .ag-lightbox { display:none; position:fixed; inset:0; z-index:1100; background:rgba(0,0,0,.8); align-items:center; justify-content:center; padding:24px; cursor:zoom-out; }
     .ag-lightbox.show { display:flex; }
     .ag-lightbox img { max-width:100%; max-height:100%; border-radius:10px; box-shadow:0 20px 60px rgba(0,0,0,.4); }
@@ -331,8 +331,8 @@
 
                     <?php for($d=1;$d<=$jumlahHari;$d++): ?>
                         <?php
-                            $abs=($gid&&isset($absensiData[$gid][$d]))?$absensiData[$gid][$d]:null;
-                            {{-- UPDATE: cek apakah data ini berasal dari absensi foto --}}
+                            $abs = ($gid && isset($absensiData[$gid][$d])) ? $absensiData[$gid][$d] : null;
+                            // UPDATE: cek apakah data ini berasal dari absensi foto
                             $hasFoto = $abs && !empty($abs->foto_masuk);
                             $fotoMasukUrl  = $hasFoto ? Storage::url($abs->foto_masuk) : null;
                             $fotoPulangUrl = ($abs && !empty($abs->foto_pulang)) ? Storage::url($abs->foto_pulang) : null;

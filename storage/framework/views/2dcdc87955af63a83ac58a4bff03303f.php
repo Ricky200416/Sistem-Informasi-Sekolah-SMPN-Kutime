@@ -10,7 +10,7 @@
     body { background: #f0f2f8; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; }
 
     .ag-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:8px; }
-    .ag-title  { font-size:15px; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:8px; ma rgin:0; }
+    .ag-title  { font-size:15px; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:8px; margin:0; }
     .ag-title i { color:#4f46e5; font-size:16px; }
     .ag-title .sub { font-size:11px; font-weight:500; color:#94a3b8; }
     .ag-btn-kelola {
@@ -84,7 +84,7 @@
     .ag-cr { position:sticky; right:0; background:inherit; border-left:1.5px solid #f1f5f9; z-index:2; }
     .ag-tbl thead th.ag-cr { background:#f8fafc; border-left:1.5px solid #e2e8f0; z-index:4; }
 
-    .ag-b { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:5px; font-size:10px; font-weight:700; cursor:pointer; border:none; font-family:'Plus Jakarta Sans',sans-serif; transition:transform .1s,box-shadow .1s; }
+    .ag-b { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:5px; font-size:10px; font-weight:700; cursor:pointer; border:none; font-family:'Plus Jakarta Sans',sans-serif; transition:transform .1s,box-shadow .1s; position:relative; }
     .ag-b:hover { transform:scale(1.18); box-shadow:0 2px 8px rgba(0,0,0,.15); }
     .ag-b-P{background:#dcfce7;color:#15803d;} .ag-b-A{background:#fee2e2;color:#b91c1c;}
     .ag-b-S{background:#fef9c3;color:#a16207;} .ag-b-I{background:#e0f2fe;color:#0369a1;}
@@ -93,18 +93,52 @@
     .ag-be:hover { background:#eef2ff; color:#4f46e5; transform:scale(1.15); }
     .ag-rc { border-radius:4px; padding:1px 4px; font-size:9px; font-weight:700; display:inline-block; }
 
+    
+    .ag-cam-dot {
+        position:absolute; top:-3px; right:-3px; width:9px; height:9px; border-radius:50%;
+        background:#4f46e5; border:1.5px solid #fff; display:flex; align-items:center; justify-content:center;
+    }
+    .ag-cam-dot i { font-size:6px; color:#fff; }
+
     .ag-legend { display:flex; gap:10px; flex-wrap:wrap; padding:8px 14px; border-top:1px solid #f1f5f9; background:#fafbfd; align-items:center; }
     .ag-li { display:flex; align-items:center; gap:4px; font-size:10px; color:#64748b; font-weight:500; }
     .ag-ld { width:16px; height:16px; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; }
 
-    .ag-mov { display:none; position:fixed; inset:0; z-index:1000; background:rgba(15,23,42,.45); backdrop-filter:blur(4px); align-items:center; justify-content:center; }
+    .ag-mov { display:none; position:fixed; inset:0; z-index:1000; background:rgba(15,23,42,.45); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:16px; }
     .ag-mov.show { display:flex; }
-    .ag-mbox { background:#fff; border-radius:14px; padding:20px; width:275px; box-shadow:0 24px 60px rgba(0,0,0,.18); animation:agPop .2s cubic-bezier(.34,1.56,.64,1); }
+    .ag-mbox { background:#fff; border-radius:14px; padding:20px; width:275px; box-shadow:0 24px 60px rgba(0,0,0,.18); animation:agPop .2s cubic-bezier(.34,1.56,.64,1); max-height:90vh; overflow-y:auto; }
+    
+    .ag-mbox.ag-mbox-wide { width:340px; }
     @keyframes agPop { from{transform:scale(.88);opacity:0} to{transform:scale(1);opacity:1} }
     .ag-mh { display:flex; align-items:center; gap:10px; margin-bottom:13px; }
     .ag-mav { width:34px; height:34px; border-radius:9px; background:#e0e7ff; color:#4f46e5; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; }
     .ag-mn  { font-size:13px; font-weight:700; color:#1e293b; line-height:1.2; }
     .ag-ms  { font-size:10px; color:#64748b; margin-top:2px; }
+
+    
+    .ag-photo-block { margin-bottom:14px; }
+    .ag-photo-badge {
+        display:inline-flex; align-items:center; gap:5px; background:#eef2ff; color:#4338ca;
+        border:1px solid #c7d2fe; border-radius:6px; padding:3px 8px; font-size:10px; font-weight:700;
+        margin-bottom:8px;
+    }
+    .ag-photo-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .ag-photo-grid.single { grid-template-columns:1fr; }
+    .ag-photo-item { text-align:center; }
+    .ag-photo-item img {
+        width:100%; height:100px; object-fit:cover; border-radius:8px; border:1px solid #e2e8f0;
+        cursor:zoom-in; transition:opacity .15s;
+    }
+    .ag-photo-item img:hover { opacity:.85; }
+    .ag-photo-item .lbl { font-size:9px; color:#94a3b8; font-weight:600; margin-top:3px; }
+    .ag-photo-empty {
+        display:flex; align-items:center; justify-content:center; height:100px; border-radius:8px;
+        border:1.5px dashed #e2e8f0; color:#cbd5e1; font-size:9.5px;
+    }
+    .ag-status-divider { display:flex; align-items:center; gap:8px; margin:12px 0 10px; }
+    .ag-status-divider hr { flex:1; border:none; border-top:1px solid #f1f5f9; }
+    .ag-status-divider span { font-size:9.5px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.04em; }
+
     .ag-sg  { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:14px; }
     .ag-sb  { display:flex; flex-direction:column; align-items:center; gap:3px; padding:9px 4px; border-radius:9px; border:2px solid #f1f5f9; cursor:pointer; transition:all .15s; background:#f8fafc; font-family:inherit; }
     .ag-sb .sc { font-size:14px; font-weight:800; color:var(--sc); }
@@ -127,6 +161,11 @@
     .ag-empty { padding:48px; text-align:center; color:#94a3b8; }
     .ag-empty i { font-size:36px; display:block; margin-bottom:10px; color:#cbd5e1; }
     .ag-empty p { font-size:12px; margin:0; line-height:1.7; }
+
+    
+    .ag-lightbox { display:none; position:fixed; inset:0; z-index:1100; background:rgba(0,0,0,.8); align-items:center; justify-content:center; padding:24px; cursor:zoom-out; }
+    .ag-lightbox.show { display:flex; }
+    .ag-lightbox img { max-width:100%; max-height:100%; border-radius:10px; box-shadow:0 20px 60px rgba(0,0,0,.4); }
 </style>
 <?php $__env->stopPush(); ?>
 
@@ -139,7 +178,6 @@
     $jumlahHari  = $jumlahHari  ?? cal_days_in_month(CAL_GREGORIAN, $bulan, $tahun);
     $bulanList   = $bulanList   ?? [1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',7=>'Juli',8=>'Agustus',9=>'September',10=>'Oktober',11=>'November',12=>'Desember'];
 
-    // UPDATE: Tahun sekarang tanpa batasan (dari 2000 sampai tahun ini + 10 tahun ke depan)
     $tahunList   = range(2000, date('Y') + 10);
     $daftarKelas = $daftarKelas ?? collect();
     $kelasFilter = $kelasFilter ?? null;
@@ -166,6 +204,11 @@
         </h5>
 
         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            
+            <a href="<?php echo e(route('admin.perizinan.index')); ?>" class="ag-btn-kelola">
+                <i class="bi bi-file-earmark-text-fill"></i>
+                Perizinan
+            </a>
             <a href="<?php echo e(route('admin.absensi-guru.export-pdf', ['bulan' => $bulan, 'tahun' => $tahun])); ?>"
                class="ag-btn-kelola" style="background:#ef4444; border-color:#ef4444; color:white;">
                 <i class="bi bi-file-pdf-fill"></i>
@@ -287,18 +330,33 @@
                     </td>
 
                     <?php for($d=1;$d<=$jumlahHari;$d++): ?>
-                        <?php $abs=($gid&&isset($absensiData[$gid][$d]))?$absensiData[$gid][$d]:null; ?>
+                        <?php
+                            $abs=($gid&&isset($absensiData[$gid][$d]))?$absensiData[$gid][$d]:null;
+                            {{-- UPDATE: cek apakah data ini berasal dari absensi foto --}}
+                            $hasFoto = $abs && !empty($abs->foto_masuk);
+                            $fotoMasukUrl  = $hasFoto ? Storage::url($abs->foto_masuk) : null;
+                            $fotoPulangUrl = ($abs && !empty($abs->foto_pulang)) ? Storage::url($abs->foto_pulang) : null;
+                            $jamMasuk  = $abs->jam_masuk  ?? null;
+                            $jamPulang = $abs->jam_pulang ?? null;
+                            $tipeAbsen = $abs->tipe_absensi ?? null;
+                        ?>
                         <td id="ag-c-<?php echo e($gid??'u'.$user->id); ?>-<?php echo e($d); ?>"
                             class="<?php echo e($todayDay===$d?'ag-td':''); ?>">
                             <?php if(!$gid): ?>
                                 <span style="color:#f1f5f9;font-size:10px;" title="Profil belum ada">·</span>
                             <?php elseif($abs): ?>
                                 <button class="ag-b ag-b-<?php echo e($abs->status); ?>"
-                                    onclick="agM(<?php echo e($gid); ?>,<?php echo e($d); ?>,'<?php echo e($abs->status); ?>',<?php echo \Illuminate\Support\Js::from($namaTampil)->toHtml() ?>,<?php echo e($abs->id); ?>)"
-                                    title="<?php echo e($namaTampil); ?> · <?php echo e($d); ?> <?php echo e($bulanList[$bulan]); ?>"><?php echo e($abs->status); ?></button>
+                                    onclick="agM(<?php echo e($gid); ?>,<?php echo e($d); ?>,'<?php echo e($abs->status); ?>',<?php echo \Illuminate\Support\Js::from($namaTampil)->toHtml() ?>,<?php echo e($abs->id); ?>,<?php echo e($hasFoto ? 'true' : 'false'); ?>,<?php echo \Illuminate\Support\Js::from($fotoMasukUrl)->toHtml() ?>,<?php echo \Illuminate\Support\Js::from($fotoPulangUrl)->toHtml() ?>,<?php echo \Illuminate\Support\Js::from($jamMasuk)->toHtml() ?>,<?php echo \Illuminate\Support\Js::from($jamPulang)->toHtml() ?>,<?php echo \Illuminate\Support\Js::from($tipeAbsen)->toHtml() ?>)"
+                                    title="<?php echo e($namaTampil); ?> · <?php echo e($d); ?> <?php echo e($bulanList[$bulan]); ?><?php echo e($hasFoto ? ' · Ada foto absensi' : ''); ?>">
+                                    <?php echo e($abs->status); ?>
+
+                                    <?php if($hasFoto): ?>
+                                        <span class="ag-cam-dot"><i class="bi bi-camera-fill"></i></span>
+                                    <?php endif; ?>
+                                </button>
                             <?php else: ?>
                                 <span class="ag-be"
-                                    onclick="agM(<?php echo e($gid); ?>,<?php echo e($d); ?>,'',<?php echo \Illuminate\Support\Js::from($namaTampil)->toHtml() ?>,null)"
+                                    onclick="agM(<?php echo e($gid); ?>,<?php echo e($d); ?>,'',<?php echo \Illuminate\Support\Js::from($namaTampil)->toHtml() ?>,null,false,null,null,null,null,null)"
                                     title="Isi absensi <?php echo e($d); ?> <?php echo e($bulanList[$bulan]); ?>">+</span>
                             <?php endif; ?>
                         </td>
@@ -348,6 +406,8 @@
 
                 </span>
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            
+            <span class="ag-li"><span class="ag-ld" style="background:#eef2ff;color:#4f46e5;"><i class="bi bi-camera-fill" style="font-size:8px;"></i></span>Absen via Foto</span>
             <span style="margin-left:auto;font-size:10px;color:#cbd5e1;"><i class="bi bi-info-circle me-1"></i>Klik sel untuk isi / ubah</span>
         </div>
     </div>
@@ -355,11 +415,21 @@
 
 
 <div class="ag-mov" id="agModal" onclick="if(event.target.id==='agModal')agMC()">
-    <div class="ag-mbox">
+    <div class="ag-mbox" id="agMbox">
         <div class="ag-mh">
             <div class="ag-mav" id="agMav">G</div>
             <div><div class="ag-mn" id="agMn">—</div><div class="ag-ms" id="agMs">—</div></div>
         </div>
+
+        
+        <div class="ag-photo-block" id="agPhotoBlock" style="display:none;">
+            <span class="ag-photo-badge" id="agPhotoBadge"><i class="bi bi-camera-fill"></i> Absen via Foto</span>
+            <div class="ag-photo-grid" id="agPhotoGrid"></div>
+        </div>
+        <div class="ag-status-divider" id="agDivider" style="display:none;">
+            <hr><span>Ubah Status Manual</span><hr>
+        </div>
+
         <div class="ag-sg">
             <?php $__currentLoopData = ['P'=>'Hadir','A'=>'Alpha','S'=>'Sakit','I'=>'Izin','L'=>'Terlambat','W'=>'WFH']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $k=>$lb): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <button type="button" class="ag-sb" data-s="<?php echo e($k); ?>" onclick="agSS('<?php echo e($k); ?>')">
@@ -373,6 +443,11 @@
             <button class="ag-mb ag-mb-s" id="agSaveBtn" onclick="agSave()"><i class="bi bi-check2"></i> Simpan</button>
         </div>
     </div>
+</div>
+
+
+<div class="ag-lightbox" id="agLightbox" onclick="agLbC()">
+    <img src="" id="agLbImg" alt="">
 </div>
 
 <div class="ag-toast" id="agToast"><i id="agTi"></i><span id="agTm"></span></div>
@@ -392,17 +467,69 @@ function agFil(v){
     const q=v.toLowerCase().trim();
     document.querySelectorAll('.ag-row').forEach(r=>{r.style.display=(!q||r.dataset.nama.includes(q))?'':'none';});
 }
-function agM(gid,hari,status,nama,aid){
+
+// UPDATE: agM sekarang menerima data foto absensi
+function agM(gid,hari,status,nama,aid,hasFoto,fotoMasuk,fotoPulang,jamMasuk,jamPulang,tipeAbsen){
     ag={gid,hari,status:status||null,aid,nama};
     document.getElementById('agMav').textContent=nama.charAt(0).toUpperCase();
     document.getElementById('agMn').textContent=nama;
     document.getElementById('agMs').textContent=`${hari} ${AG_BN} ${AG_Y}`+(status?` · ${status}`:' · Belum diisi');
     document.querySelectorAll('.ag-sb').forEach(b=>b.classList.toggle('active',b.dataset.s===status));
     document.getElementById('agDelBtn').style.display=aid?'inline-flex':'none';
+
+    // UPDATE: render blok foto jika ada
+    const photoBlock = document.getElementById('agPhotoBlock');
+    const photoGrid   = document.getElementById('agPhotoGrid');
+    const divider     = document.getElementById('agDivider');
+    const badge       = document.getElementById('agPhotoBadge');
+    const mbox        = document.getElementById('agMbox');
+
+    if (hasFoto) {
+        mbox.classList.add('ag-mbox-wide');
+        photoBlock.style.display='block';
+        divider.style.display='flex';
+
+        const labelTipe = tipeAbsen === 'kantor' ? 'Absen di Kantor' : 'Absen Mengajar';
+        badge.innerHTML = `<i class="bi bi-camera-fill"></i> ${labelTipe}`;
+
+        let html = '';
+        html += `<div class="ag-photo-item">
+                    <img src="${fotoMasuk}" onclick="agLbO('${fotoMasuk}')">
+                    <div class="lbl">${tipeAbsen === 'kantor' ? 'Foto Kehadiran' : 'Foto Masuk'}${jamMasuk ? ' · '+jamMasuk.substring(0,5) : ''}</div>
+                  </div>`;
+        if (tipeAbsen !== 'kantor') {
+            if (fotoPulang) {
+                html += `<div class="ag-photo-item">
+                            <img src="${fotoPulang}" onclick="agLbO('${fotoPulang}')">
+                            <div class="lbl">Foto Pulang${jamPulang ? ' · '+jamPulang.substring(0,5) : ''}</div>
+                          </div>`;
+            } else {
+                html += `<div class="ag-photo-item">
+                            <div class="ag-photo-empty">Belum upload<br>foto pulang</div>
+                            <div class="lbl">Foto Pulang</div>
+                          </div>`;
+            }
+        }
+        photoGrid.className = 'ag-photo-grid' + (tipeAbsen === 'kantor' ? ' single' : '');
+        photoGrid.innerHTML = html;
+    } else {
+        mbox.classList.remove('ag-mbox-wide');
+        photoBlock.style.display='none';
+        divider.style.display='none';
+        photoGrid.innerHTML='';
+    }
+
     document.getElementById('agModal').classList.add('show');
 }
 function agMC(){document.getElementById('agModal').classList.remove('show');}
 function agSS(k){ag.status=k;document.querySelectorAll('.ag-sb').forEach(b=>b.classList.toggle('active',b.dataset.s===k));}
+
+// UPDATE: lightbox zoom foto
+function agLbO(url){
+    document.getElementById('agLbImg').src=url;
+    document.getElementById('agLightbox').classList.add('show');
+}
+function agLbC(){document.getElementById('agLightbox').classList.remove('show');}
 
 async function agSave(){
     if(!ag.status){agT('Pilih status','error');return;}
@@ -425,14 +552,15 @@ async function agDel(){
     }catch(e){agT('Gagal terhubung','error');}finally{agBL(false);}
 }
 const AGS={P:['#dcfce7','#15803d'],A:['#fee2e2','#b91c1c'],S:['#fef9c3','#a16207'],I:['#e0f2fe','#0369a1'],L:['#fce7f3','#be185d'],W:['#f3e8ff','#7e22ce']};
+// UPDATE: setelah simpan manual, sel tidak lagi punya foto (agM dipanggil tanpa data foto)
 function agUC(gid,hari,status,aid){
     const c=document.getElementById(`ag-c-${gid}-${hari}`);if(!c)return;
     const[bg,fc]=AGS[status]??['#f1f5f9','#64748b'];
-    c.innerHTML=`<button class="ag-b" style="background:${bg};color:${fc};" onclick="agM(${gid},${hari},'${status}',${JSON.stringify(ag.nama)},${aid})">${status}</button>`;
+    c.innerHTML=`<button class="ag-b" style="background:${bg};color:${fc};" onclick="agM(${gid},${hari},'${status}',${JSON.stringify(ag.nama)},${aid},false,null,null,null,null,null)">${status}</button>`;
 }
 function agCC(gid,hari){
     const c=document.getElementById(`ag-c-${gid}-${hari}`);if(!c)return;
-    c.innerHTML=`<span class="ag-be" onclick="agM(${gid},${hari},'',${JSON.stringify(ag.nama)},null)">+</span>`;
+    c.innerHTML=`<span class="ag-be" onclick="agM(${gid},${hari},'',${JSON.stringify(ag.nama)},null,false,null,null,null,null,null)">+</span>`;
 }
 function agBL(on){const b=document.getElementById('agSaveBtn');b.disabled=on;b.innerHTML=on?'<span style="opacity:.6">Menyimpan…</span>':'<i class="bi bi-check2"></i> Simpan';}
 let _at;
@@ -447,7 +575,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     const th=document.querySelector('.ag-tbl thead th.ag-td');
     if(th){const sc=document.getElementById('agScroll');sc.scrollLeft=Math.max(0,th.offsetLeft-240);}
 });
-document.addEventListener('keydown',e=>{if(e.key==='Escape')agMC();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){agMC();agLbC();}});
 </script>
 <?php $__env->stopPush(); ?>
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH S:\PA3\smpn-kutime\resources\views/admin/absensi-guru/index.blade.php ENDPATH**/ ?>

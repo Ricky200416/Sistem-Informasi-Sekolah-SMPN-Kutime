@@ -269,12 +269,13 @@
                                     @if($item->file_path)
                                     <div class="w-20 h-14 rounded-xl overflow-hidden shrink-0
                                                 bg-slate-100 dark:bg-slate-700
-                                                border border-slate-200 dark:border-slate-600">
+                                                border border-slate-200 dark:border-slate-600
+                                                flex items-center justify-center">
                                         <img src="{{ asset('storage/' . $item->file_path) }}"
                                              alt="{{ $item->judul }}"
                                              loading="lazy"
                                              class="w-full h-full object-cover"
-                                             onerror="this.closest('div').innerHTML='<div class=\'w-full h-full flex items-center justify-center text-xl text-slate-400\'>🖼️</div>'">
+                                             onerror="pgImgFallback(this)">
                                     </div>
                                     @endif
                                     @if($item->isi)
@@ -468,10 +469,18 @@
 (function () {
     'use strict';
 
+    // ── Fallback gambar di list (jika file rusak / tidak ada) ──
+    window.pgImgFallback = function (imgEl) {
+        var wrapper = imgEl.parentElement;
+        if (!wrapper) return;
+        wrapper.innerHTML = '<div class="w-full h-full flex items-center justify-center text-xl text-slate-400">🖼️</div>';
+    };
+
     window.pgBuka = function (d) {
         var konten = document.getElementById('pgModalKonten');
         if (!konten) return;
-        konten.innerHTML = pgBuatHtml(d);
+        konten.innerHTML = '';
+        konten.appendChild(pgBuatHtml(d));
         var overlay = document.getElementById('pgModal');
         overlay.classList.remove('hidden');
         overlay.classList.add('flex');
@@ -489,101 +498,256 @@
         if (e.key === 'Escape') pgTutup();
     });
 
+    // ── Fallback gambar di modal (jika file rusak / tidak ada) ──
+    window.pgModalImgFallback = function (imgEl) {
+        var wrapper = imgEl.closest('div');
+        if (!wrapper) return;
+        wrapper.innerHTML = '';
+
+        var box = document.createElement('div');
+        box.className = 'p-8 text-center';
+
+        var icon = document.createElement('div');
+        icon.className = 'text-5xl mb-3';
+        icon.textContent = '🖼️';
+
+        var p1 = document.createElement('p');
+        p1.className = 'text-sm text-slate-400';
+        p1.textContent = 'Gambar tidak dapat dimuat.';
+
+        var p2 = document.createElement('p');
+        p2.className = 'text-xs text-slate-400 mt-1';
+        p2.textContent = 'Jalankan: php artisan storage:link';
+
+        box.appendChild(icon);
+        box.appendChild(p1);
+        box.appendChild(p2);
+        wrapper.appendChild(box);
+    };
+
     function pgBuatHtml(d) {
-        var h = '';
+        var container = document.createElement('div');
 
-        // Header: ikon + judul + badge
-        h += '<div class="flex items-start gap-4 mb-5 pr-10">';
-        h += '<div class="text-3xl shrink-0 mt-0.5 leading-none">' + d.tipeIcon + '</div>';
-        h += '<div class="flex-1 min-w-0">';
-        h += '<h2 class="text-xl font-bold text-slate-800 dark:text-slate-100 leading-snug break-words">' + esc(d.judul) + '</h2>';
-        h += '<div class="flex gap-2 mt-2 flex-wrap">';
-        h += '<span class="px-2.5 py-1 rounded-full text-xs font-semibold ' + d.audienceColor + '">' + esc(d.audience) + '</span>';
-        h += '<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 capitalize">' + esc(d.tipe) + '</span>';
-        h += '</div></div></div>';
+        // ── Header: ikon + judul + badge ──
+        var header = document.createElement('div');
+        header.className = 'flex items-start gap-4 mb-5 pr-10';
 
-        // Meta
-        h += '<div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400 mb-5 pb-5 border-b border-slate-200 dark:border-slate-700">';
-        h += '<span>📅 ' + esc(d.tanggal) + '</span>';
-        h += '<span>👤 ' + esc(d.creator) + '</span>';
-        h += '<span>🕐 ' + esc(d.diffHumans) + '</span>';
-        h += '</div>';
+        var iconEl = document.createElement('div');
+        iconEl.className = 'text-3xl shrink-0 mt-0.5 leading-none';
+        iconEl.textContent = d.tipeIcon;
+        header.appendChild(iconEl);
 
-        // GAMBAR
+        var headerRight = document.createElement('div');
+        headerRight.className = 'flex-1 min-w-0';
+
+        var title = document.createElement('h2');
+        title.className = 'text-xl font-bold text-slate-800 dark:text-slate-100 leading-snug break-words';
+        title.textContent = d.judul;
+        headerRight.appendChild(title);
+
+        var badgeWrap = document.createElement('div');
+        badgeWrap.className = 'flex gap-2 mt-2 flex-wrap';
+
+        var badgeAudience = document.createElement('span');
+        badgeAudience.className = 'px-2.5 py-1 rounded-full text-xs font-semibold ' + d.audienceColor;
+        badgeAudience.textContent = d.audience;
+        badgeWrap.appendChild(badgeAudience);
+
+        var badgeTipe = document.createElement('span');
+        badgeTipe.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 capitalize';
+        badgeTipe.textContent = d.tipe;
+        badgeWrap.appendChild(badgeTipe);
+
+        headerRight.appendChild(badgeWrap);
+        header.appendChild(headerRight);
+        container.appendChild(header);
+
+        // ── Meta ──
+        var meta = document.createElement('div');
+        meta.className = 'flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400 mb-5 pb-5 border-b border-slate-200 dark:border-slate-700';
+
+        var metaTanggal = document.createElement('span');
+        metaTanggal.textContent = '📅 ' + d.tanggal;
+        meta.appendChild(metaTanggal);
+
+        var metaCreator = document.createElement('span');
+        metaCreator.textContent = '👤 ' + d.creator;
+        meta.appendChild(metaCreator);
+
+        var metaDiff = document.createElement('span');
+        metaDiff.textContent = '🕐 ' + d.diffHumans;
+        meta.appendChild(metaDiff);
+
+        container.appendChild(meta);
+
+        // ── GAMBAR ──
         if (d.tipe === 'gambar') {
             if (d.fileUrl && d.fileUrl !== '') {
-                h += '<div class="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-600 mb-5 bg-slate-50 dark:bg-slate-900 flex items-center justify-center min-h-[120px]">';
-                h += '<img src="' + d.fileUrl + '" alt="' + esc(d.judul) + '" class="w-full max-h-[420px] object-contain block"';
-                h += ' onerror="this.closest(\'div\').innerHTML=\'<div class=\\\"p-8 text-center\\\"><div class=\\\"text-5xl mb-3\\\">🖼️</div><p class=\\\"text-sm text-slate-400\\\">Gambar tidak dapat dimuat.</p><p class=\\\"text-xs text-slate-400 mt-1\\\">Jalankan: php artisan storage:link</p></div>\'">';
-                h += '</div>';
+                var imgWrap = document.createElement('div');
+                imgWrap.className = 'rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-600 mb-5 bg-slate-50 dark:bg-slate-900 flex items-center justify-center min-h-[120px]';
+
+                var img = document.createElement('img');
+                img.src = d.fileUrl;
+                img.alt = d.judul;
+                img.className = 'w-full max-h-[420px] object-contain block';
+                img.onerror = function () { window.pgModalImgFallback(img); };
+
+                imgWrap.appendChild(img);
+                container.appendChild(imgWrap);
             } else {
-                h += '<div class="p-8 mb-5 bg-slate-50 dark:bg-slate-900/40 rounded-2xl text-center"><div class="text-4xl mb-2">🖼️</div><p class="text-sm text-slate-400">Tidak ada file gambar.</p></div>';
+                container.appendChild(buatKotakKosong('🖼️', 'Tidak ada file gambar.'));
             }
         }
 
-        // ISI / TEKS
+        // ── ISI / TEKS ──
         if (d.isi && d.isi.trim() !== '') {
             var adaHtml = /<[a-z][\s\S]*>/i.test(d.isi);
-            h += adaHtml
-                ? '<div class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed mb-5 prose prose-sm dark:prose-invert max-w-none">' + bersihHtml(d.isi) + '</div>'
-                : '<div class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed mb-5 whitespace-pre-line">' + esc(d.isi) + '</div>';
+            var isiWrap = document.createElement('div');
+
+            if (adaHtml) {
+                isiWrap.className = 'text-sm text-slate-700 dark:text-slate-300 leading-relaxed mb-5 prose prose-sm dark:prose-invert max-w-none';
+                isiWrap.innerHTML = bersihHtml(d.isi);
+            } else {
+                isiWrap.className = 'text-sm text-slate-700 dark:text-slate-300 leading-relaxed mb-5 whitespace-pre-line';
+                isiWrap.textContent = d.isi;
+            }
+
+            container.appendChild(isiWrap);
         }
 
-        // DOKUMEN
+        // ── DOKUMEN ──
         if (d.tipe === 'dokumen') {
             if (d.fileUrl && d.fileUrl !== '') {
-                h += '<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl border border-indigo-200 dark:border-indigo-700 mb-5">';
-                h += '<div class="flex items-center gap-3">';
-                h += '<div class="w-12 h-12 bg-indigo-100 dark:bg-indigo-800 rounded-xl flex items-center justify-center text-2xl">📄</div>';
-                h += '<div><p class="text-sm font-bold text-indigo-700 dark:text-indigo-300">' + esc(d.fileExt || 'FILE') + ' Dokumen</p>';
-                h += '<p class="text-xs text-slate-400 max-w-[220px] truncate">' + esc(d.fileName) + '</p></div></div>';
-                h += '<a href="' + d.fileUrl + '" target="_blank" download onclick="event.stopPropagation()"';
-                h += ' class="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl no-underline">';
-                h += '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>';
-                h += 'Unduh Dokumen</a></div>';
+                var docWrap = document.createElement('div');
+                docWrap.className = 'flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl border border-indigo-200 dark:border-indigo-700 mb-5';
+
+                var docLeft = document.createElement('div');
+                docLeft.className = 'flex items-center gap-3';
+
+                var docIcon = document.createElement('div');
+                docIcon.className = 'w-12 h-12 bg-indigo-100 dark:bg-indigo-800 rounded-xl flex items-center justify-center text-2xl';
+                docIcon.textContent = '📄';
+                docLeft.appendChild(docIcon);
+
+                var docInfo = document.createElement('div');
+                var docExt = document.createElement('p');
+                docExt.className = 'text-sm font-bold text-indigo-700 dark:text-indigo-300';
+                docExt.textContent = (d.fileExt || 'FILE') + ' Dokumen';
+                docInfo.appendChild(docExt);
+
+                var docName = document.createElement('p');
+                docName.className = 'text-xs text-slate-400 max-w-[220px] truncate';
+                docName.textContent = d.fileName;
+                docInfo.appendChild(docName);
+
+                docLeft.appendChild(docInfo);
+                docWrap.appendChild(docLeft);
+
+                var docBtn = document.createElement('a');
+                docBtn.href = d.fileUrl;
+                docBtn.target = '_blank';
+                docBtn.setAttribute('download', '');
+                docBtn.className = 'shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl no-underline';
+                docBtn.addEventListener('click', function (e) { e.stopPropagation(); });
+
+                docBtn.innerHTML = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>';
+                var docBtnLabel = document.createTextNode('Unduh Dokumen');
+                docBtn.appendChild(docBtnLabel);
+
+                docWrap.appendChild(docBtn);
+                container.appendChild(docWrap);
             } else {
-                h += '<div class="p-8 mb-5 bg-slate-50 dark:bg-slate-900/40 rounded-2xl text-center"><div class="text-4xl mb-2">📄</div><p class="text-sm text-slate-400">Tidak ada file dokumen.</p></div>';
+                container.appendChild(buatKotakKosong('📄', 'Tidak ada file dokumen.'));
             }
         }
 
-        // LINK
+        // ── LINK ──
         if (d.tipe === 'link') {
             if (d.linkUrl && d.linkUrl !== '') {
-                h += '<div class="p-4 bg-sky-50 dark:bg-sky-900/30 rounded-2xl border border-sky-200 dark:border-sky-700 mb-5">';
-                h += '<p class="text-xs text-slate-500 dark:text-slate-400 mb-3 font-medium">🔗 Tautan Resmi Pengumuman</p>';
-                h += '<a href="' + d.linkUrl + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()"';
-                h += ' class="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-xl no-underline">';
-                h += '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
-                h += esc(d.linkLabel || 'Kunjungi Link') + '</a>';
-                h += '<p class="text-xs text-slate-400 mt-2 break-all">' + esc(d.linkUrl) + '</p></div>';
+                var linkWrap = document.createElement('div');
+                linkWrap.className = 'p-4 bg-sky-50 dark:bg-sky-900/30 rounded-2xl border border-sky-200 dark:border-sky-700 mb-5';
+
+                var linkLabelTop = document.createElement('p');
+                linkLabelTop.className = 'text-xs text-slate-500 dark:text-slate-400 mb-3 font-medium';
+                linkLabelTop.textContent = '🔗 Tautan Resmi Pengumuman';
+                linkWrap.appendChild(linkLabelTop);
+
+                var linkBtn = document.createElement('a');
+                linkBtn.href = d.linkUrl;
+                linkBtn.target = '_blank';
+                linkBtn.rel = 'noopener noreferrer';
+                linkBtn.className = 'inline-flex items-center gap-2 px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-xl no-underline';
+                linkBtn.addEventListener('click', function (e) { e.stopPropagation(); });
+
+                linkBtn.innerHTML = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
+                linkBtn.appendChild(document.createTextNode(d.linkLabel || 'Kunjungi Link'));
+                linkWrap.appendChild(linkBtn);
+
+                var linkUrlText = document.createElement('p');
+                linkUrlText.className = 'text-xs text-slate-400 mt-2 break-all';
+                linkUrlText.textContent = d.linkUrl;
+                linkWrap.appendChild(linkUrlText);
+
+                container.appendChild(linkWrap);
             } else {
-                h += '<div class="p-8 mb-5 bg-slate-50 dark:bg-slate-900/40 rounded-2xl text-center"><div class="text-4xl mb-2">🔗</div><p class="text-sm text-slate-400">Tidak ada tautan.</p></div>';
+                container.appendChild(buatKotakKosong('🔗', 'Tidak ada tautan.'));
             }
         }
 
-        // Tanggal berakhir
+        // ── Tanggal berakhir ──
         if (d.tglSelesai && d.tglSelesai !== '') {
-            h += '<div class="flex items-center gap-3 px-4 py-3 bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-200 dark:border-amber-700 mb-4">';
-            h += '<span class="text-xl">⏰</span>';
-            h += '<p class="text-xs text-amber-700 dark:text-amber-300 font-medium">Berakhir: <strong>' + esc(d.tglSelesai) + '</strong></p></div>';
+            var endWrap = document.createElement('div');
+            endWrap.className = 'flex items-center gap-3 px-4 py-3 bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-200 dark:border-amber-700 mb-4';
+
+            var endIcon = document.createElement('span');
+            endIcon.className = 'text-xl';
+            endIcon.textContent = '⏰';
+            endWrap.appendChild(endIcon);
+
+            var endText = document.createElement('p');
+            endText.className = 'text-xs text-amber-700 dark:text-amber-300 font-medium';
+
+            var strong = document.createElement('strong');
+            strong.textContent = d.tglSelesai;
+
+            endText.appendChild(document.createTextNode('Berakhir: '));
+            endText.appendChild(strong);
+            endWrap.appendChild(endText);
+
+            container.appendChild(endWrap);
         }
 
-        // Tombol tutup
-        h += '<div class="flex justify-end pt-2">';
-        h += '<button onclick="pgTutup()" class="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-sm font-semibold rounded-2xl transition-colors">Tutup</button>';
-        h += '</div>';
+        // ── Tombol tutup ──
+        var footer = document.createElement('div');
+        footer.className = 'flex justify-end pt-2';
 
-        return h;
+        var closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'px-6 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-sm font-semibold rounded-2xl transition-colors';
+        closeBtn.textContent = 'Tutup';
+        closeBtn.addEventListener('click', function () { window.pgTutup(); });
+
+        footer.appendChild(closeBtn);
+        container.appendChild(footer);
+
+        return container;
     }
 
-    function esc(str) {
-        if (str === null || str === undefined) return '';
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+    function buatKotakKosong(emoji, teks) {
+        var box = document.createElement('div');
+        box.className = 'p-8 mb-5 bg-slate-50 dark:bg-slate-900/40 rounded-2xl text-center';
+
+        var iconEl = document.createElement('div');
+        iconEl.className = 'text-4xl mb-2';
+        iconEl.textContent = emoji;
+
+        var textEl = document.createElement('p');
+        textEl.className = 'text-sm text-slate-400';
+        textEl.textContent = teks;
+
+        box.appendChild(iconEl);
+        box.appendChild(textEl);
+        return box;
     }
 
     function bersihHtml(html) {

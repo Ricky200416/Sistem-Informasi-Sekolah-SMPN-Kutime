@@ -5,67 +5,59 @@
             'label'   => 'Total Guru',
             'value'   => $stats['total_guru'] ?? 0,
             'icon'    => '👨‍🏫',
-            'color'   => 'from-indigo-500 to-indigo-600',
+            'color'   => 'from-indigo-600 to-blue-600',
             'bg'      => 'bg-indigo-50 dark:bg-indigo-900/20',
-            'text'    => 'text-indigo-700 dark:text-indigo-300',
             'sub'     => ($stats['guru_hadir'] ?? 0) . ' hadir hari ini',
-            'subColor'=> 'text-emerald-600 dark:text-emerald-400',
+            'subColor'=> 'text-emerald-600',
         ],
         [
             'label'   => 'Total Siswa',
             'value'   => $stats['total_siswa'] ?? 0,
             'icon'    => '🧑‍🎓',
-            'color'   => 'from-violet-500 to-violet-600',
+            'color'   => 'from-violet-600 to-purple-600',
             'bg'      => 'bg-violet-50 dark:bg-violet-900/20',
-            'text'    => 'text-violet-700 dark:text-violet-300',
-            'sub'     => 'Terdaftar aktif',
+            'sub'     => 'Siswa Aktif',
             'subColor'=> 'text-slate-400',
         ],
         [
             'label'   => 'Total Kelas',
             'value'   => $stats['total_kelas'] ?? 0,
             'icon'    => '🏫',
-            'color'   => 'from-sky-500 to-sky-600',
+            'color'   => 'from-sky-600 to-cyan-600',
             'bg'      => 'bg-sky-50 dark:bg-sky-900/20',
-            'text'    => 'text-sky-700 dark:text-sky-300',
-            'sub'     => ($kelasTanpaWali ?? 0) > 0
-                        ? ($kelasTanpaWali . ' kelas tanpa wali')
-                        : 'Semua ada wali kelas',
-            'subColor'=> ($kelasTanpaWali ?? 0) > 0
-                        ? 'text-amber-600 dark:text-amber-400'
-                        : 'text-emerald-600 dark:text-emerald-400',
+            'sub'     => ($kelasTanpaWali ?? 0) > 0 ? ($kelasTanpaWali . ' tnp wali') : 'Wali terisi semua',
+            'subColor'=> ($kelasTanpaWali ?? 0) > 0 ? 'text-amber-600' : 'text-emerald-600',
         ],
         [
             'label'   => 'Guru Hadir',
             'value'   => $stats['guru_hadir'] ?? 0,
             'icon'    => '✅',
-            'color'   => 'from-emerald-500 to-emerald-600',
+            'color'   => 'from-emerald-600 to-teal-600',
             'bg'      => 'bg-emerald-50 dark:bg-emerald-900/20',
-            'text'    => 'text-emerald-700 dark:text-emerald-300',
-            'sub'     => 'Hari ini',
+            'sub'     => 'Kehadiran Real-time',
             'subColor'=> 'text-slate-400',
         ],
     ];
 ?>
 
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
     <?php $__currentLoopData = $cards; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $card): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
     <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200
-                dark:border-slate-700 shadow-sm p-4 flex items-start gap-3
-                hover:shadow-md transition-shadow">
+                dark:border-slate-700 shadow-sm p-4 flex items-center gap-4
+                hover:border-indigo-300 dark:hover:border-indigo-700 transition-all group">
 
         
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br <?php echo e($card['color']); ?>
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br <?php echo e($card['color']); ?>
 
-                    flex items-center justify-center text-lg shrink-0 shadow-sm">
+                    flex items-center justify-center text-2xl shrink-0 shadow-lg shadow-indigo-100 dark:shadow-none 
+                    group-hover:scale-110 transition-transform">
             <?php echo e($card['icon']); ?>
 
         </div>
 
         
         <div class="min-w-0 flex-1">
-            <p class="text-[10px] font-semibold text-slate-500 dark:text-slate-400
-                       uppercase tracking-wider leading-none mb-1">
+            <p class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em] mb-1">
                 <?php echo e($card['label']); ?>
 
             </p>
@@ -73,8 +65,8 @@
                 <?php echo e(number_format($card['value'])); ?>
 
             </p>
-            <p class="text-[10px] font-medium mt-1 <?php echo e($card['subColor']); ?> leading-none">
-                <?php echo e($card['sub']); ?>
+            <p class="text-[9px] font-bold mt-1.5 <?php echo e($card['subColor']); ?> flex items-center gap-1">
+                <span class="w-1 h-1 rounded-full bg-current opacity-50"></span> <?php echo e($card['sub']); ?>
 
             </p>
         </div>

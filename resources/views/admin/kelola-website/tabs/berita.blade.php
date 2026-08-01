@@ -5,7 +5,6 @@
     x-cloak
     class="space-y-4"
     x-data="beritaTab()"
-    x-init="init()"
 >
 
     {{-- ── Flash success ── --}}
@@ -26,315 +25,7 @@
         </div>
     @endif
 
-    {{-- ── Error validasi dari server ── --}}
-    @if($errors->any())
-        <div class="flex gap-2 bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-700">
-            <svg class="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            <div>
-                <p class="font-semibold mb-1">Terdapat kesalahan:</p>
-                <ul class="list-disc list-inside space-y-0.5">
-                    @foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach
-                </ul>
-            </div>
-        </div>
-    @endif
-
-
-    {{-- ═══════════════════════════════════════════════════════
-         PANEL FORM — Tambah / Edit (inline, no page reload)
-    ═══════════════════════════════════════════════════════ --}}
-    <div id="berita-panel"
-         class="bg-white rounded-xl border shadow-sm overflow-hidden transition-all duration-200"
-         :class="formOpen
-             ? (isEdit ? 'border-amber-300 shadow-amber-100' : 'border-indigo-300 shadow-indigo-100')
-             : 'border-slate-200'">
-
-        {{-- Header panel --}}
-        <button type="button"
-                @click="toggleForm()"
-                class="w-full flex items-center justify-between px-5 py-3.5 border-b text-left transition-colors"
-                :class="formOpen
-                    ? (isEdit ? 'bg-amber-50 border-amber-200' : 'bg-indigo-50 border-indigo-200')
-                    : 'bg-slate-50 border-slate-100 hover:bg-slate-100'">
-
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl flex items-center justify-center transition-colors shrink-0"
-                     :class="formOpen
-                         ? (isEdit ? 'bg-amber-500' : 'bg-indigo-600')
-                         : 'bg-slate-200'">
-                    <svg x-show="!isEdit" class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    <svg x-show="isEdit" class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                    </svg>
-                </div>
-
-                <div>
-                    <p class="text-sm font-bold text-slate-800"
-                       x-text="isEdit ? 'Edit Berita / Pengumuman' : 'Tambah Berita / Pengumuman Baru'"></p>
-                    <p class="text-xs text-slate-400 mt-0.5">
-                        <span x-show="!formOpen">Klik untuk membuka formulir.</span>
-                        <span x-show="formOpen && !isEdit">Isi formulir berikut lalu klik Publikasikan.</span>
-                        <span x-show="formOpen && isEdit">Ubah data yang diperlukan, lalu klik Simpan Perubahan.</span>
-                    </p>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-2 shrink-0">
-                <span x-show="formOpen && isEdit"
-                      class="hidden sm:inline-flex px-2.5 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full border border-amber-200">
-                    ✏️ Mode Edit
-                </span>
-                <span x-show="formOpen && !isEdit"
-                      class="hidden sm:inline-flex px-2.5 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-full border border-indigo-200">
-                    ➕ Tambah Baru
-                </span>
-                <svg class="w-4 h-4 text-slate-400 transition-transform duration-300"
-                     :class="formOpen ? 'rotate-180' : ''"
-                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                </svg>
-            </div>
-        </button>
-
-        {{-- Body form (collapsible) --}}
-        <div x-show="formOpen" x-collapse>
-            <div class="px-5 py-5">
-                <form
-                    id="berita-form"
-                    method="POST"
-                    action="{{ route('admin.berita.store') }}"
-                    enctype="multipart/form-data"
-                >
-                    @csrf
-                    {{-- Method override: POST untuk store, PATCH untuk update --}}
-                    <input type="hidden" name="_method" id="f-method" value="POST">
-
-                    {{-- Media tipe (dikontrol Alpine) --}}
-                    <input type="hidden" name="media_tipe" :value="mediaTipe">
-
-                    {{-- Hidden input utama untuk media_link --}}
-                    <input type="hidden" name="media_link" id="f-media-link-hidden" :value="mediaLinkValue">
-
-                    <div class="grid lg:grid-cols-5 gap-5">
-
-                        {{-- ── Kiri: Konten ── --}}
-                        <div class="lg:col-span-3 space-y-4">
-
-                            {{-- JUDUL --}}
-                            <div>
-                                <label for="f-judul" class="block text-xs font-semibold text-slate-700 mb-1.5">
-                                    Judul <span class="text-red-500">*</span>
-                                </label>
-                                <input type="text" id="f-judul" name="judul"
-                                       value="{{ old('judul') }}"
-                                       class="w-full rounded-lg border-slate-300 text-sm py-2.5 px-3 focus:border-indigo-500 focus:ring-indigo-500 transition"
-                                       placeholder="Masukkan judul berita atau pengumuman..."
-                                       required>
-                            </div>
-
-                            {{-- RINGKASAN --}}
-                            <div>
-                                <label for="f-ringkasan" class="block text-xs font-semibold text-slate-700 mb-1.5">
-                                    Ringkasan
-                                    <span class="text-slate-400 font-normal">(opsional, maks. 500 karakter)</span>
-                                </label>
-                                <textarea id="f-ringkasan" name="ringkasan" rows="2"
-                                          class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500 transition"
-                                          placeholder="Ringkasan singkat yang muncul di daftar berita...">{{ old('ringkasan') }}</textarea>
-                            </div>
-
-                            {{-- ISI --}}
-                            <div>
-                                <label for="f-isi" class="block text-xs font-semibold text-slate-700 mb-1.5">
-                                    Isi Berita <span class="text-red-500">*</span>
-                                </label>
-                                <textarea id="f-isi" name="isi" rows="10"
-                                          class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500 transition"
-                                          placeholder="Tulis isi lengkap berita atau pengumuman di sini..."
-                                          required>{{ old('isi') }}</textarea>
-                            </div>
-
-                        </div>
-
-                        {{-- ── Kanan: Pengaturan & Media ── --}}
-                        <div class="lg:col-span-2 space-y-4">
-
-                            {{-- Pengaturan --}}
-                            <div class="bg-slate-50 rounded-xl border border-slate-200 p-4 space-y-3.5">
-                                <p class="text-xs font-bold text-slate-500 uppercase tracking-widest">Pengaturan</p>
-
-                                <div>
-                                    <label for="f-kategori" class="block text-xs font-semibold text-slate-700 mb-1">Kategori <span class="text-red-500">*</span></label>
-                                    <select id="f-kategori" name="kategori"
-                                            class="w-full rounded-lg border-slate-300 text-xs py-2 focus:border-indigo-500 focus:ring-indigo-500" required>
-                                        <option value="berita">📰 Berita</option>
-                                        <option value="pengumuman">📢 Pengumuman</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label for="f-status" class="block text-xs font-semibold text-slate-700 mb-1">Status <span class="text-red-500">*</span></label>
-                                    <select id="f-status" name="status"
-                                            class="w-full rounded-lg border-slate-300 text-xs py-2 focus:border-indigo-500 focus:ring-indigo-500" required>
-                                        <option value="draf">📝 Draf – tidak tampil</option>
-                                        <option value="aktif">✅ Aktif – tampil di website</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label for="f-tanggal" class="block text-xs font-semibold text-slate-700 mb-1">Tanggal Publish</label>
-                                    <input type="datetime-local" id="f-tanggal" name="tanggal_publish"
-                                           value="{{ old('tanggal_publish', now()->format('Y-m-d\TH:i')) }}"
-                                           class="w-full rounded-lg border-slate-300 text-xs py-2 focus:border-indigo-500 focus:ring-indigo-500">
-                                </div>
-
-                                <label class="flex items-start gap-2.5 cursor-pointer group pt-0.5">
-                                    <input type="checkbox" id="f-penting" name="is_penting" value="1"
-                                           class="mt-0.5 rounded border-slate-300 text-red-500 focus:ring-red-400">
-                                    <span class="text-xs text-slate-700">
-                                        🔴 Tandai sebagai <strong>Penting</strong>
-                                        <span class="block text-slate-400 font-normal mt-0.5">Ditampilkan di bagian teratas halaman</span>
-                                    </span>
-                                </label>
-                            </div>
-
-                            {{-- Media --}}
-                            <div class="bg-slate-50 rounded-xl border border-slate-200 p-4 space-y-3">
-                                <p class="text-xs font-bold text-slate-500 uppercase tracking-widest">Media Lampiran</p>
-
-                                {{-- Pilih tipe --}}
-                                <div class="grid grid-cols-2 gap-1.5">
-                                    <template x-for="opt in mediaOptions" :key="opt.value">
-                                        <label class="flex items-center gap-1.5 px-2.5 py-2 border-2 rounded-lg cursor-pointer transition-all text-xs font-semibold"
-                                               :class="mediaTipe === opt.value
-                                                   ? 'border-indigo-500 bg-white text-indigo-700 shadow-sm'
-                                                   : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700'">
-                                            <input type="radio" class="sr-only"
-                                                   :value="opt.value"
-                                                   x-model="mediaTipe"
-                                                   @change="onTipeChange()">
-                                            <span x-text="opt.icon" class="text-sm"></span>
-                                            <span x-text="opt.label"></span>
-                                        </label>
-                                    </template>
-                                </div>
-
-                                {{-- Upload FOTO --}}
-                                <div x-show="mediaTipe === 'photo'" class="space-y-2">
-                                    <div x-show="existingFileUrl" class="rounded-lg overflow-hidden border border-slate-200 bg-white">
-                                        <img :src="existingFileUrl" class="w-full max-h-40 object-cover">
-                                        <p class="text-xs text-slate-400 px-2.5 py-1.5 border-t border-slate-100">📷 Foto saat ini. Upload baru untuk mengganti.</p>
-                                    </div>
-                                    <input type="file" id="f-media-photo" name="media_file"
-                                           accept="image/jpeg,image/png,image/webp,image/gif"
-                                           :disabled="mediaTipe !== 'photo'"
-                                           class="block w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition"
-                                           @change="previewPhoto($event)">
-                                    <div x-show="photoPreview" class="rounded-lg overflow-hidden border border-indigo-200 bg-white">
-                                        <img :src="photoPreview" class="w-full max-h-40 object-cover">
-                                        <p class="text-xs text-indigo-400 px-2.5 py-1.5 border-t border-indigo-100">✨ Pratinjau foto baru</p>
-                                    </div>
-                                </div>
-
-                                {{-- Upload VIDEO --}}
-                                <div x-show="mediaTipe === 'video'" class="space-y-2">
-                                    <div x-show="existingFileUrl" class="rounded-lg overflow-hidden border border-slate-200 bg-white">
-                                        <video :src="existingFileUrl" controls class="w-full max-h-40"></video>
-                                        <p class="text-xs text-slate-400 px-2.5 py-1.5 border-t border-slate-100">🎥 Video saat ini. Upload baru untuk mengganti.</p>
-                                    </div>
-                                    <input type="file" id="f-media-video" name="media_file"
-                                           accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm"
-                                           :disabled="mediaTipe !== 'video'"
-                                           class="block w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition"
-                                           @change="previewVideo($event)">
-                                    <div x-show="videoPreview" class="rounded-lg overflow-hidden border border-indigo-200 bg-white">
-                                        <video :src="videoPreview" controls class="w-full max-h-40"></video>
-                                        <p class="text-xs text-indigo-400 px-2.5 py-1.5 border-t border-indigo-100">✨ Pratinjau video baru</p>
-                                    </div>
-                                </div>
-
-                                {{-- Input YouTube --}}
-                                <div x-show="mediaTipe === 'link_youtube'" class="space-y-2">
-                                    <input type="url" id="f-media-youtube"
-                                           class="w-full rounded-lg border-slate-300 text-xs py-2 focus:border-red-500 focus:ring-red-400"
-                                           placeholder="https://www.youtube.com/watch?v=..."
-                                           x-model="mediaLinkValue"
-                                           @input="previewYoutube($event.target.value)">
-                                    <div x-show="youtubeThumbnail" class="rounded-lg overflow-hidden border border-slate-200 bg-white">
-                                        <img :src="youtubeThumbnail" class="w-full max-h-40 object-cover">
-                                        <p class="text-xs text-slate-400 px-2.5 py-1.5 border-t border-slate-100">▶️ Thumbnail YouTube</p>
-                                    </div>
-                                </div>
-
-                                {{-- Input Facebook --}}
-                                <div x-show="mediaTipe === 'link_facebook'" class="space-y-2">
-                                    <input type="url" id="f-media-facebook"
-                                           class="w-full rounded-lg border-slate-300 text-xs py-2 focus:border-blue-500 focus:ring-blue-400"
-                                           placeholder="https://www.facebook.com/watch?v=..."
-                                           x-model="mediaLinkValue">
-                                    <p class="text-xs text-slate-400">Masukkan URL video Facebook.</p>
-                                </div>
-
-                                {{-- Thumbnail kustom --}}
-                                <div x-show="mediaTipe !== 'none'" class="pt-3 border-t border-slate-200 space-y-2">
-                                    <label class="block text-xs font-semibold text-slate-600">
-                                        Thumbnail Kustom
-                                        <span class="text-slate-400 font-normal">(opsional)</span>
-                                    </label>
-                                    <div x-show="existingThumbnailUrl" class="rounded-lg overflow-hidden border border-slate-200 bg-white">
-                                        <img :src="existingThumbnailUrl" class="w-full max-h-24 object-cover">
-                                        <p class="text-xs text-slate-400 px-2.5 py-1 border-t border-slate-100">Thumbnail saat ini.</p>
-                                    </div>
-                                    <input type="file" id="f-thumbnail" name="media_thumbnail"
-                                           accept="image/jpeg,image/png,image/webp"
-                                           class="block w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 transition">
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>{{-- /grid --}}
-
-                    {{-- Tombol aksi --}}
-                    <div class="flex items-center justify-between pt-5 mt-1 border-t border-slate-100">
-                        <button type="button" @click="cancelForm()"
-                                class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                            Batal
-                        </button>
-
-                        <div class="flex items-center gap-3">
-                            <p x-show="isEdit" class="text-xs text-amber-600 hidden sm:block">
-                                Mengedit: <span x-text="editJudul" class="font-bold"></span>
-                            </p>
-                            <button type="submit"
-                                    class="inline-flex items-center gap-1.5 px-6 py-2 text-xs font-bold rounded-lg transition shadow-sm"
-                                    :class="isEdit
-                                        ? 'bg-amber-500 hover:bg-amber-600 text-white'
-                                        : 'bg-indigo-600 hover:bg-indigo-700 text-white'">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
-                                </svg>
-                                <span x-text="isEdit ? 'Simpan Perubahan' : 'Publikasikan'"></span>
-                            </button>
-                        </div>
-                    </div>
-
-                </form>
-            </div>
-        </div>
-
-    </div>{{-- /panel form --}}
-
-
-    {{-- ═══════════════════════════════════════════════════════
-         SECTION DAFTAR BERITA & PENGUMUMAN
-    ═══════════════════════════════════════════════════════ --}}
+    {{-- ── SECTION DAFTAR BERITA & PENGUMUMAN ── --}}
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
 
         {{-- Header --}}
@@ -414,8 +105,7 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-slate-100">
                     @forelse($beritas as $item)
-                    <tr class="hover:bg-slate-50 transition-colors"
-                        :class="editId === {{ $item->id }} && isEdit ? 'bg-amber-50 ring-1 ring-inset ring-amber-200' : ''">
+                    <tr class="hover:bg-slate-50 transition-colors">
 
                         {{-- Thumbnail + Judul --}}
                         <td class="px-4 py-3 text-xs">
@@ -546,24 +236,22 @@
 
                                 {{-- Tombol Edit --}}
                                 <button type="button"
-                                        @click="openEdit(
-                                            {{ $item->id }},
-                                            @js($item->judul),
-                                            @js($item->ringkasan ?? ''),
-                                            @js($item->isi ?? ''),
-                                            @js($item->kategori),
-                                            @js($item->status),
-                                            @js($item->tanggal_publish?->format('Y-m-d\TH:i') ?? now()->format('Y-m-d\TH:i')),
-                                            {{ $item->is_penting ? 'true' : 'false' }},
-                                            @js($item->media_tipe ?? 'none'),
-                                            @js($item->media_link ?? ''),
-                                            @js($item->media_file_url ?? ''),
-                                            @js($item->media_thumbnail_url ?? '')
-                                        )"
-                                        class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition"
-                                        :class="editId === {{ $item->id }} && isEdit
-                                            ? 'bg-amber-400 text-white'
-                                            : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'">
+                                        @click="openEdit({
+                                            id: {{ $item->id }},
+                                            judul: {{ Js::from($item->judul) }},
+                                            ringkasan: {{ Js::from($item->ringkasan ?? '') }},
+                                            isi: {{ Js::from($item->isi ?? '') }},
+                                            kategori: '{{ $item->kategori }}',
+                                            status: '{{ $item->status }}',
+                                            tanggal_publish: '{{ $item->tanggal_publish?->format('Y-m-d\TH:i') ?? now()->format('Y-m-d\TH:i') }}',
+                                            is_penting: {{ $item->is_penting ? 'true' : 'false' }},
+                                            media_tipe: '{{ $item->media_tipe ?? 'none' }}',
+                                            media_link: '{{ $item->media_link ?? '' }}',
+                                            media_file_url: '{{ $item->media_file_url ?? '' }}',
+                                            media_thumbnail_url: '{{ $item->media_thumbnail_url ?? '' }}',
+                                            update_url: '{{ route('admin.berita.update', $item) }}'
+                                        })"
+                                        class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition bg-indigo-50 text-indigo-600 hover:bg-indigo-100">
                                     ✏️ Edit
                                 </button>
 
@@ -636,6 +324,253 @@
         </a>
     </div>
 
+    {{-- ═══════════════════════════════════════════════════════
+         OVERLAY MODAL: FORM TAMBAH & EDIT BERITA
+    ═══════════════════════════════════════════════════════ --}}
+    <div 
+        x-show="isOpen" 
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+    >
+        {{-- Modal Card --}}
+        <div 
+            @click.away="closeModal()"
+            class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-4xl max-h-[92vh] flex flex-col"
+            x-transition:enter="transition ease-out duration-300 transform"
+            x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+            x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+            x-transition:leave="transition ease-in duration-200 transform"
+            x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+            x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+        >
+            {{-- Modal Header --}}
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50 rounded-t-2xl">
+                <div class="flex items-center gap-2">
+                    <span x-show="!isEdit" class="p-1.5 bg-indigo-500 text-white rounded-lg text-xs font-bold">➕ Baru</span>
+                    <span x-show="isEdit" class="p-1.5 bg-amber-500 text-white rounded-lg text-xs font-bold">✏️ Edit</span>
+                    <h3 class="text-sm font-bold text-slate-900" x-text="isEdit ? 'Ubah Berita / Pengumuman' : 'Tambah Berita / Pengumuman Baru'"></h3>
+                </div>
+                <button type="button" @click="closeModal()" class="text-slate-400 hover:text-slate-600 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            {{-- Form Wrapper --}}
+            <form :action="formAction" method="POST" enctype="multipart/form-data" class="flex flex-col h-full overflow-hidden">
+                @csrf
+                <template x-if="methodField === 'PATCH'">
+                    <input type="hidden" name="_method" value="PATCH">
+                </template>
+                <input type="hidden" name="id" :value="id">
+
+                {{-- Modal Body (Scrollable) --}}
+                <div class="flex-1 overflow-y-auto p-6 space-y-4 max-h-[calc(92vh-130px)]">
+
+                    {{-- Server-side validation errors --}}
+                    @if($errors->any())
+                        <div class="flex gap-2 bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-700">
+                            <svg class="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <div>
+                                <p class="font-semibold mb-1">Terdapat kesalahan:</p>
+                                <ul class="list-disc list-inside space-y-0.5">
+                                    @foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    @endif
+
+                    <div class="grid lg:grid-cols-5 gap-5">
+                        
+                        {{-- Kiri: Konten Utama (3/5) --}}
+                        <div class="lg:col-span-3 space-y-4">
+                            {{-- JUDUL --}}
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Judul Berita <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" name="judul" x-model="judul"
+                                       class="w-full rounded-lg border-slate-300 text-sm py-2 px-3 focus:border-indigo-500 focus:ring-indigo-500 transition"
+                                       placeholder="Tulis judul berita atau pengumuman..." required>
+                            </div>
+
+                            {{-- RINGKASAN --}}
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Ringkasan <span class="text-slate-400 font-normal">(maks. 500 karakter, opsional)</span>
+                                </label>
+                                <textarea name="ringkasan" rows="2" x-model="ringkasan"
+                                          class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500 transition"
+                                          placeholder="Ringkasan singkat yang muncul di daftar halaman depan..."></textarea>
+                            </div>
+
+                            {{-- ISI --}}
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Isi Berita / Konten Utama <span class="text-red-500">*</span>
+                                </label>
+                                <textarea name="isi" rows="10" x-model="isi"
+                                          class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500 transition"
+                                          placeholder="Tulis isi berita secara lengkap di sini..." required></textarea>
+                            </div>
+                        </div>
+
+                        {{-- Kanan: Pengaturan & Media (2/5) --}}
+                        <div class="lg:col-span-2 space-y-4">
+                            {{-- Pengaturan Form --}}
+                            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3.5">
+                                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">⚙️ Pengaturan Posting</p>
+                                
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Kategori <span class="text-red-500">*</span></label>
+                                    <select name="kategori" x-model="kategori"
+                                            class="w-full rounded-lg border-slate-300 text-xs py-2 focus:border-indigo-500 focus:ring-indigo-500" required>
+                                        <option value="berita">📰 Berita</option>
+                                        <option value="pengumuman">📢 Pengumuman</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Status Publish <span class="text-red-500">*</span></label>
+                                    <select name="status" x-model="status"
+                                            class="w-full rounded-lg border-slate-300 text-xs py-2 focus:border-indigo-500 focus:ring-indigo-500" required>
+                                        <option value="aktif">✅ Aktif – tampil di website</option>
+                                        <option value="draf">📝 Draf – simpan sebagai draf</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal Publish</label>
+                                    <input type="datetime-local" name="tanggal_publish" x-model="tanggalPublish"
+                                           class="w-full rounded-lg border-slate-300 text-xs py-2 focus:border-indigo-500 focus:ring-indigo-500">
+                                </div>
+
+                                <label class="flex items-start gap-2 cursor-pointer pt-1">
+                                    <input type="checkbox" name="is_penting" value="1" x-model="isPenting"
+                                           class="rounded border-slate-300 text-red-500 focus:ring-red-400 mt-0.5">
+                                    <span class="text-xs text-slate-700">
+                                        🔴 Tandai sebagai <strong>Penting</strong>
+                                        <span class="block text-slate-400 text-[10px] font-normal">Tampil di urutan teratas website</span>
+                                    </span>
+                                </label>
+                            </div>
+
+                            {{-- Media Attachment --}}
+                            <div class="bg-indigo-50/40 border border-indigo-100 rounded-xl p-4 space-y-3">
+                                <p class="text-[10px] font-bold text-indigo-900 uppercase tracking-wider">📎 Media Lampiran</p>
+
+                                {{-- Pilihan Tipe Media --}}
+                                <input type="hidden" name="media_tipe" :value="mediaTipe">
+
+                                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-1.5">
+                                    <template x-for="opt in mediaOptions" :key="opt.value">
+                                        <label class="flex items-center gap-1.5 px-2 py-1.5 border-2 rounded-lg cursor-pointer transition-all text-xs font-medium"
+                                               :class="mediaTipe === opt.value
+                                                   ? 'border-indigo-600 bg-white text-indigo-700 shadow-sm font-bold'
+                                                   : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700'">
+                                            <input type="radio" class="sr-only" :value="opt.value" x-model="mediaTipe" @change="onTipeChange()">
+                                            <span x-text="opt.icon"></span>
+                                            <span x-text="opt.label"></span>
+                                        </label>
+                                    </template>
+                                </div>
+
+                                {{-- Upload FOTO (Diproteksi dengan :disabled apabila tidak aktif) --}}
+                                <div x-show="mediaTipe === 'photo'" class="space-y-2 pt-1">
+                                    <div x-show="isEdit && existingFileUrl" class="rounded-lg overflow-hidden border border-slate-200 bg-white">
+                                        <img :src="existingFileUrl" class="w-full max-h-32 object-cover">
+                                        <p class="text-[10px] text-slate-400 p-1.5 border-t border-slate-100">📷 Foto saat ini. Upload baru jika ingin mengganti.</p>
+                                    </div>
+                                    <input type="file" id="modal-media-photo" name="media_file" accept="image/*"
+                                           :disabled="mediaTipe !== 'photo'"
+                                           @change="previewPhoto($event)"
+                                           class="block w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                                    
+                                    <div x-show="photoPreview" class="rounded-lg overflow-hidden border border-indigo-200 bg-white">
+                                        <img :src="photoPreview" class="w-full max-h-32 object-cover">
+                                    </div>
+                                </div>
+
+                                {{-- Upload VIDEO (Diproteksi dengan :disabled apabila tidak aktif) --}}
+                                <div x-show="mediaTipe === 'video'" class="space-y-2 pt-1">
+                                    <div x-show="isEdit && existingFileUrl" class="rounded-lg overflow-hidden border border-slate-200 bg-white">
+                                        <video :src="existingFileUrl" controls class="w-full max-h-32"></video>
+                                        <p class="text-[10px] text-slate-400 p-1.5 border-t border-slate-100">🎥 Video saat ini. Upload baru jika ingin mengganti.</p>
+                                    </div>
+                                    <input type="file" id="modal-media-video" name="media_file" accept="video/*"
+                                           :disabled="mediaTipe !== 'video'"
+                                           @change="previewVideo($event)"
+                                           class="block w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+
+                                    <div x-show="videoPreview" class="rounded-lg overflow-hidden border border-indigo-200 bg-white">
+                                        <video :src="videoPreview" controls class="w-full max-h-32"></video>
+                                    </div>
+                                </div>
+
+                                {{-- Input YouTube (Diproteksi dengan :disabled apabila tidak aktif) --}}
+                                <div x-show="mediaTipe === 'link_youtube'" class="space-y-2 pt-1">
+                                    <input type="url" name="media_link" x-model="mediaLinkValue"
+                                           :disabled="mediaTipe !== 'link_youtube'"
+                                           @input="previewYoutube($event.target.value)"
+                                           class="w-full rounded-lg border-slate-300 text-xs py-1.5 focus:border-red-500 focus:ring-red-400"
+                                           placeholder="https://www.youtube.com/watch?v=...">
+                                    
+                                    <div x-show="youtubeThumbnail" class="rounded-lg overflow-hidden border border-slate-200 bg-white">
+                                        <img :src="youtubeThumbnail" class="w-full max-h-32 object-cover">
+                                    </div>
+                                </div>
+
+                                {{-- Input Facebook (Diproteksi dengan :disabled apabila tidak aktif) --}}
+                                <div x-show="mediaTipe === 'link_facebook'" class="space-y-2 pt-1">
+                                    <input type="url" name="media_link" x-model="mediaLinkValue"
+                                           :disabled="mediaTipe !== 'link_facebook'"
+                                           class="w-full rounded-lg border-slate-300 text-xs py-1.5 focus:border-blue-500 focus:ring-blue-400"
+                                           placeholder="https://www.facebook.com/watch?v=...">
+                                    <p class="text-[10px] text-slate-500">Masukkan link video publik facebook.</p>
+                                </div>
+
+                                {{-- Custom Thumbnail (Opsional) --}}
+                                <div x-show="mediaTipe !== 'none'" class="pt-2 border-t border-indigo-100 space-y-1.5">
+                                    <label class="block text-[11px] font-semibold text-slate-700">Thumbnail Kustom <span class="text-slate-400 font-normal">(opsional)</span></label>
+                                    
+                                    <div x-show="isEdit && existingThumbnailUrl" class="rounded overflow-hidden border border-slate-200 bg-white w-20 h-14">
+                                        <img :src="existingThumbnailUrl" class="w-full h-full object-cover">
+                                    </div>
+
+                                    <input type="file" id="modal-thumbnail" name="media_thumbnail" accept="image/*"
+                                           class="block w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200">
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {{-- Modal Footer --}}
+                <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between rounded-b-2xl">
+                    <button type="button" @click="closeModal()"
+                            class="px-4 py-2 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition">
+                        Batal
+                    </button>
+                    <button type="submit"
+                            class="px-6 py-2 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition shadow-sm">
+                        <span x-text="isEdit ? 'Simpan Perubahan' : 'Publikasikan'"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </div>{{-- /x-data --}}
 
 
@@ -644,152 +579,147 @@
 ═══════════════════════════════════════════════════════ --}}
 <script>
 function beritaTab() {
+    // Membaca state error server-side untuk pemulihan otomatis
+    const hasErrors = @json($errors->any());
+    const isEditMode = @json(old('_method') === 'PATCH');
+    const oldId = @json(old('id', ''));
+    const beritas = @json($beritas instanceof \Illuminate\Pagination\LengthAwarePaginator ? $beritas->items() : $beritas);
+
+    let initialAction = @json(route('admin.berita.store'));
+    let existingFileUrl = '';
+    let existingThumbnailUrl = '';
+
+    // Mengembalikan data preview jika error terjadi pada mode edit
+    if (isEditMode && oldId) {
+        initialAction = `{{ route('admin.berita.update', ':id') }}`.replace(':id', oldId);
+        const matchedItem = beritas.find(item => item.id == oldId);
+        if (matchedItem) {
+            existingFileUrl = matchedItem.media_file_url || '';
+            existingThumbnailUrl = matchedItem.media_thumbnail_url || '';
+        }
+    }
+
     return {
-        // ── State ──
-        formOpen:  false,
-        isEdit:    false,
-        editId:    null,
-        editJudul: '',
+        // ── State Modal ──
+        isOpen: hasErrors,
+        isEdit: isEditMode,
+        formAction: initialAction,
+        methodField: isEditMode ? 'PATCH' : 'POST',
 
-        // ── Media state ──
-        mediaTipe:            'none',
-        mediaLinkValue:       '',
-        existingFileUrl:      '',
-        existingThumbnailUrl: '',
-        photoPreview:         null,
-        videoPreview:         null,
-        youtubeThumbnail:     null,
+        // ── Form Fields bound with x-model ──
+        id: oldId,
+        judul: @json(old('judul', '')),
+        ringkasan: @json(old('ringkasan', '')),
+        isi: @json(old('isi', '')),
+        kategori: @json(old('kategori', 'berita')),
+        status: @json(old('status', 'draf')),
+        tanggalPublish: @json(old('tanggal_publish', now()->format('Y-m-d\TH:i'))),
+        isPenting: @json(old('is_penting') ? true : false),
 
-        // ── Opsi tipe media ──
+        // ── Media Attachment State ──
+        mediaTipe: @json(old('media_tipe', 'none')),
+        mediaLinkValue: @json(old('media_link', '')),
+        existingFileUrl: existingFileUrl,
+        existingThumbnailUrl: existingThumbnailUrl,
+        photoPreview: null,
+        videoPreview: null,
+        youtubeThumbnail: null,
+
+        // ── Opsi media ──
         mediaOptions: [
             { value: 'none',          icon: '🚫', label: 'Tanpa Media' },
-            { value: 'photo',         icon: '🖼️',  label: 'Foto' },
-            { value: 'video',         icon: '🎥',  label: 'Video' },
-            { value: 'link_youtube',  icon: '▶️',  label: 'YouTube' },
+            { value: 'photo',         icon: '🖼️', label: 'Foto' },
+            { value: 'video',         icon: '🎥', label: 'Video' },
+            { value: 'link_youtube',  icon: '▶️', label: 'YouTube' },
             { value: 'link_facebook', icon: '📘', label: 'Facebook' },
         ],
 
-        // ── Init: restore jika ada error validasi server ──
         init() {
-            @if($errors->any())
-                this.formOpen = true;
-                @if(old('media_tipe'))
-                    this.mediaTipe = @js(old('media_tipe'));
-                    @if(old('media_link'))
-                        this.mediaLinkValue = @js(old('media_link'));
-                        this.$nextTick(() => {
-                            if (@js(old('media_tipe')) === 'link_youtube') {
-                                this.previewYoutube(@js(old('media_link')));
-                            }
-                        });
-                    @endif
-                @endif
-            @endif
+            if (this.mediaTipe === 'link_youtube' && this.mediaLinkValue) {
+                this.previewYoutube(this.mediaLinkValue);
+            }
         },
 
         // ── Buka form mode Tambah ──
         openAdd() {
+            this.isEdit = false;
+            this.formAction = "{{ route('admin.berita.store') }}";
+            this.methodField = 'POST';
             this.resetForm();
-            this.isEdit   = false;
-            this.formOpen = true;
-            this.scrollToPanel();
+            this.isOpen = true;
         },
 
         // ── Buka form mode Edit ──
-        openEdit(id, judul, ringkasan, isi, kategori, status, tanggal, isPenting,
-                 mediaTipe, mediaLink, mediaFileUrl, mediaThumbnailUrl) {
+        openEdit(item) {
+            this.isEdit = true;
+            this.formAction = item.update_url;
+            this.methodField = 'PATCH';
 
+            this.id = item.id;
+            this.judul = item.judul;
+            this.ringkasan = item.ringkasan || '';
+            this.isi = item.isi || '';
+            this.kategori = item.kategori || 'berita';
+            this.status = item.status || 'draf';
+            this.tanggalPublish = item.tanggal_publish;
+            this.isPenting = !!item.is_penting;
+
+            this.mediaTipe = item.media_tipe || 'none';
+            this.mediaLinkValue = item.media_link || '';
+            this.existingFileUrl = item.media_file_url || '';
+            this.existingThumbnailUrl = item.media_thumbnail_url || '';
+
+            this.photoPreview = null;
+            this.videoPreview = null;
+            this.youtubeThumbnail = null;
+
+            if (this.mediaTipe === 'link_youtube' && this.mediaLinkValue) {
+                this.previewYoutube(this.mediaLinkValue);
+            }
+
+            this.isOpen = true;
+        },
+
+        // ── Batal / Tutup ──
+        closeModal() {
+            this.isOpen = false;
             this.resetForm();
-
-            this.isEdit    = true;
-            this.editId    = id;
-            this.editJudul = judul;
-            this.formOpen  = true;
-
-            this.$nextTick(() => {
-                this.setVal('f-judul',     judul);
-                this.setVal('f-ringkasan', ringkasan);
-                this.setVal('f-isi',       isi);
-                this.setVal('f-kategori',  kategori);
-                this.setVal('f-status',    status);
-                this.setVal('f-tanggal',   tanggal);
-
-                const pEl = document.getElementById('f-penting');
-                if (pEl) pEl.checked = isPenting;
-
-                this.mediaTipe            = mediaTipe       || 'none';
-                this.mediaLinkValue       = mediaLink        || '';
-                this.existingFileUrl      = mediaFileUrl     || '';
-                this.existingThumbnailUrl = mediaThumbnailUrl || '';
-
-                // Preview thumbnail YouTube jika mode edit link_youtube
-                this.$nextTick(() => {
-                    if (mediaTipe === 'link_youtube' && mediaLink) {
-                        this.previewYoutube(mediaLink);
-                    }
-                });
-
-                const form = document.getElementById('berita-form');
-                if (form) form.action = '{{ url('admin/berita') }}/' + id;
-
-                const methodInput = document.getElementById('f-method');
-                if (methodInput) methodInput.value = 'PATCH';
-            });
-
-            this.scrollToPanel();
-        },
-
-        // ── Toggle panel ──
-        toggleForm() {
-            this.formOpen = !this.formOpen;
-            if (this.formOpen) this.scrollToPanel();
-        },
-
-        // ── Batal ──
-        cancelForm() {
-            this.formOpen = false;
-            setTimeout(() => this.resetForm(), 350);
         },
 
         // ── Reset semua field & state ──
         resetForm() {
-            this.isEdit               = false;
-            this.editId               = null;
-            this.editJudul            = '';
-            this.mediaTipe            = 'none';
-            this.mediaLinkValue       = '';
-            this.existingFileUrl      = '';
+            this.id = '';
+            this.judul = '';
+            this.ringkasan = '';
+            this.isi = '';
+            this.kategori = 'berita';
+            this.status = 'draf';
+            this.tanggalPublish = "{{ now()->format('Y-m-d\TH:i') }}";
+            this.isPenting = false;
+
+            this.mediaTipe = 'none';
+            this.mediaLinkValue = '';
+            this.existingFileUrl = '';
             this.existingThumbnailUrl = '';
-            this.photoPreview         = null;
-            this.videoPreview         = null;
-            this.youtubeThumbnail     = null;
+            this.photoPreview = null;
+            this.videoPreview = null;
+            this.youtubeThumbnail = null;
 
-            ['f-judul', 'f-ringkasan', 'f-isi'].forEach(id => this.setVal(id, ''));
-            this.setVal('f-kategori', 'berita');
-            this.setVal('f-status',   'draf');
-            this.setVal('f-tanggal',  new Date().toISOString().slice(0, 16));
-
-            const pEl = document.getElementById('f-penting');
-            if (pEl) pEl.checked = false;
-
-            ['f-media-photo', 'f-media-video', 'f-thumbnail'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.value = '';
-            });
-
-            const form = document.getElementById('berita-form');
-            if (form) form.action = '{{ route('admin.berita.store') }}';
-            const methodInput = document.getElementById('f-method');
-            if (methodInput) methodInput.value = 'POST';
+            const filePhoto = document.getElementById('modal-media-photo');
+            if (filePhoto) filePhoto.value = '';
+            const fileVideo = document.getElementById('modal-media-video');
+            if (fileVideo) fileVideo.value = '';
+            const thumbInput = document.getElementById('modal-thumbnail');
+            if (thumbInput) thumbInput.value = '';
         },
 
         // ── Ganti tipe media — reset link & preview ──
         onTipeChange() {
-            this.photoPreview     = null;
-            this.videoPreview     = null;
+            this.photoPreview = null;
+            this.videoPreview = null;
             this.youtubeThumbnail = null;
-            this.existingFileUrl  = '';
-            this.mediaLinkValue   = '';
+            this.existingFileUrl = '';
+            this.mediaLinkValue = '';
         },
 
         // ── Preview foto ──
@@ -821,21 +751,7 @@ function beritaTab() {
                 }
             }
             this.youtubeThumbnail = null;
-        },
-
-        // ── Helper: set value ke elemen by id ──
-        setVal(id, val) {
-            const el = document.getElementById(id);
-            if (el) el.value = val ?? '';
-        },
-
-        // ── Scroll ke panel form ──
-        scrollToPanel() {
-            this.$nextTick(() => {
-                const panel = document.getElementById('berita-panel');
-                if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            });
-        },
+        }
     };
 }
 </script>

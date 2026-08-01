@@ -4,7 +4,6 @@
 
 @section('content')
 
-{{-- ── Fallback: memastikan semua variabel tersedia dengan tipe yang aman ──────────── --}}
 @php
     $widgetPengumuman ??= collect();
     $stats            ??= ['total_guru' => 0, 'total_siswa' => 0, 'total_kelas' => 0, 'guru_hadir' => 0];
@@ -15,129 +14,80 @@
     $kelasTanpaWali   ??= 0;
 @endphp
 
-<div class="space-y-2.5 max-w-7xl mx-auto container-fluid px-2">
+<div class="space-y-4 max-w-full mx-auto container-fluid px-2 pb-6">
 
-    {{-- ── Greeting & Tanggal Terkompresi ────────────────────────────── --}}
-    <div class="flex items-center justify-between flex-wrap gap-2 bg-white dark:bg-slate-800 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-        <div>
-            <h2 class="text-xs font-bold text-slate-800 dark:text-slate-100 leading-tight flex items-center gap-1">
-                <span>👋</span> Selamat datang, {{ auth()->user()->name ?? 'Admin' }}!
-            </h2>
-            <p class="text-[9px] text-slate-400 dark:text-slate-500 font-medium tracking-wide">
-                {{ now()->isoFormat('dddd, D MMMM Y · HH:mm') }} WIB
-            </p>
+    {{-- ── Greeting & Info Bar ── --}}
+    <div class="relative overflow-hidden flex items-center justify-between flex-wrap gap-3 bg-white dark:bg-slate-800 px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+        <div class="flex items-center gap-3 relative z-10">
+            <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-xl shadow-inner">
+                👋
+            </div>
+            <div>
+                <h2 class="text-sm font-black text-slate-800 dark:text-slate-100 leading-tight">
+                    Halo, {{ auth()->user()->name ?? 'Admin' }}!
+                </h2>
+                <p class="text-[10px] text-slate-400 dark:text-slate-500 font-bold tracking-wide uppercase">
+                    {{ now()->isoFormat('dddd, D MMMM Y') }} <span class="mx-1 opacity-30">|</span> <span id="realtimeClock">{{ now()->format('H:i:s') }}</span> WIB
+                </p>
+            </div>
         </div>
         
-        {{-- Quick Actions Ringkas --}}
-        <div class="flex items-center gap-1.5 flex-wrap">
+        {{-- Quick Actions --}}
+        <div class="flex items-center gap-2 relative z-10">
             @if(Route::has('admin.users.index'))
             <a href="{{ route('admin.users.index') }}"
-               class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg
-                      bg-indigo-600 text-white text-[9px] font-bold
-                      hover:bg-indigo-700 transition shadow-sm active:scale-95">
-                ➕ User Baru
+               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl
+                      bg-indigo-600 text-white text-[10px] font-black
+                      hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200 dark:shadow-none active:scale-95">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path d="M12 4v16m8-8H4"/></svg>
+                USER BARU
             </a>
             @endif
             @if(Route::has('admin.pengumuman.create'))
             <a href="{{ route('admin.pengumuman.create') }}"
-               class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg
-                      bg-slate-50 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300
+               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl
+                      bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200
                       border border-slate-200 dark:border-slate-600
-                      text-[9px] font-bold hover:bg-slate-100 dark:hover:bg-slate-700 transition shadow-sm">
-                📢 Pengumuman
+                      text-[10px] font-black hover:bg-slate-50 dark:hover:bg-slate-600 transition shadow-sm">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
+                PENGUMUMAN
             </a>
             @endif
         </div>
+        {{-- Dekorasi Latar Belakang --}}
+        <div class="absolute right-0 top-0 w-32 h-32 bg-indigo-500/5 rounded-full -mr-16 -mt-16"></div>
     </div>
 
-    {{-- ── Statistik Ringkasan ────────────────────────────── --}}
+    {{-- ── Row 1: Statistik Utama ── --}}
     <div class="w-full">
-        @include('admin.dashboard.stats', [
-            'stats'          => $stats,
-            'kelasTanpaWali' => $kelasTanpaWali,
-        ])
+        @include('admin.dashboard.stats', ['stats' => $stats, 'kelasTanpaWali' => $kelasTanpaWali])
     </div>
 
-    {{-- ── Absensi Minggu Ini ─────────────────────────────── --}}
+    {{-- ── Row 2: Absensi Mingguan (Lebar Penuh) ── --}}
     <div class="w-full">
-        @include('admin.dashboard.absensi_minggu', [
-            'absensiMinggu' => $absensiMinggu,
-        ])
+        @include('admin.dashboard.absensi_minggu', ['absensiMinggu' => $absensiMinggu])
     </div>
 
-    {{-- ── Grid Utama Atas: Jadwal Hari Ini & Pengumuman Internal ───────────────── --}}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 items-stretch">
-
-        {{-- Jadwal Hari Ini --}}
-        <div class="flex flex-col bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden h-full">
-            <div class="px-3 py-2 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/40">
-                <h3 class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                    📅 Jadwal Hari Ini
-                </h3>
-            </div>
-            <div class="p-2 flex-1 overflow-y-auto max-h-[220px] custom-scrollbar">
-                @include('admin.dashboard.schedule', [
-                    'jadwalHariIni' => $jadwalHariIni,
-                ])
-            </div>
-        </div>
-
-        {{-- Pengumuman Internal --}}
-        <div class="flex flex-col bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden h-full">
-            <div class="px-3 py-2 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/40">
-                <h3 class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                    📢 Pengumuman Internal
-                </h3>
-            </div>
-            <div class="p-2 flex-1 overflow-y-auto max-h-[220px] custom-scrollbar">
-                @include('admin.dashboard.announcement', [
-                    'widgetPengumuman' => $widgetPengumuman,
-                ])
-            </div>
-        </div>
-
+    {{-- ── Row 3: Jadwal & Pengumuman ── --}}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        @include('admin.dashboard.schedule', ['jadwalHariIni' => $jadwalHariIni])
+        @include('admin.dashboard.announcement', ['widgetPengumuman' => $widgetPengumuman])
     </div>
 
-    {{-- ── Grid Bawah: Log Aktivitas Sistem & Widget Pendukung ── --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 items-stretch">
-
-        {{-- Log Aktivitas Sistem (Mengambil porsi 2 Kolom) --}}
-        <div class="lg:col-span-2 flex flex-col bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden h-full">
-            <div class="px-3 py-2 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/40">
-                <h3 class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                    ⏱️ Log Aktivitas Sistem
-                </h3>
-            </div>
-            <div class="p-2 flex-1 overflow-y-auto max-h-[260px] custom-scrollbar">
-                @include('admin.dashboard.activity_log', [
-                    'activityLogs' => $activityLogs,
-                ])
-            </div>
+    {{-- ── Row 4: Log Aktivitas & Side Widgets ── --}}
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div class="lg:col-span-8">
+            @include('admin.dashboard.activity_log', ['activityLogs' => $activityLogs])
         </div>
-
-        {{-- Ulang Tahun Guru & Akses Cepat (Kombinasi 1 Kolom) --}}
-        <div class="lg:col-span-1 flex flex-col gap-3 h-full">
+        <div class="lg:col-span-4 space-y-4">
+            @include('admin.dashboard.ultah_guru', ['guruUltah' => $guruUltah])
             
-            {{-- Bagian Ulang Tahun Guru --}}
-            <div class="flex flex-col bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex-1">
-                <div class="px-3 py-1.5 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/40">
-                    <h3 class="text-[10px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                        🎂 Guru Ulang Tahun
-                    </h3>
-                </div>
-                <div class="p-2 overflow-y-auto max-h-[110px] custom-scrollbar flex-1">
-                    @include('admin.dashboard.ultah_guru', [
-                        'guruUltah' => $guruUltah,
-                    ])
-                </div>
-            </div>
-
-            {{-- Bagian Menu Akses Cepat Ringkas --}}
-            <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-2.5">
-                <p class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-                    ⚡ Akses Cepat Menuju Fitur
+            {{-- Quick Access Menu --}}
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-4">
+                <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <span class="w-1 h-3 bg-indigo-500 rounded-full"></span> Navigasi Cepat
                 </p>
-                <div class="grid grid-cols-2 gap-1.5">
+                <div class="grid grid-cols-2 gap-2">
                     @php
                         $quickLinks = [
                             ['icon'=>'📋','label'=>'Absensi Guru', 'route'=>'admin.absensi-guru.index',  'color'=>'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300'],
@@ -145,52 +95,38 @@
                             ['icon'=>'🏫','label'=>'Kelola Kelas', 'route'=>'admin.kelas.index',          'color'=>'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300'],
                             ['icon'=>'📢','label'=>'Pengumuman',   'route'=>'admin.pengumuman',           'color'=>'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'],
                             ['icon'=>'🎓','label'=>'Data Siswa',   'route'=>'admin.users.index',          'color'=>'bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-300'],
+                            ['icon'=>'⚙️','label'=>'User Role',    'route'=>'admin.users.index',          'color'=>'bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300'],
                         ];
                     @endphp
-
                     @foreach($quickLinks as $ql)
                         @if(Route::has($ql['route']))
                         <a href="{{ route($ql['route']) }}"
-                           class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg
-                                  {{ $ql['color'] }} hover:opacity-85 active:scale-[0.97]
-                                  transition-all text-[10px] font-semibold leading-tight overflow-hidden">
-                            <span class="text-xs shrink-0">{{ $ql['icon'] }}</span>
+                           class="flex items-center gap-2 px-2.5 py-2 rounded-xl {{ $ql['color'] }} 
+                                  hover:opacity-80 transition-all text-[10px] font-bold group">
+                            <span class="text-sm group-hover:scale-110 transition-transform">{{ $ql['icon'] }}</span>
                             <span class="truncate">{{ $ql['label'] }}</span>
                         </a>
                         @endif
                     @endforeach
                 </div>
             </div>
-
         </div>
-
     </div>
-
 </div>
 
-{{-- ── Custom Scrollbar Minimalis & Kompresi Global Component Layout ── --}}
-<style>
-    /* Mengurangi margin bawaan section layouts default jika terlalu longgar */
-    .container-fluid {
-        padding-top: 0.25rem !important;
-        padding-bottom: 0.5rem !important;
+<script>
+    function updateClock() {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('id-ID', { hour12: false });
+        document.getElementById('realtimeClock').textContent = timeStr;
     }
-    
-    /* Scrollbar mikro agar tidak memakan ruang konten internal */
-    .custom-scrollbar::-webkit-scrollbar {
-        width: 3px;
-        height: 3px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(156, 163, 175, 0.25);
-        border-radius: 999px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: rgba(156, 163, 175, 0.45);
-    }
-</style>
+    setInterval(updateClock, 1000);
+</script>
 
+<style>
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.3); border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(156, 163, 175, 0.5); }
+</style>
 @endsection

@@ -1,89 +1,52 @@
 
 <?php
     $total = array_sum($absensiMinggu);
-    $pct   = fn(int $val): int => $total > 0 ? (int) round($val / $total * 100) : 0;
-
+    $pct = fn($val) => $total > 0 ? (int) round($val / $total * 100) : 0;
     $items = [
-        ['label' => 'Hadir',     'key' => 'hadir', 'color' => 'bg-emerald-500', 'text' => 'text-emerald-700 dark:text-emerald-300', 'ring' => 'ring-emerald-200 dark:ring-emerald-800'],
-        ['label' => 'Sakit',     'key' => 'sakit', 'color' => 'bg-blue-400',    'text' => 'text-blue-700 dark:text-blue-300',       'ring' => 'ring-blue-200 dark:ring-blue-800'],
-        ['label' => 'Izin',      'key' => 'izin',  'color' => 'bg-amber-400',   'text' => 'text-amber-700 dark:text-amber-300',     'ring' => 'ring-amber-200 dark:ring-amber-800'],
-        ['label' => 'Alpha',     'key' => 'alpha', 'color' => 'bg-red-500',     'text' => 'text-red-700 dark:text-red-300',         'ring' => 'ring-red-200 dark:ring-red-800'],
-        ['label' => 'Terlambat', 'key' => 'telat', 'color' => 'bg-pink-400',    'text' => 'text-pink-700 dark:text-pink-300',       'ring' => 'ring-pink-200 dark:ring-pink-800'],
+        ['label' => 'Hadir', 'key' => 'hadir', 'color' => 'bg-emerald-500', 'text' => 'text-emerald-600'],
+        ['label' => 'Sakit', 'key' => 'sakit', 'color' => 'bg-blue-400', 'text' => 'text-blue-500'],
+        ['label' => 'Izin', 'key' => 'izin', 'color' => 'bg-amber-400', 'text' => 'text-amber-500'],
+        ['label' => 'Alpha', 'key' => 'alpha', 'color' => 'bg-red-500', 'text' => 'text-red-600'],
+        ['label' => 'Telat', 'key' => 'telat', 'color' => 'bg-pink-400', 'text' => 'text-pink-500'],
     ];
 ?>
 
-<div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200
-            dark:border-slate-700 shadow-sm overflow-hidden">
-
-    
-    <div class="flex items-center justify-between px-4 py-3
-                border-b border-slate-100 dark:border-slate-700/60">
-        <div class="flex items-center gap-2">
-            <div class="w-7 h-7 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500
-                        flex items-center justify-center text-white text-sm shadow-sm shrink-0">
-                📊
-            </div>
+<div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/30">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-2xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-xl">📊</div>
             <div>
-                <p class="text-xs font-bold text-slate-800 dark:text-slate-100 leading-tight">
-                    Absensi Minggu Ini
-                </p>
-                <p class="text-[10px] text-slate-400 leading-none mt-0.5">
-                    <?php echo e(\Carbon\Carbon::now()->startOfWeek()->isoFormat('D MMM')); ?>
-
-                    –
-                    <?php echo e(\Carbon\Carbon::now()->endOfWeek()->isoFormat('D MMM Y')); ?>
-
-                </p>
+                <p class="text-sm font-black text-slate-800 dark:text-slate-100">Absensi Guru & Staff</p>
+                <p class="text-xs text-slate-400"><?php echo e(\Carbon\Carbon::now()->startOfWeek()->isoFormat('D MMM')); ?> – <?php echo e(\Carbon\Carbon::now()->endOfWeek()->isoFormat('D MMM Y')); ?></p>
             </div>
         </div>
-        <a href="<?php echo e(route('admin.absensi-guru.rekap')); ?>"
-           class="text-[10px] font-semibold text-emerald-600 hover:text-emerald-700
-                  flex items-center gap-0.5 transition-colors">
-            Rekap
-            <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24"
-                 stroke="currentColor" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-            </svg>
-        </a>
+        <a href="<?php echo e(route('admin.absensi-guru.rekap')); ?>" class="text-xs font-bold text-slate-500 hover:text-indigo-600 transition">Rekap Lengkap →</a>
     </div>
 
-    
-    <?php if($total > 0): ?>
-    <div class="px-4 pt-3">
-        <div class="flex h-3 rounded-full overflow-hidden gap-px">
+    <div class="p-6">
+        <?php if($total > 0): ?>
+        <div class="h-6 bg-slate-100 dark:bg-slate-700 rounded-2xl overflow-hidden mb-6 shadow-inner flex">
             <?php $__currentLoopData = $items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-            <?php $p = $pct($absensiMinggu[$item['key']] ?? 0); ?>
-            <?php if($p > 0): ?>
-            <div class="<?php echo e($item['color']); ?> transition-all" style="width:<?php echo e($p); ?>%"
-                 title="<?php echo e($item['label']); ?>: <?php echo e($absensiMinggu[$item['key']]); ?>"></div>
-            <?php endif; ?>
+                <?php $p = $pct($absensiMinggu[$item['key']] ?? 0); ?>
+                <?php if($p > 0): ?>
+                <div class="<?php echo e($item['color']); ?>" style="width: <?php echo e($p); ?>%" title="<?php echo e($item['label']); ?>: <?php echo e($absensiMinggu[$item['key']]); ?>"></div>
+                <?php endif; ?>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+        </div>
+        <?php endif; ?>
+
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <?php $__currentLoopData = $items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+            <?php $val = $absensiMinggu[$item['key']] ?? 0; ?>
+            <div class="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+                <div class="flex items-center gap-2 mb-2">
+                    <div class="w-3 h-3 rounded-full <?php echo e($item['color']); ?>"></div>
+                    <span class="text-xs font-bold uppercase tracking-widest text-slate-500"><?php echo e($item['label']); ?></span>
+                </div>
+                <div class="text-3xl font-black <?php echo e($item['text']); ?>"><?php echo e($val); ?></div>
+                <?php if($total > 0): ?><span class="text-sm text-slate-400"><?php echo e($pct($val)); ?>%</span><?php endif; ?>
+            </div>
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </div>
     </div>
-    <?php endif; ?>
-
-    
-    <div class="grid grid-cols-5 gap-0 px-4 py-3">
-        <?php $__currentLoopData = $items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-        <?php $val = $absensiMinggu[$item['key']] ?? 0; ?>
-        <div class="flex flex-col items-center gap-1">
-            <span class="text-sm font-black <?php echo e($item['text']); ?>"><?php echo e($val); ?></span>
-            <div class="flex items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full <?php echo e($item['color']); ?>"></span>
-                <span class="text-[9px] text-slate-400 font-medium"><?php echo e($item['label']); ?></span>
-            </div>
-            <?php if($total > 0): ?>
-            <span class="text-[9px] font-bold <?php echo e($item['text']); ?> opacity-60">
-                <?php echo e($pct($val)); ?>%
-            </span>
-            <?php endif; ?>
-        </div>
-        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-    </div>
-
-    <?php if($total === 0): ?>
-    <div class="px-4 pb-4 text-center">
-        <p class="text-[10px] text-slate-400">Belum ada data absensi minggu ini.</p>
-    </div>
-    <?php endif; ?>
 </div><?php /**PATH S:\PA3\smpn-kutime\resources\views/admin/dashboard/absensi_minggu.blade.php ENDPATH**/ ?>

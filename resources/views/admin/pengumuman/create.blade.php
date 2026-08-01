@@ -1,291 +1,239 @@
 {{-- resources/views/admin/pengumuman/create.blade.php --}}
 @extends('layouts.app')
+
 @section('title', 'Tambah Pengumuman')
 
 @section('content')
-<div class="max-w-2xl space-y-4">
-
-    {{-- Breadcrumb --}}
-    <div class="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400">
-        <a href="{{ route('admin.pengumuman') }}" class="hover:text-indigo-600 font-semibold">Pengumuman</a>
-        <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-        </svg>
-        <span class="text-slate-700 dark:text-slate-200 font-bold">Tambah Baru</span>
-    </div>
-
-    <form method="POST" action="{{ route('admin.pengumuman.store') }}"
-          enctype="multipart/form-data" id="formPengumuman" onsubmit="return prepareSubmit()">
-        @csrf
-
-        {{-- Card 1: Informasi Dasar --}}
-        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200
-                    dark:border-slate-700 shadow-sm p-4 space-y-3.5">
-            <h3 class="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                <span class="w-5 h-5 bg-indigo-100 dark:bg-indigo-900/40 rounded-lg flex items-center
-                             justify-center text-indigo-600 text-[10px] font-bold shrink-0">1</span>
-                Informasi Dasar
-            </h3>
-
-            <div>
-                <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400
-                               uppercase tracking-wide mb-1">
-                    Judul <span class="text-red-500">*</span>
-                </label>
-                <input type="text" name="judul" value="{{ old('judul') }}"
-                       placeholder="Masukkan judul pengumuman..."
-                       class="w-full px-3 py-2 rounded-xl border text-xs transition
-                              focus:outline-none focus:ring-2 focus:ring-indigo-300
-                              @error('judul') border-red-400 bg-red-50 @else border-slate-200 dark:border-slate-600 @enderror
-                              bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200">
-                @error('judul')<p class="text-[10px] text-red-500 mt-0.5">{{ $message }}</p>@enderror
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+<div class="fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+    <div class="bg-white dark:bg-slate-800 w-full max-w-3xl rounded-[2.5rem] shadow-2xl border border-white/20 dark:border-slate-700 max-h-[94vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
+        
+        <!-- HEADER -->
+        <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-white/50 dark:bg-slate-800/50 backdrop-blur-md sticky top-0 z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-indigo-200 dark:shadow-none shrink-0">📢</div>
                 <div>
-                    <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400
-                                   uppercase tracking-wide mb-1">
-                        Target Penerima <span class="text-red-500">*</span>
-                    </label>
-                    <select name="target_audience"
-                            class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600
-                                   bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs
-                                   focus:outline-none focus:ring-2 focus:ring-indigo-300 transition">
-                        <option value="semua" {{ old('target_audience','semua')=='semua' ? 'selected' : '' }}>🌐 Semua</option>
-                        <option value="guru"  {{ old('target_audience')=='guru'  ? 'selected' : '' }}>👨‍🏫 Khusus Guru</option>
-                        <option value="siswa" {{ old('target_audience')=='siswa' ? 'selected' : '' }}>🎓 Khusus Siswa</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400
-                                   uppercase tracking-wide mb-1">
-                        Tipe Konten <span class="text-red-500">*</span>
-                    </label>
-                    <select name="tipe_konten" id="tipeKonten"
-                            class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600
-                                   bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs
-                                   focus:outline-none focus:ring-2 focus:ring-indigo-300 transition"
-                            onchange="switchTipe(this.value)">
-                        <option value="teks"    {{ old('tipe_konten','teks')=='teks'    ? 'selected' : '' }}>📝 Teks</option>
-                        <option value="gambar"  {{ old('tipe_konten')=='gambar'  ? 'selected' : '' }}>🖼️ Gambar</option>
-                        <option value="dokumen" {{ old('tipe_konten')=='dokumen' ? 'selected' : '' }}>📄 Dokumen</option>
-                        <option value="link"    {{ old('tipe_konten')=='link'    ? 'selected' : '' }}>🔗 Link URL</option>
-                    </select>
+                    <h2 class="font-bold text-xl text-slate-800 dark:text-white">Pengumuman Baru</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">Buat pesan yang menarik untuk audiens Anda</p>
                 </div>
             </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div>
-                    <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400
-                                   uppercase tracking-wide mb-1">Tanggal Mulai</label>
-                    <input type="datetime-local" name="tanggal_mulai" value="{{ old('tanggal_mulai') }}"
-                           class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600
-                                  bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs
-                                  focus:outline-none focus:ring-2 focus:ring-indigo-300 transition">
-                    <p class="text-[10px] text-slate-400 mt-0.5">Kosongkan = langsung aktif</p>
-                </div>
-                <div>
-                    <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400
-                                   uppercase tracking-wide mb-1">Tanggal Selesai</label>
-                    <input type="datetime-local" name="tanggal_selesai" value="{{ old('tanggal_selesai') }}"
-                           class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600
-                                  bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs
-                                  focus:outline-none focus:ring-2 focus:ring-indigo-300 transition">
-                    <p class="text-[10px] text-slate-400 mt-0.5">Kosongkan = tidak ada batas</p>
-                </div>
-            </div>
+            <a href="{{ route('admin.pengumuman') }}" 
+               class="w-10 h-10 flex items-center justify-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 transition-all">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </a>
         </div>
 
-        {{-- Card 2: Konten --}}
-        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200
-                    dark:border-slate-700 shadow-sm p-4 space-y-3.5 mt-3">
-            <h3 class="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                <span class="w-5 h-5 bg-indigo-100 dark:bg-indigo-900/40 rounded-lg flex items-center
-                             justify-center text-indigo-600 text-[10px] font-bold shrink-0">2</span>
-                Konten Pengumuman
-            </h3>
+        <form method="POST" action="{{ route('admin.pengumuman.store') }}" 
+              enctype="multipart/form-data" id="formPengumuman" 
+              onsubmit="return prepareSubmit()" class="flex-1 flex flex-col overflow-hidden">
+            @csrf
 
-            {{-- TEKS --}}
-            <div id="sectionTeks" class="tipe-section">
-                <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400
-                               uppercase tracking-wide mb-1">Isi Pengumuman</label>
-                <textarea name="isi" id="isiTeks" rows="5"
-                          placeholder="Tulis isi pengumuman di sini..."
-                          class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600
-                                 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs
-                                 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition resize-none">{{ old('tipe_konten','teks')==='teks' ? old('isi') : '' }}</textarea>
-            </div>
+            <div class="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
 
-            {{-- GAMBAR --}}
-            <div id="sectionGambar" class="tipe-section hidden">
-                <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-5
-                            text-center hover:border-indigo-400 transition-colors cursor-pointer"
-                     onclick="document.getElementById('fileGambarInput').click()">
-                    <div class="text-2xl mb-1.5">🖼️</div>
-                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Klik untuk upload gambar</p>
-                    <p class="text-[10px] text-slate-400 mt-0.5">JPG, PNG, GIF, WebP — maks. 20 MB</p>
-                    <input type="file" id="fileGambarInput" name="file" accept="image/*"
-                           class="hidden" onchange="previewFile(this)">
-                </div>
-                <div id="previewGambarBox" class="mt-3 hidden text-center">
-                    <img id="previewGambarImg"
-                         class="max-h-36 rounded-xl mx-auto object-contain border border-slate-200 dark:border-slate-600">
-                    <p id="previewGambarName" class="text-[10px] text-slate-400 mt-1"></p>
-                </div>
-                <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400
-                               uppercase tracking-wide mb-1 mt-3">Keterangan (opsional)</label>
-                <textarea id="isiGambar" rows="3" placeholder="Tambahkan keterangan gambar..."
-                          class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600
-                                 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs
-                                 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition resize-none">{{ old('tipe_konten')==='gambar' ? old('isi') : '' }}</textarea>
-            </div>
-
-            {{-- DOKUMEN --}}
-            <div id="sectionDokumen" class="tipe-section hidden">
-                <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-5
-                            text-center hover:border-indigo-400 transition-colors cursor-pointer"
-                     onclick="document.getElementById('fileDokumenInput').click()">
-                    <div class="text-2xl mb-1.5">📄</div>
-                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Klik untuk upload dokumen</p>
-                    <p class="text-[10px] text-slate-400 mt-0.5">PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX — maks. 20 MB</p>
-                    <input type="file" id="fileDokumenInput" name="file"
-                           accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx"
-                           class="hidden" onchange="showFileName(this)">
-                </div>
-                <div id="fileNameBox" class="mt-3 hidden">
-                    <div class="flex items-center gap-2 px-3 py-2.5 bg-indigo-50 dark:bg-indigo-900/30
-                                rounded-xl border border-indigo-200 dark:border-indigo-700">
-                        <span>📄</span>
+                <!-- 1. Informasi Dasar -->
+                <div class="space-y-6">
+                    <div class="flex items-center gap-3">
+                        <span class="text-[10px] font-black bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-400 px-2 py-1 rounded-md uppercase tracking-widest">Langkah 1</span>
+                        <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">Konfigurasi Pengumuman</h3>
+                        <div class="h-px bg-slate-100 dark:bg-slate-700 flex-1"></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 gap-6">
                         <div>
-                            <p id="fileNameText" class="text-xs font-semibold text-indigo-700 dark:text-indigo-300"></p>
-                            <p id="fileSizeText" class="text-[10px] text-indigo-400"></p>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">Judul Pengumuman <span class="text-red-500">*</span></label>
+                            <input type="text" name="judul" value="{{ old('judul') }}" required
+                                   placeholder="Contoh: Jadwal Ujian Semester Ganjil 2024"
+                                   class="w-full px-5 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 text-sm font-medium transition-all">
+                            @error('judul')<p class="text-red-500 text-[10px] mt-1.5 ml-2 font-bold">{{ $message }}</p>@enderror
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">Penerima</label>
+                                <select name="target_audience" class="w-full px-5 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-sm focus:ring-4 focus:ring-indigo-500/10 transition-all font-medium cursor-pointer">
+                                    <option value="semua" {{ old('target_audience') == 'semua' ? 'selected' : '' }}>🌐 Semua (Umum)</option>
+                                    <option value="guru"  {{ old('target_audience') == 'guru' ? 'selected' : '' }}>👨‍🏫 Guru Saja</option>
+                                    <option value="siswa" {{ old('target_audience') == 'siswa' ? 'selected' : '' }}>🎓 Siswa Saja</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">Jenis Konten</label>
+                                <select name="tipe_konten" id="tipeKonten" onchange="switchTipe(this.value)" 
+                                        class="w-full px-5 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-sm focus:ring-4 focus:ring-indigo-500/10 transition-all font-medium cursor-pointer">
+                                    <option value="teks"    {{ old('tipe_konten') == 'teks' ? 'selected' : '' }}>📝 Pesan Teks</option>
+                                    <option value="gambar"  {{ old('tipe_konten') == 'gambar' ? 'selected' : '' }}>🖼️ Gambar / Poster</option>
+                                    <option value="dokumen" {{ old('tipe_konten') == 'dokumen' ? 'selected' : '' }}>📄 Berkas Dokumen</option>
+                                    <option value="link"    {{ old('tipe_konten') == 'link' ? 'selected' : '' }}>🔗 Tautan Luar</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">Waktu Mulai</label>
+                                <input type="datetime-local" name="tanggal_mulai" value="{{ old('tanggal_mulai') }}" 
+                                       class="w-full px-5 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-sm focus:ring-4 focus:ring-indigo-500/10 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">Waktu Berakhir (Opsional)</label>
+                                <input type="datetime-local" name="tanggal_selesai" value="{{ old('tanggal_selesai') }}" 
+                                       class="w-full px-5 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-sm focus:ring-4 focus:ring-indigo-500/10 transition-all">
+                            </div>
                         </div>
                     </div>
                 </div>
-                <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400
-                               uppercase tracking-wide mb-1 mt-3">Deskripsi (opsional)</label>
-                <textarea id="isiDokumen" rows="3" placeholder="Tambahkan deskripsi dokumen..."
-                          class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600
-                                 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs
-                                 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition resize-none">{{ old('tipe_konten')==='dokumen' ? old('isi') : '' }}</textarea>
+
+                <!-- 2. Konten -->
+                <div class="space-y-6">
+                    <div class="flex items-center gap-3">
+                        <span class="text-[10px] font-black bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-400 px-2 py-1 rounded-md uppercase tracking-widest">Langkah 2</span>
+                        <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">Isi Pengumuman</h3>
+                        <div class="h-px bg-slate-100 dark:bg-slate-700 flex-1"></div>
+                    </div>
+
+                    <!-- TEKS -->
+                    <div id="sectionTeks" class="tipe-section animate-in fade-in slide-in-from-top-2 duration-300">
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-3 uppercase tracking-wider">Pesan Utama</label>
+                        <textarea name="isi" id="isiTeks" rows="6" 
+                                  placeholder="Tuliskan detail pengumuman di sini..."
+                                  class="w-full px-5 py-4 rounded-[1.5rem] border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-4 focus:ring-indigo-500/10 text-sm leading-relaxed transition-all resize-none min-h-[200px]">{{ old('isi') }}</textarea>
+                    </div>
+
+                    <!-- GAMBAR -->
+                    <div id="sectionGambar" class="tipe-section hidden animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div onclick="document.getElementById('fileGambarInput').click()" 
+                             class="group border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-3xl p-10 text-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10 transition-all">
+                            <div class="w-20 h-20 bg-slate-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center text-4xl mx-auto mb-4 group-hover:scale-110 transition-transform">🖼️</div>
+                            <p class="font-bold text-slate-700 dark:text-slate-200">Pilih File Gambar</p>
+                            <p class="text-[11px] text-slate-400 mt-2 font-medium">PNG, JPG, WebP (Maks 20MB)</p>
+                            <input type="file" id="fileGambarInput" name="file" accept="image/*" class="hidden" onchange="previewFile(this)">
+                        </div>
+                        <div id="previewGambarBox" class="mt-6 hidden text-center p-4 bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-slate-100 dark:border-slate-700">
+                            <img id="previewGambarImg" class="max-h-60 mx-auto rounded-2xl shadow-lg border-4 border-white dark:border-slate-800">
+                            <p id="previewGambarName" class="text-[10px] font-bold text-slate-400 mt-3 truncate"></p>
+                        </div>
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mt-6 mb-3 uppercase tracking-wider">Keterangan Gambar (Opsional)</label>
+                        <textarea id="isiGambar" rows="3" placeholder="Tambahkan deskripsi singkat jika diperlukan..." class="w-full px-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm transition-all resize-none"></textarea>
+                    </div>
+
+                    <!-- DOKUMEN -->
+                    <div id="sectionDokumen" class="tipe-section hidden animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div onclick="document.getElementById('fileDokumenInput').click()" 
+                             class="group border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-3xl p-10 text-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10 transition-all">
+                            <div class="w-20 h-20 bg-slate-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center text-4xl mx-auto mb-4 group-hover:scale-110 transition-transform">📄</div>
+                            <p class="font-bold text-slate-700 dark:text-slate-200">Unggah Berkas Dokumen</p>
+                            <p class="text-[11px] text-slate-400 mt-2 font-medium">PDF, DOCX, XLSX, PPTX (Maks 20MB)</p>
+                            <input type="file" id="fileDokumenInput" name="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx" class="hidden" onchange="showFileName(this)">
+                        </div>
+                        <div id="fileNameBox" class="mt-6 hidden">
+                            <div class="bg-indigo-600 p-5 rounded-[1.5rem] flex items-center gap-4 shadow-lg shadow-indigo-200 dark:shadow-none">
+                                <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-2xl">📁</div>
+                                <div class="min-w-0">
+                                    <p id="fileNameText" class="font-bold text-white text-sm truncate"></p>
+                                    <p id="fileSizeText" class="text-[10px] text-indigo-100 font-medium"></p>
+                                </div>
+                            </div>
+                        </div>
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mt-6 mb-3 uppercase tracking-wider">Deskripsi Berkas (Opsional)</label>
+                        <textarea id="isiDokumen" rows="3" placeholder="Beri informasi mengenai isi berkas ini..." class="w-full px-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm transition-all resize-none"></textarea>
+                    </div>
+
+                    <!-- LINK -->
+                    <div id="sectionLink" class="tipe-section hidden space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">URL Tautan <span class="text-red-500">*</span></label>
+                                <input type="url" name="link_url" value="{{ old('link_url') }}" placeholder="https://contoh.com/halaman"
+                                       class="w-full px-5 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-sm font-medium focus:ring-4 focus:ring-indigo-500/10 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">Label Tombol</label>
+                                <input type="text" name="link_label" value="{{ old('link_label', 'Buka Tautan') }}" 
+                                       class="w-full px-5 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-sm font-medium focus:ring-4 focus:ring-indigo-500/10 transition-all">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">Keterangan Tambahan</label>
+                            <textarea id="isiLink" rows="3" placeholder="Penjelasan mengenai link yang dibagikan..." class="w-full px-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm transition-all resize-none"></textarea>
+                        </div>
+                    </div>
+
+                    <textarea name="isi" id="isiHidden" class="hidden"></textarea>
+                </div>
+
+                <!-- 3. Pengaturan -->
+                <div class="space-y-6 pb-4">
+                    <div class="flex items-center gap-3">
+                        <span class="text-[10px] font-black bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-400 px-2 py-1 rounded-md uppercase tracking-widest">Langkah 3</span>
+                        <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">Publikasi</h3>
+                        <div class="h-px bg-slate-100 dark:bg-slate-700 flex-1"></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        @foreach([
+                            ['id' => 'toggleAktif', 'name' => 'is_active', 'title' => 'Terbitkan Sekarang', 'desc' => 'Langsung tampil di aplikasi', 'icon' => '🚀'],
+                            ['id' => 'toggleDashboard', 'name' => 'show_di_dashboard', 'title' => 'Sematkan di Dashboard', 'desc' => 'Muncul di halaman utama', 'icon' => '📌']
+                        ] as $toggle)
+                        <label class="flex items-center justify-between p-5 bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-slate-100 dark:border-slate-700 cursor-pointer hover:border-indigo-200 dark:hover:border-indigo-800 transition-all">
+                            <div class="flex items-center gap-4">
+                                <span class="text-2xl">{{ $toggle['icon'] }}</span>
+                                <div>
+                                    <p class="text-sm font-bold text-slate-700 dark:text-slate-200">{{ $toggle['title'] }}</p>
+                                    <p class="text-[10px] text-slate-400 font-medium">{{ $toggle['desc'] }}</p>
+                                </div>
+                            </div>
+                            <div class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" name="{{ $toggle['name'] }}" value="1" id="{{ $toggle['id'] }}" checked class="sr-only peer">
+                                <div class="w-12 h-7 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 shadow-inner"></div>
+                            </div>
+                        </label>
+                        @endforeach
+                    </div>
+                </div>
             </div>
 
-            {{-- LINK --}}
-            <div id="sectionLink" class="tipe-section hidden space-y-3">
-                <div>
-                    <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400
-                                   uppercase tracking-wide mb-1">
-                        URL Link <span class="text-red-500">*</span>
-                    </label>
-                    <input type="url" name="link_url"
-                           value="{{ old('tipe_konten')==='link' ? old('link_url') : '' }}"
-                           placeholder="https://..."
-                           class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600
-                                  bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs
-                                  focus:outline-none focus:ring-2 focus:ring-indigo-300 transition">
-                    @error('link_url')<p class="text-[10px] text-red-500 mt-0.5">{{ $message }}</p>@enderror
-                </div>
-                <div>
-                    <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400
-                                   uppercase tracking-wide mb-1">Label Tombol</label>
-                    <input type="text" name="link_label"
-                           value="{{ old('tipe_konten')==='link' ? old('link_label','Kunjungi Link') : 'Kunjungi Link' }}"
-                           class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600
-                                  bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs
-                                  focus:outline-none focus:ring-2 focus:ring-indigo-300 transition">
-                </div>
-                <div>
-                    <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400
-                                   uppercase tracking-wide mb-1">Keterangan (opsional)</label>
-                    <textarea id="isiLink" rows="3" placeholder="Tambahkan keterangan..."
-                              class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600
-                                     bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs
-                                     focus:outline-none focus:ring-2 focus:ring-indigo-300 transition resize-none">{{ old('tipe_konten')==='link' ? old('isi') : '' }}</textarea>
-                </div>
+            <!-- FOOTER -->
+            <div class="px-8 py-6 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 backdrop-blur-md flex items-center justify-between">
+                <a href="{{ route('admin.pengumuman') }}" class="text-sm font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    Batal
+                </a>
+                <button type="submit" 
+                        class="px-10 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl flex items-center gap-3 transition-all shadow-xl shadow-indigo-200 dark:shadow-none hover:scale-[1.02] active:scale-95">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Simpan & Terbitkan
+                </button>
             </div>
-
-            {{-- Hidden isi --}}
-            <textarea name="isi" id="isiHidden" class="hidden" aria-hidden="true"></textarea>
-        </div>
-
-        {{-- Card 3: Pengaturan --}}
-        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200
-                    dark:border-slate-700 shadow-sm p-4 space-y-2.5 mt-3">
-            <h3 class="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                <span class="w-5 h-5 bg-indigo-100 dark:bg-indigo-900/40 rounded-lg flex items-center
-                             justify-center text-indigo-600 text-[10px] font-bold shrink-0">3</span>
-                Pengaturan Tampilan
-            </h3>
-
-            @foreach([
-                ['id'=>'toggleAktif',     'name'=>'is_active',       'val'=>'1', 'old'=>'1',
-                 'title'=>'Status Aktif',       'desc'=>'Pengumuman aktif dapat dilihat oleh penerima'],
-                ['id'=>'toggleDashboard', 'name'=>'show_di_dashboard','val'=>'1', 'old'=>'1',
-                 'title'=>'Tampil di Dashboard', 'desc'=>'Muncul di widget dashboard penerima'],
-            ] as $toggle)
-            <label class="flex items-center justify-between cursor-pointer p-3
-                           bg-slate-50 dark:bg-slate-700/50 rounded-xl border
-                           border-slate-200 dark:border-slate-600 hover:border-indigo-300 transition">
-                <div>
-                    <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">{{ $toggle['title'] }}</p>
-                    <p class="text-[10px] text-slate-400 mt-0.5">{{ $toggle['desc'] }}</p>
-                </div>
-                <div class="relative shrink-0 ml-3">
-                    <input type="checkbox" name="{{ $toggle['name'] }}" value="{{ $toggle['val'] }}"
-                           id="{{ $toggle['id'] }}"
-                           {{ old($toggle['name'], $toggle['old']) == '1' ? 'checked' : '' }}
-                           class="sr-only peer">
-                    <div class="w-9 h-5 bg-slate-300 peer-checked:bg-indigo-500 rounded-full transition-colors cursor-pointer"
-                         onclick="document.getElementById('{{ $toggle['id'] }}').click()"></div>
-                    <div class="pointer-events-none absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full
-                                shadow transition-transform peer-checked:translate-x-4"></div>
-                </div>
-            </label>
-            @endforeach
-        </div>
-
-        {{-- Aksi --}}
-        <div class="flex items-center justify-between mt-3">
-            <a href="{{ route('admin.pengumuman') }}"
-               class="text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400
-                      dark:hover:text-slate-200 transition">← Batal</a>
-            <button type="submit"
-                    class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold
-                           rounded-xl transition shadow-sm flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                </svg>
-                Simpan Pengumuman
-            </button>
-        </div>
-    </form>
+        </form>
+    </div>
 </div>
 
 <script>
 var currentTipe = '{{ old("tipe_konten", "teks") }}';
+
 function switchTipe(val) {
     currentTipe = val;
-    document.querySelectorAll('.tipe-section').forEach(function(el) { el.classList.add('hidden'); });
-    document.querySelectorAll('input[type="file"]').forEach(function(inp) { inp.disabled = true; });
-    var map = { teks:'Teks', gambar:'Gambar', dokumen:'Dokumen', link:'Link' };
-    var section = document.getElementById('section' + map[val]);
-    if (section) {
-        section.classList.remove('hidden');
-        var f = section.querySelector('input[type="file"]');
-        if (f) f.disabled = false;
-    }
+    document.querySelectorAll('.tipe-section').forEach(el => el.classList.add('hidden'));
+    const section = document.getElementById('section' + val.charAt(0).toUpperCase() + val.slice(1));
+    if (section) section.classList.remove('hidden');
 }
+
 function prepareSubmit() {
-    var isiMap = { teks: document.getElementById('isiTeks'), gambar: document.getElementById('isiGambar'), dokumen: document.getElementById('isiDokumen'), link: document.getElementById('isiLink') };
-    var hidden = document.getElementById('isiHidden');
-    var active = isiMap[currentTipe];
-    if (active && hidden) { hidden.value = active.value; active.removeAttribute('name'); }
+    const isiMap = { teks: 'isiTeks', gambar: 'isiGambar', dokumen: 'isiDokumen', link: 'isiLink' };
+    const hidden = document.getElementById('isiHidden');
+    const activeEl = document.getElementById(isiMap[currentTipe]);
+    if (activeEl && hidden) {
+        hidden.value = activeEl.value || '';
+        activeEl.removeAttribute('name');
+    }
     return true;
 }
+
 function previewFile(input) {
     if (input.files && input.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
+        const reader = new FileReader();
+        reader.onload = e => {
             document.getElementById('previewGambarImg').src = e.target.result;
             document.getElementById('previewGambarName').textContent = input.files[0].name;
             document.getElementById('previewGambarBox').classList.remove('hidden');
@@ -293,14 +241,22 @@ function previewFile(input) {
         reader.readAsDataURL(input.files[0]);
     }
 }
+
 function showFileName(input) {
     if (input.files && input.files[0]) {
-        var file = input.files[0];
-        document.getElementById('fileNameText').textContent = file.name;
-        document.getElementById('fileSizeText').textContent = (file.size/1024/1024).toFixed(2) + ' MB';
+        const f = input.files[0];
+        document.getElementById('fileNameText').textContent = f.name;
+        document.getElementById('fileSizeText').textContent = (f.size / 1024 / 1024).toFixed(2) + ' MB';
         document.getElementById('fileNameBox').classList.remove('hidden');
     }
 }
+
 switchTipe(currentTipe);
 </script>
+<style>
+.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+.dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+</style>
 @endsection

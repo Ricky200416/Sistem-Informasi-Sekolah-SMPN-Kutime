@@ -247,12 +247,12 @@
 <script id="kelasListData" type="application/json">{!! json_encode($kelasForJs) !!}</script>
 
 {{-- =========================================================== --}}
-{{-- MODAL IMPORT                                                  --}}
+{{-- MODAL IMPORT (UPDATED: RESPONSIVE TWO-COLUMN LAYOUT)        --}}
 {{-- =========================================================== --}}
 <div id="modalImport"
      class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200
-                dark:border-slate-700 w-full max-w-md overflow-hidden">
+                dark:border-slate-700 w-full max-w-2xl overflow-hidden">
 
         <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
             <div class="flex items-center gap-2">
@@ -264,7 +264,7 @@
                 </div>
                 <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Import Data via Excel</h3>
             </div>
-            <button onclick="closeModal('modalImport')"
+            <button type="button" onclick="closeModal('modalImport')"
                     class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -273,167 +273,174 @@
         </div>
 
         <form action="{{ route('admin.users.import') }}" method="POST"
-              enctype="multipart/form-data" class="p-5 space-y-4">
+              enctype="multipart/form-data" class="p-5 flex flex-col gap-4">
             @csrf
 
-            <div>
-                <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                    Role Tujuan
-                </label>
-                <div class="grid grid-cols-2 gap-2">
-                    <label class="cursor-pointer">
-                        <input type="radio" name="role" value="guru" id="importRoleGuru" class="peer hidden" checked>
-                        <div class="text-center py-2.5 rounded-xl border-2 border-slate-100 dark:border-slate-700
-                                    peer-checked:border-indigo-500 peer-checked:bg-indigo-50 dark:peer-checked:bg-indigo-950/50
-                                    text-xs font-semibold text-slate-600 dark:text-slate-400
-                                    peer-checked:text-indigo-700 dark:peer-checked:text-indigo-400
-                                    transition-all duration-150">
-                            👨‍🏫 Guru
-                        </div>
-                    </label>
-                    <label class="cursor-pointer">
-                        <input type="radio" name="role" value="siswa" id="importRoleSiswa" class="peer hidden">
-                        <div class="text-center py-2.5 rounded-xl border-2 border-slate-100 dark:border-slate-700
-                                    peer-checked:border-indigo-500 peer-checked:bg-indigo-50 dark:peer-checked:bg-indigo-950/50
-                                    text-xs font-semibold text-slate-600 dark:text-slate-400
-                                    peer-checked:text-indigo-700 dark:peer-checked:text-indigo-400
-                                    transition-all duration-150">
-                            🎒 Siswa
-                        </div>
-                    </label>
-                </div>
-            </div>
-
-            <div id="sectionSiswaImport"
-                 class="hidden space-y-3 bg-violet-50 dark:bg-violet-950/20
-                        border border-violet-200 dark:border-violet-800 rounded-2xl p-4">
-                <p class="text-[10px] font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wider">
-                    📋 Penempatan Kelas Siswa
-                </p>
-                <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                
+                {{-- KOLOM KIRI: Pengaturan Role & File --}}
+                <div class="space-y-4">
                     <div>
-                        <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">
-                            Tingkat <span class="text-red-400">*</span>
+                        <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                            Role Tujuan
                         </label>
-                        <select name="import_grade" id="importGrade"
-                                class="w-full rounded-xl border border-slate-200 dark:border-slate-600
-                                       px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-300
-                                       bg-white dark:bg-slate-700 dark:text-slate-200">
-                            <option value="">— Pilih Tingkat —</option>
-                            <option value="7">VII (Kelas 7)</option>
-                            <option value="8">VIII (Kelas 8)</option>
-                            <option value="9">IX (Kelas 9)</option>
-                        </select>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="role" value="guru" id="importRoleGuru" class="peer hidden" checked>
+                                <div class="text-center py-2 rounded-xl border-2 border-slate-100 dark:border-slate-700
+                                            peer-checked:border-indigo-500 peer-checked:bg-indigo-50 dark:peer-checked:bg-indigo-950/50
+                                            text-xs font-semibold text-slate-600 dark:text-slate-400
+                                            peer-checked:text-indigo-700 dark:peer-checked:text-indigo-400
+                                            transition-all duration-150">
+                                    👨‍🏫 Guru
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="role" value="siswa" id="importRoleSiswa" class="peer hidden">
+                                <div class="text-center py-2 rounded-xl border-2 border-slate-100 dark:border-slate-700
+                                            peer-checked:border-indigo-500 peer-checked:bg-indigo-50 dark:peer-checked:bg-indigo-950/50
+                                            text-xs font-semibold text-slate-600 dark:text-slate-400
+                                            peer-checked:text-indigo-700 dark:peer-checked:text-indigo-400
+                                            transition-all duration-150">
+                                    🎒 Siswa
+                                </div>
+                            </label>
+                        </div>
                     </div>
+
                     <div>
-                        <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">
-                            Semester <span class="text-red-400">*</span>
+                        <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                            Password Default <span class="text-red-400">*</span>
                         </label>
-                        <select name="import_semester" id="importSemester"
-                                class="w-full rounded-xl border border-slate-200 dark:border-slate-600
-                                       px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-300
-                                       bg-white dark:bg-slate-700 dark:text-slate-200">
-                            <option value="">— Pilih Semester —</option>
-                            <option value="1">Semester 1 (Ganjil)</option>
-                            <option value="2">Semester 2 (Genap)</option>
-                        </select>
+                        <input type="text" name="password_import" id="passwordImport" required
+                               placeholder="Password untuk semua akun baru..."
+                               class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600
+                                      bg-white dark:bg-slate-900 text-xs text-slate-700 dark:text-slate-300
+                                      placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Min. 5 karakter.</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                            File Excel (.xlsx / .xls) <span class="text-red-400">*</span>
+                        </label>
+                        <input type="file" name="import_file" id="importFileInput" required accept=".xlsx,.xls"
+                               class="w-full text-xs text-slate-500 dark:text-slate-400
+                                      file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0
+                                      file:text-xs file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-950/50
+                                      file:text-indigo-700 dark:file:text-indigo-400
+                                      hover:file:bg-indigo-100 dark:hover:file:bg-indigo-950
+                                      file:cursor-pointer cursor-pointer file:transition-colors">
+                        <div id="filePreview" class="hidden mt-2 flex items-center gap-2 px-3 py-1.5 rounded-lg
+                                                      bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200
+                                                      dark:border-emerald-800">
+                            <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586
+                                         a1 1 0 01.707.293l5.414 5.414A1 1 0 0120 9.414V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <span id="filePreviewName" class="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium truncate"></span>
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">
-                        Kelas <span class="text-red-400">*</span>
-                    </label>
-                    <select name="import_kelas_id" id="importKelasId"
-                            class="w-full rounded-xl border border-slate-200 dark:border-slate-600
-                                   px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-300
-                                   bg-white dark:bg-slate-700 dark:text-slate-200">
-                        <option value="">— Pilih tingkat &amp; semester dulu —</option>
-                    </select>
-                    <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
-                        Semua siswa dari file ini akan masuk ke kelas yang dipilih.
-                    </p>
+
+                {{-- KOLOM KANAN: Template & Penempatan Kelas Dinamis --}}
+                <div class="space-y-4">
+                    <div class="rounded-xl border border-dashed border-slate-200 dark:border-slate-600
+                                bg-slate-50 dark:bg-slate-900/50 p-3">
+                        <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                            Download Template Excel
+                        </p>
+                        <div class="flex gap-2">
+                            <a id="btnTemplateGuru"
+                               href="{{ route('admin.users.template-import', ['role' => 'guru']) }}"
+                               class="flex-1 inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl
+                                      border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/50
+                                      text-indigo-700 dark:text-indigo-400 text-xs font-semibold
+                                      hover:bg-indigo-100 dark:hover:bg-indigo-950 transition-colors duration-150">
+                                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                Guru
+                            </a>
+                            <a id="btnTemplateSiswa"
+                               href="{{ route('admin.users.template-import', ['role' => 'siswa']) }}"
+                               class="flex-1 inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl
+                                      border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/50
+                                      text-emerald-700 dark:text-emerald-400 text-xs font-semibold
+                                      hover:bg-emerald-100 dark:hover:bg-emerald-950 transition-colors duration-150">
+                                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                Siswa
+                            </a>
+                        </div>
+                        <p class="text-[9px] text-slate-400 dark:text-slate-500 mt-1.5 leading-tight">
+                            Mulai isi dari baris ke-3 pada berkas template.
+                        </p>
+                    </div>
+
+                    <div id="sectionSiswaImport"
+                         class="hidden space-y-3 bg-violet-50 dark:bg-violet-950/20
+                                border border-violet-200 dark:border-violet-800 rounded-2xl p-3.5">
+                        <p class="text-[10px] font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wider">
+                            📋 Penempatan Kelas Siswa
+                        </p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">
+                                    Tingkat <span class="text-red-400">*</span>
+                                </label>
+                                <select name="import_grade" id="importGrade"
+                                        class="w-full rounded-xl border border-slate-200 dark:border-slate-600
+                                               px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-300
+                                               bg-white dark:bg-slate-700 dark:text-slate-200">
+                                    <option value="">— Pilih —</option>
+                                    <option value="7">VII (7)</option>
+                                    <option value="8">VIII (8)</option>
+                                    <option value="9">IX (9)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">
+                                    Semester <span class="text-red-400">*</span>
+                                </label>
+                                <select name="import_semester" id="importSemester"
+                                        class="w-full rounded-xl border border-slate-200 dark:border-slate-600
+                                               px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-300
+                                               bg-white dark:bg-slate-700 dark:text-slate-200">
+                                    <option value="">— Pilih —</option>
+                                    <option value="1">Ganjil (1)</option>
+                                    <option value="2">Genap (2)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">
+                                Kelas <span class="text-red-400">*</span>
+                            </label>
+                            <select name="import_kelas_id" id="importKelasId"
+                                    class="w-full rounded-xl border border-slate-200 dark:border-slate-600
+                                           px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-300
+                                           bg-white dark:bg-slate-700 dark:text-slate-200">
+                                <option value="">— Pilih tingkat &amp; semester dulu —</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
+
             </div>
 
-            <div class="rounded-xl border border-dashed border-slate-200 dark:border-slate-600
-                        bg-slate-50 dark:bg-slate-900/50 p-3.5">
-                <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2.5">
-                    Download Template Excel
-                </p>
-                <div class="flex gap-2">
-                    <a id="btnTemplateGuru"
-                       href="{{ route('admin.users.template-import', ['role' => 'guru']) }}"
-                       class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl
-                              border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/50
-                              text-indigo-700 dark:text-indigo-400 text-xs font-semibold
-                              hover:bg-indigo-100 dark:hover:bg-indigo-950 transition-colors duration-150">
-                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                        </svg>
-                        Template Guru
-                    </a>
-                    <a id="btnTemplateSiswa"
-                       href="{{ route('admin.users.template-import', ['role' => 'siswa']) }}"
-                       class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl
-                              border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/50
-                              text-emerald-700 dark:text-emerald-400 text-xs font-semibold
-                              hover:bg-emerald-100 dark:hover:bg-emerald-950 transition-colors duration-150">
-                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                        </svg>
-                        Template Siswa
-                    </a>
-                </div>
-                <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-2 leading-relaxed">
-                    Download template → isi data mulai baris ke-3 → upload di sini.
-                </p>
-            </div>
-
-            <div>
-                <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                    Password Default <span class="text-red-400">*</span>
-                </label>
-                <input type="text" name="password_import" id="passwordImport" required
-                       placeholder="Password untuk semua akun baru..."
-                       class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600
-                              bg-white dark:bg-slate-900 text-xs text-slate-700 dark:text-slate-300
-                              placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none transition">
-                <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Min. 5 karakter.</p>
-            </div>
-
-            <div>
-                <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                    File Excel (.xlsx / .xls) <span class="text-red-400">*</span>
-                </label>
-                <input type="file" name="import_file" id="importFileInput" required accept=".xlsx,.xls"
-                       class="w-full text-xs text-slate-500 dark:text-slate-400
-                              file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0
-                              file:text-xs file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-950/50
-                              file:text-indigo-700 dark:file:text-indigo-400
-                              hover:file:bg-indigo-100 dark:hover:file:bg-indigo-950
-                              file:cursor-pointer cursor-pointer file:transition-colors">
-                <div id="filePreview" class="hidden mt-2 flex items-center gap-2 px-3 py-2 rounded-lg
-                                              bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200
-                                              dark:border-emerald-800">
-                    <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586
-                                 a1 1 0 01.707.293l5.414 5.414A1 1 0 0120 9.414V19a2 2 0 01-2 2z"/>
-                    </svg>
-                    <span id="filePreviewName" class="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium truncate"></span>
-                </div>
-            </div>
-
-            <div class="flex gap-2 pt-1">
+            <div class="flex gap-2 pt-2 border-t border-slate-100 dark:border-slate-700">
                 <button type="submit"
                         class="flex-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95
-                               text-white py-2.5 rounded-xl text-xs font-bold transition shadow-sm">
+                               text-white py-2 rounded-xl text-xs font-bold transition shadow-sm">
                     Mulai Proses Import
                 </button>
                 <button type="button" onclick="closeModal('modalImport')"
-                        class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600
+                        class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600
                                text-xs font-semibold text-slate-600 dark:text-slate-400
                                hover:bg-slate-50 dark:hover:bg-slate-700 transition">
                     Batal

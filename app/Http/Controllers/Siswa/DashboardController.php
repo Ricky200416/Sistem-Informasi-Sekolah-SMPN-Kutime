@@ -45,6 +45,24 @@ class DashboardController extends Controller
             }
         }
 
+        /*
+         * ── Lengkapi Data Info Kelas ─────────────────────────────────
+         * Pastikan relasi homeroomTeacher (Wali Kelas) ter-load dan
+         * hitung jumlah siswa (students_count) agar Info Kelas di
+         * dashboard siswa sinkron dengan data yang dikelola admin.
+         */
+        if ($studyGroup) {
+            // Load relasi wali kelas jika belum di-load dan relasinya ada
+            if (method_exists($studyGroup, 'homeroomTeacher') && !$studyGroup->relationLoaded('homeroomTeacher')) {
+                $studyGroup->load('homeroomTeacher');
+            }
+
+            // Hitung jumlah siswa di kelas tersebut jika relasi students ada
+            if (method_exists($studyGroup, 'students')) {
+                $studyGroup->loadCount('students');
+            }
+        }
+
         /* ── Pengumuman ──────────────────────────────────────────── */
         $widgetPengumuman = collect();
         try {

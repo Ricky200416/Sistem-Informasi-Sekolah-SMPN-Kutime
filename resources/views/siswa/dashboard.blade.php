@@ -249,7 +249,7 @@
 
         </div>
 
-        {{-- ── KOLOM KANAN (1/3): Pengumuman + Info Kelas ─────── --}}
+{{-- ── KOLOM KANAN (1/3): Pengumuman + Info Kelas ─────── --}}
         <div class="lg:col-span-1 space-y-4">
 
             {{-- Widget Pengumuman --}}
@@ -262,6 +262,31 @@
             <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200
                         dark:border-slate-700 shadow-sm overflow-hidden">
 
+                @php
+                    // ── Ambil nama kelas (cek beberapa kemungkinan nama kolom/attribute) ──
+                    $namaKelas = $studyGroup->name
+                        ?? $studyGroup->nama_kelas
+                        ?? $studyGroup->nama
+                        ?? null;
+
+                    // ── Ambil tahun ajaran (cek beberapa kemungkinan nama kolom) ──
+                    $tahunAjaran = $studyGroup->academic_year
+                        ?? $studyGroup->tahun_ajaran
+                        ?? $studyGroup->tahunAjaran
+                        ?? null;
+
+                    // ── Ambil semester ──
+                    $semesterVal = $studyGroup->semester
+                        ?? $studyGroup->smt
+                        ?? null;
+
+                    // ── Ambil ruang ──
+                    $ruangKelas = $studyGroup->room
+                        ?? $studyGroup->ruang
+                        ?? $studyGroup->ruangan
+                        ?? null;
+                @endphp
+
                 <div class="px-4 py-3.5 border-b border-slate-100 dark:border-slate-700/60
                             bg-gradient-to-r from-violet-50 to-purple-50
                             dark:from-violet-900/10 dark:to-purple-900/10">
@@ -269,31 +294,62 @@
                         Info Kelas
                     </h3>
                     <p class="text-[10px] text-slate-400 mt-0.5">
-                        {{ $studyGroup->name }} · {{ $studyGroup->academic_year }}
+                        {{ $namaKelas ?? '-' }} · {{ $tahunAjaran ?? '-' }}
                     </p>
                 </div>
 
                 <div class="p-4 space-y-3">
                     @php
                         $infoItems = [
-                            ['icon' => '🏫', 'label' => 'Kelas',       'val' => $studyGroup->name],
-                            ['icon' => '📅', 'label' => 'Tahun Ajaran', 'val' => $studyGroup->academic_year ?? '-'],
-                            ['icon' => '📖', 'label' => 'Semester',     'val' => 'Semester ' . ($studyGroup->semester ?? '-')],
+                            [
+                                'icon'  => '🏫',
+                                'label' => 'Kelas',
+                                'val'   => $namaKelas ?? '-',
+                            ],
+                            [
+                                'icon'  => '📅',
+                                'label' => 'Tahun Ajaran',
+                                'val'   => $tahunAjaran ?? '-',
+                            ],
+                            [
+                                'icon'  => '📖',
+                                'label' => 'Semester',
+                                'val'   => $semesterVal ? 'Semester ' . $semesterVal : '-',
+                            ],
                         ];
-                        if ($studyGroup->homeroomTeacher) {
+
+                        // Wali Kelas
+                        if (!empty($studyGroup->homeroomTeacher) && !empty($studyGroup->homeroomTeacher->name)) {
                             $infoItems[] = [
                                 'icon'  => '👩‍🏫',
                                 'label' => 'Wali Kelas',
                                 'val'   => $studyGroup->homeroomTeacher->name,
                             ];
                         }
-                        if (isset($studyGroup->students_count) || method_exists($studyGroup, 'students')) {
-                            $jumlahSiswa = is_numeric($studyGroup->students_count ?? null)
-                                ? $studyGroup->students_count
-                                : optional($studyGroup->students)->count();
-                            if ($jumlahSiswa !== null) {
-                                $infoItems[] = ['icon' => '👥', 'label' => 'Jumlah Siswa', 'val' => $jumlahSiswa . ' siswa'];
-                            }
+
+                        // Jumlah Siswa
+                        $jumlahSiswa = null;
+                        if (is_numeric($studyGroup->students_count ?? null)) {
+                            $jumlahSiswa = (int) $studyGroup->students_count;
+                        } elseif (method_exists($studyGroup, 'students')) {
+                            $jumlahSiswa = (int) $studyGroup->students()->count();
+                        }
+
+                        if ($jumlahSiswa !== null) {
+                            $infoItems[] = [
+                                'icon'  => '👥',
+                                'label' => 'Jumlah Siswa',
+                                'val'   => $jumlahSiswa . ' siswa',
+                            ];
+                        }
+
+                        // Ruang Kelas
+                        if (!empty($ruangKelas)) {
+                            $infoItems[] = [
+                                'icon'  => '🚪',
+                                'label' => 'Ruang',
+                                'val'   => $ruangKelas,
+                            ];
                         }
                     @endphp
 
@@ -309,6 +365,13 @@
                     </div>
                     @endforeach
                 </div>
+            </div>
+            @else
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200
+                        dark:border-slate-700 shadow-sm p-4 text-center">
+                <p class="text-xs text-slate-400">
+                    Kamu belum terdaftar di kelas manapun.
+                </p>
             </div>
             @endif
 

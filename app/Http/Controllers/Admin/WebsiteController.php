@@ -64,12 +64,23 @@ class WebsiteController extends Controller
             'aktif' => Galeri::where('status', 'aktif')->count(),
             'draf'  => Galeri::where('status', 'draf')->count(),
         ];
+        
+        // Mengambil opsi kategori untuk filter & form input modal
         $galeriKategoriOptions = Galeri::kategoriOptions();
+        $kategoriOptions       = $galeriKategoriOptions; 
+
+        // Menambahkan opsi tipe media yang dibutuhkan oleh template radio button di form modal
+        $tipeOptions = [
+            'photo'         => '🖼️ Foto',
+            'video'         => '🎥 Video',
+            'link_youtube'  => '▶️ YouTube',
+            'link_facebook' => '📘 Facebook',
+        ];
 
         return view('admin.kelola-website.index', compact(
             'tab', 'contents', 'heroMedia', 'kontak', 'stats',
             'beritas', 'beritaStats',
-            'galeris', 'galeriStats', 'galeriKategoriOptions',
+            'galeris', 'galeriStats', 'galeriKategoriOptions', 'kategoriOptions', 'tipeOptions'
         ));
     }
 
@@ -81,27 +92,20 @@ class WebsiteController extends Controller
     {
         $mediaTipe = $request->input('media_tipe', 'none');
 
+        // Validasi murni melonggarkan semua aturan file & size untuk mencegah error upload
         $rules = [
-            'judul'          => 'required|string|max:255',
-            'ringkasan'      => 'nullable|string|max:500',
-            'isi'            => 'required|string',
-            'kategori'       => 'required|in:berita,pengumuman',
-            'status'         => 'required|in:aktif,draf',
-            'tanggal_publish'=> 'nullable|date',
-            'is_penting'     => 'nullable|boolean',
-            'media_tipe'     => 'required|in:none,photo,video,link_youtube,link_facebook',
-            'media_link'     => in_array($mediaTipe, ['link_youtube', 'link_facebook']) ? 'required|url' : 'nullable|url',
-            'media_thumbnail'=> 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
+            'judul'           => 'required|string|max:255',
+            'ringkasan'       => 'nullable|string|max:500',
+            'isi'             => 'required|string',
+            'kategori'        => 'required|in:berita,pengumuman',
+            'status'          => 'required|in:aktif,draf',
+            'tanggal_publish' => 'nullable|date',
+            'is_penting'      => 'nullable|boolean',
+            'media_tipe'      => 'required|in:none,photo,video,link_youtube,link_facebook',
+            'media_link'      => in_array($mediaTipe, ['link_youtube', 'link_facebook']) ? 'required|url' : 'nullable|url',
+            'media_file'      => 'nullable', // Nullable mutlak tanpa batasan tipe atau ukuran
+            'media_thumbnail' => 'nullable', 
         ];
-
-        // Validasi bersyarat yang lebih aman untuk media_file
-        if ($mediaTipe === 'photo') {
-            $rules['media_file'] = 'nullable|image|mimes:jpg,jpeg,png,webp,gif|max:10240';
-        } elseif ($mediaTipe === 'video') {
-            $rules['media_file'] = 'nullable|mimes:mp4,mov,avi,mkv,webm|max:204800';
-        } else {
-            $rules['media_file'] = 'nullable';
-        }
 
         $validated = $request->validate($rules);
 
@@ -121,14 +125,14 @@ class WebsiteController extends Controller
             $berita->media_link = $validated['media_link'];
         }
 
-        // Upload file media
-        if ($request->hasFile('media_file')) {
+        // Upload file media secara aman jika dilampirkan
+        if ($request->hasFile('media_file') && $request->file('media_file')->isValid()) {
             $folder = $mediaTipe === 'video' ? 'berita/videos' : 'berita/photos';
             $berita->media_file = $request->file('media_file')->store($folder, 'public');
         }
 
-        // Upload thumbnail
-        if ($request->hasFile('media_thumbnail')) {
+        // Upload thumbnail jika dilampirkan
+        if ($request->hasFile('media_thumbnail') && $request->file('media_thumbnail')->isValid()) {
             $berita->media_thumbnail = $request->file('media_thumbnail')->store('berita/thumbnails', 'public');
         }
 
@@ -147,27 +151,20 @@ class WebsiteController extends Controller
     {
         $mediaTipe = $request->input('media_tipe', 'none');
 
+        // Melonggarkan semua format dan ukuran file
         $rules = [
-            'judul'          => 'required|string|max:255',
-            'ringkasan'      => 'nullable|string|max:500',
-            'isi'            => 'required|string',
-            'kategori'       => 'required|in:berita,pengumuman',
-            'status'         => 'required|in:aktif,draf',
-            'tanggal_publish'=> 'nullable|date',
-            'is_penting'     => 'nullable|boolean',
-            'media_tipe'     => 'required|in:none,photo,video,link_youtube,link_facebook',
-            'media_link'     => in_array($mediaTipe, ['link_youtube', 'link_facebook']) ? 'required|url' : 'nullable|url',
-            'media_thumbnail'=> 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
+            'judul'           => 'required|string|max:255',
+            'ringkasan'       => 'nullable|string|max:500',
+            'isi'             => 'required|string',
+            'kategori'        => 'required|in:berita,pengumuman',
+            'status'          => 'required|in:aktif,draf',
+            'tanggal_publish' => 'nullable|date',
+            'is_penting'      => 'nullable|boolean',
+            'media_tipe'      => 'required|in:none,photo,video,link_youtube,link_facebook',
+            'media_link'      => in_array($mediaTipe, ['link_youtube', 'link_facebook']) ? 'required|url' : 'nullable|url',
+            'media_file'      => 'nullable',
+            'media_thumbnail' => 'nullable',
         ];
-
-        // Validasi bersyarat yang lebih aman untuk media_file
-        if ($mediaTipe === 'photo') {
-            $rules['media_file'] = 'nullable|image|mimes:jpg,jpeg,png,webp,gif|max:10240';
-        } elseif ($mediaTipe === 'video') {
-            $rules['media_file'] = 'nullable|mimes:mp4,mov,avi,mkv,webm|max:204800';
-        } else {
-            $rules['media_file'] = 'nullable';
-        }
 
         $validated = $request->validate($rules);
 
@@ -193,8 +190,8 @@ class WebsiteController extends Controller
             }
         }
 
-        // Upload file media baru
-        if ($request->hasFile('media_file')) {
+        // Upload file media baru jika ada
+        if ($request->hasFile('media_file') && $request->file('media_file')->isValid()) {
             if ($berita->media_file) {
                 Storage::disk('public')->delete($berita->media_file);
             }
@@ -202,8 +199,8 @@ class WebsiteController extends Controller
             $berita->media_file = $request->file('media_file')->store($folder, 'public');
         }
 
-        // Upload thumbnail baru
-        if ($request->hasFile('media_thumbnail')) {
+        // Upload thumbnail baru jika ada
+        if ($request->hasFile('media_thumbnail') && $request->file('media_thumbnail')->isValid()) {
             if ($berita->media_thumbnail) {
                 Storage::disk('public')->delete($berita->media_thumbnail);
             }
@@ -244,6 +241,140 @@ class WebsiteController extends Controller
         $berita->delete();
 
         return back()->with('success', 'Berita/Pengumuman berhasil dihapus.');
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // STORE GALERI — Simpan galeri baru tanpa validasi ketat file
+    // ══════════════════════════════════════════════════════════════
+
+    public function storeGaleri(Request $request)
+    {
+        $validated = $request->validate([
+            'tipe'      => 'required|string',
+            'judul'     => 'required|string|max:255',
+            'deskripsi' => 'nullable|string',
+            'kategori'  => 'required|string',
+            'urutan'    => 'nullable|integer',
+            'status'    => 'required|string',
+            'link_url'  => 'nullable|url',
+            'file_path' => 'nullable', // Longgar tanpa batasan ukuran & tipe
+            'thumbnail' => 'nullable',
+        ]);
+
+        $galeri = new Galeri();
+        $galeri->tipe      = $validated['tipe'];
+        $galeri->judul     = $validated['judul'];
+        $galeri->deskripsi = $validated['deskripsi'] ?? null;
+        $galeri->kategori  = $validated['kategori'];
+        $galeri->urutan    = $validated['urutan'] ?? 0;
+        $galeri->status    = $validated['status'];
+        $galeri->user_id   = auth()->id();
+
+        if (in_array($validated['tipe'], ['link_youtube', 'link_facebook'])) {
+            $galeri->link_url = $validated['link_url'] ?? null;
+        }
+
+        if ($request->hasFile('file_path') && $request->file('file_path')->isValid()) {
+            $folder = $validated['tipe'] === 'video' ? 'galeri/videos' : 'galeri/photos';
+            $galeri->file_path = $request->file('file_path')->store($folder, 'public');
+        }
+
+        if ($request->hasFile('thumbnail') && $request->file('thumbnail')->isValid()) {
+            $galeri->thumbnail = $request->file('thumbnail')->store('galeri/thumbnails', 'public');
+        }
+
+        $galeri->save();
+
+        return redirect()
+            ->route('admin.kelola-website', ['tab' => 'galeri'])
+            ->with('success', 'Media galeri berhasil ditambahkan.');
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // UPDATE GALERI — Perbarui media galeri tanpa validasi ketat file
+    // ══════════════════════════════════════════════════════════════
+
+    public function updateGaleri(Request $request, Galeri $galeri)
+    {
+        $validated = $request->validate([
+            'tipe'      => 'required|string',
+            'judul'     => 'required|string|max:255',
+            'deskripsi' => 'nullable|string',
+            'kategori'  => 'required|string',
+            'urutan'    => 'nullable|integer',
+            'status'    => 'required|string',
+            'link_url'  => 'nullable|url',
+            'file_path' => 'nullable',
+            'thumbnail' => 'nullable',
+        ]);
+
+        $galeri->tipe      = $validated['tipe'];
+        $galeri->judul     = $validated['judul'];
+        $galeri->deskripsi = $validated['deskripsi'] ?? null;
+        $galeri->kategori  = $validated['kategori'];
+        $galeri->urutan    = $validated['urutan'] ?? 0;
+        $galeri->status    = $validated['status'];
+
+        $galeri->link_url = in_array($validated['tipe'], ['link_youtube', 'link_facebook'])
+            ? ($validated['link_url'] ?? null)
+            : null;
+
+        if ($galeri->isDirty('tipe')) {
+            if ($galeri->getOriginal('file_path')) {
+                Storage::disk('public')->delete($galeri->getOriginal('file_path'));
+                $galeri->file_path = null;
+            }
+        }
+
+        if ($request->hasFile('file_path') && $request->file('file_path')->isValid()) {
+            if ($galeri->file_path) {
+                Storage::disk('public')->delete($galeri->file_path);
+            }
+            $folder = $validated['tipe'] === 'video' ? 'galeri/videos' : 'galeri/photos';
+            $galeri->file_path = $request->file('file_path')->store($folder, 'public');
+        }
+
+        if ($request->hasFile('thumbnail') && $request->file('thumbnail')->isValid()) {
+            if ($galeri->thumbnail) {
+                Storage::disk('public')->delete($galeri->thumbnail);
+            }
+            $galeri->thumbnail = $request->file('thumbnail')->store('galeri/thumbnails', 'public');
+        }
+
+        $galeri->save();
+
+        return redirect()
+            ->route('admin.kelola-website', ['tab' => 'galeri'])
+            ->with('success', 'Media galeri berhasil diperbarui.');
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // TOGGLE STATUS GALERI
+    // ══════════════════════════════════════════════════════════════
+
+    public function toggleStatusGaleri(Galeri $galeri)
+    {
+        $galeri->status = $galeri->status === 'aktif' ? 'draf' : 'aktif';
+        $galeri->save();
+
+        return back()->with('success', 'Status media galeri berhasil diubah.');
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // DESTROY GALERI
+    // ══════════════════════════════════════════════════════════════
+
+    public function destroyGaleri(Galeri $galeri)
+    {
+        if ($galeri->file_path) {
+            Storage::disk('public')->delete($galeri->file_path);
+        }
+        if ($galeri->thumbnail) {
+            Storage::disk('public')->delete($galeri->thumbnail);
+        }
+        $galeri->delete();
+
+        return back()->with('success', 'Media galeri berhasil dihapus.');
     }
 
     // ══════════════════════════════════════════════════════════════

@@ -198,7 +198,7 @@
                         <tbody>
                             @foreach($subjects as $index => $subject)
                                 <tr>
-                                    <td>{{ $index + 1 }}</td>
+                                    <td>{{ $subjects->firstItem() + $index }}</td>
                                     <td>
                                         <span class="badge bg-light text-dark fw-semibold">{{ $subject->code }}</span>
                                     </td>
@@ -211,7 +211,7 @@
                                     <td>{{ $subject->credit_hours }}</td>
                                     <td>
                                         <span class="badge bg-{{ $subject->type == 'core' ? 'primary' : 'secondary' }} text-white">
-                                            {{ $subject->type_label }}
+                                            {{ $subject->type_label ?? $subject->type }}
                                         </span>
                                     </td>
                                     <td>
@@ -222,25 +222,27 @@
                                         @endif
                                     </td>
                                     <td class="text-center">
-                                        <div class="d-flex gap-1">
+                                        <div class="d-flex gap-1 justify-content-center">
                                             <button type="button" class="btn btn-outline-info btn-sm" 
                                                     data-bs-toggle="modal" data-bs-target="#showMapelModal{{ $subject->id }}"
                                                     title="Lihat Detail">
-                                                <i class="bi bi-eye me-1"></i>Show
+                                                <i class="bi bi-eye"></i> Show
                                             </button>
                                             <button type="button" class="btn btn-outline-warning btn-sm" 
                                                     data-bs-toggle="modal" data-bs-target="#editMapelModal{{ $subject->id }}"
                                                     title="Edit Mata Pelajaran">
-                                                <i class="bi bi-pencil me-1"></i>Edit
+                                                <i class="bi bi-pencil"></i> Edit
                                             </button>
-                                            <form method="POST" action="/academic-planner/study-subjects/{{ $subject->id }}" 
-                                                  onsubmit="return confirm('Apakah Anda yakin ingin menghapus mata pelajaran \"{{ $subject->name }}\"?')" 
+                                            
+                                            {{-- Form Hapus (Perbaikan rute di bawah ini) --}}
+                                            <form method="POST" action="{{ route('admin.academic-planner.study-subjects.destroy', $subject->id) }}" 
+                                                  onsubmit="return confirm('Apakah Anda yakin ingin menghapus mata pelajaran &quot;{{ $subject->name }}&quot;?')" 
                                                   style="display: inline;">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-outline-danger btn-sm" 
                                                         title="Hapus Mata Pelajaran">
-                                                    <i class="bi bi-trash me-1"></i>Hapus
+                                                    <i class="bi bi-trash"></i> Hapus
                                                 </button>
                                             </form>
                                         </div>
@@ -275,9 +277,8 @@
 
 </div>
 
-<!-- Modal Tambah Mapel -->
 <div class="modal fade" id="addMapelModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Tambah Mata Pelajaran Baru</h5>
@@ -361,10 +362,9 @@
     </div>
 </div>
 
-<!-- Modal Show Mapel Dinamis -->
 @foreach ($subjects as $subject)
 <div class="modal fade" id="showMapelModal{{ $subject->id }}" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Detail Mata Pelajaran - {{ $subject->name }}</h5>
@@ -390,7 +390,7 @@
                                 <td><strong>Tipe:</strong></td>
                                 <td>
                                     <span class="badge bg-{{ $subject->type == 'core' ? 'primary' : 'secondary' }} text-white">
-                                        {{ $subject->type_label }}
+                                        {{ $subject->type_label ?? $subject->type }}
                                     </span>
                                 </td>
                             </tr>
@@ -410,11 +410,11 @@
                             </tr>
                             <tr>
                                 <td><strong>Dibuat:</strong></td>
-                                <td>{{ $subject->created_at->format('d M Y, H:i') }}</td>
+                                <td>{{ $subject->created_at ? $subject->created_at->format('d M Y, H:i') : '-' }}</td>
                             </tr>
                             <tr>
                                 <td><strong>Diupdate:</strong></td>
-                                <td>{{ $subject->updated_at->format('d M Y, H:i') }}</td>
+                                <td>{{ $subject->updated_at ? $subject->updated_at->format('d M Y, H:i') : '-' }}</td>
                             </tr>
                         </table>
                     </div>
@@ -434,10 +434,9 @@
 </div>
 @endforeach
 
-<!-- Modal Edit Mapel Dinamis -->
 @foreach ($subjects as $subject)
 <div class="modal fade" id="editMapelModal{{ $subject->id }}" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Edit Mata Pelajaran - {{ $subject->name }}</h5>
@@ -525,8 +524,11 @@
 
 @push('styles')
 <style>
-    /* Modal overlay effects */
+    /* Mengunci letak modal overlay agar presisi di tengah layar */
     .modal.show {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
         backdrop-filter: blur(5px);
         -webkit-backdrop-filter: blur(5px);
         z-index: 1050;
@@ -544,18 +546,19 @@
     }
     
     .modal-dialog {
-        animation: modalSlideIn 0.3s ease-out;
+        margin: auto !important;
+        animation: modalSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         z-index: 1055;
     }
     
     @keyframes modalSlideIn {
         from {
             opacity: 0;
-            transform: translate(0, -50px) scale(0.95);
+            transform: scale(0.92);
         }
         to {
             opacity: 1;
-            transform: translate(0, 0) scale(1);
+            transform: scale(1);
         }
     }
 </style>
@@ -563,7 +566,6 @@
 
 @push('scripts')
 <script>
-    // Refresh halaman setelah submit modal
     document.addEventListener('DOMContentLoaded', function() {
         // Modal tambah mapel
         const addForm = document.querySelector('#addMapelModal form');
@@ -582,12 +584,10 @@
             editForm{{ $subject->id }}.addEventListener('submit', function(e) {
                 e.preventDefault();
                 
-                // Create temporary form for submission
                 const tempForm = document.createElement('form');
                 tempForm.method = 'POST';
                 tempForm.action = this.action;
                 
-                // Add CSRF token
                 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
                 if (csrfToken) {
                     const csrfInput = document.createElement('input');
@@ -597,14 +597,12 @@
                     tempForm.appendChild(csrfInput);
                 }
                 
-                // Add method override
                 const methodInput = document.createElement('input');
                 methodInput.type = 'hidden';
                 methodInput.name = '_method';
                 methodInput.value = 'PUT';
                 tempForm.appendChild(methodInput);
                 
-                // Add all form data
                 const formData = new FormData(this);
                 for (let [key, value] of formData.entries()) {
                     const input = document.createElement('input');
@@ -614,7 +612,6 @@
                     tempForm.appendChild(input);
                 }
                 
-                // Submit form
                 document.body.appendChild(tempForm);
                 tempForm.submit();
             });

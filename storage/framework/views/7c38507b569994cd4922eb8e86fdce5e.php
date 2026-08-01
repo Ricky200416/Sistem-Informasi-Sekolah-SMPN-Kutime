@@ -21,19 +21,19 @@
 <div id="pgModal"
      onclick="if(event.target===this)pgTutup()"
      class="fixed inset-0 z-[999] hidden items-center justify-center p-4"
-     style="background:rgba(0,0,0,.55);backdrop-filter:blur(5px)">
+     style="background:rgba(15, 23, 42, 0.6); backdrop-filter:blur(8px)">
     <div class="relative w-full max-w-xl max-h-[90vh] overflow-y-auto
-                bg-white dark:bg-slate-800 rounded-2xl shadow-2xl
-                border border-slate-200 dark:border-slate-700">
+                bg-white dark:bg-slate-800 rounded-3xl shadow-2xl
+                border border-slate-200 dark:border-slate-700 transform transition-all">
         <button onclick="pgTutup()"
-                class="absolute top-3 right-3 z-10 w-6 h-6 flex items-center justify-center
+                class="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center
                        bg-slate-100 hover:bg-red-100 dark:bg-slate-700 dark:hover:bg-red-900/40
-                       text-slate-500 hover:text-red-500 rounded-lg transition-all">
-            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                       text-slate-500 hover:text-red-500 rounded-xl transition-all">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
             </svg>
         </button>
-        <div id="pgModalKonten" class="p-4"></div>
+        <div id="pgModalKonten" class="p-6 sm:p-8"></div>
     </div>
 </div>
 
@@ -41,127 +41,123 @@
 <div id="pgBulkDeleteModal"
      onclick="if(event.target===this)pgTutupBulkModal()"
      class="fixed inset-0 z-[1000] hidden items-center justify-center p-4"
-     style="background:rgba(0,0,0,.6);backdrop-filter:blur(6px)">
-    <div class="w-full max-w-sm bg-white dark:bg-slate-800 rounded-2xl shadow-2xl
-                border border-slate-200 dark:border-slate-700 p-5">
-        <div class="flex items-center gap-3 mb-3">
-            <div class="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/40 flex items-center justify-center text-xl shrink-0">
-                🗑️
-            </div>
-            <div>
-                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Hapus Pengumuman</h3>
-                <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Tindakan ini tidak dapat dibatalkan</p>
-            </div>
+     style="background:rgba(15, 23, 42, 0.7); backdrop-filter:blur(8px)">
+    <div class="w-full max-w-sm bg-white dark:bg-slate-800 rounded-3xl shadow-2xl
+                border border-slate-200 dark:border-slate-700 p-6 text-center">
+        <div class="w-16 h-16 rounded-2xl bg-red-100 dark:bg-red-900/40 flex items-center justify-center text-3xl mx-auto mb-4">
+            🗑️
         </div>
-        <p class="text-xs text-slate-600 dark:text-slate-300 mb-4" id="pgBulkDeleteDesc">
-            Yakin ingin menghapus <strong id="pgBulkDeleteCount">0</strong> pengumuman yang dipilih?
+        <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">Hapus Pengumuman?</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 mb-6" id="pgBulkDeleteDesc">
+            Yakin ingin menghapus <span id="pgBulkDeleteCount" class="font-bold text-red-600">0</span> pengumuman yang dipilih? Tindakan ini permanen.
         </p>
-        <div class="flex gap-2">
+        <div class="flex gap-3">
             <button onclick="pgTutupBulkModal()"
-                    class="flex-1 px-4 py-2 rounded-xl text-xs font-semibold
+                    class="flex-1 px-4 py-3 rounded-2xl text-sm font-semibold
                            bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600
                            text-slate-700 dark:text-slate-200 transition">
                 Batal
             </button>
             <button onclick="pgKonfirmasiBulkDelete()"
-                    class="flex-1 px-4 py-2 rounded-xl text-xs font-semibold
-                           bg-red-600 hover:bg-red-700 text-white transition">
+                    class="flex-1 px-4 py-3 rounded-2xl text-sm font-semibold
+                           bg-red-600 hover:bg-red-700 text-white transition shadow-lg shadow-red-200 dark:shadow-none">
                 Ya, Hapus
             </button>
         </div>
     </div>
 </div>
 
-<div class="space-y-4">
+<div class="space-y-6">
 
     
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100">📢 Kelola Pengumuman</h2>
-            <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
-                Buat &amp; kelola pengumuman untuk Guru dan Siswa
+            <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                📢 Kelola Pengumuman
+            </h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                Publikasikan informasi penting untuk Guru dan Siswa di sini.
             </p>
         </div>
         <a href="<?php echo e(route('admin.pengumuman.create')); ?>"
-           class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600
-                  hover:bg-indigo-700 text-white text-xs font-semibold transition shadow-sm w-fit">
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+           class="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-indigo-600
+                  hover:bg-indigo-700 text-white text-sm font-semibold transition shadow-lg shadow-indigo-200 dark:shadow-none w-fit">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
             </svg>
-            Tambah Pengumuman
+            Buat Pengumuman
         </a>
     </div>
 
     
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <?php $__currentLoopData = [
-            ['label'=>'Total',  'val'=>$total,       'icon'=>'📋','c'=>'text-slate-700 dark:text-slate-200'],
-            ['label'=>'Aktif',  'val'=>$aktif,       'icon'=>'✅','c'=>'text-emerald-600 dark:text-emerald-400'],
-            ['label'=>'Guru',   'val'=>$guru+$semua, 'icon'=>'👨‍🏫','c'=>'text-violet-600 dark:text-violet-400'],
-            ['label'=>'Siswa',  'val'=>$siswa+$semua,'icon'=>'🎓','c'=>'text-sky-600 dark:text-sky-400'],
+            ['label'=>'Total',  'val'=>$total,       'icon'=>'📋','c'=>'text-slate-700 dark:text-slate-200', 'bg'=>'bg-slate-100'],
+            ['label'=>'Aktif',  'val'=>$aktif,       'icon'=>'✅','c'=>'text-emerald-600 dark:text-emerald-400', 'bg'=>'bg-emerald-50'],
+            ['label'=>'Guru',   'val'=>$guru+$semua, 'icon'=>'👨‍🏫','c'=>'text-violet-600 dark:text-violet-400', 'bg'=>'bg-violet-50'],
+            ['label'=>'Siswa',  'val'=>$siswa+$semua,'icon'=>'🎓','c'=>'text-sky-600 dark:text-sky-400', 'bg'=>'bg-sky-50'],
         ]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $st): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-        <div class="bg-white dark:bg-slate-800 rounded-2xl px-3.5 py-3
-                    border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div class="mb-0.5" style="font-size:1.1rem"><?php echo e($st['icon']); ?></div>
-            <div class="text-base font-bold <?php echo e($st['c']); ?>"><?php echo e($st['val']); ?></div>
-            <div class="text-[10px] text-slate-400 dark:text-slate-500 font-medium"><?php echo e($st['label']); ?></div>
+        <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 <?php echo e($st['bg']); ?> dark:bg-slate-700 rounded-2xl flex items-center justify-center text-2xl">
+                <?php echo e($st['icon']); ?>
+
+            </div>
+            <div>
+                <div class="text-xl font-bold <?php echo e($st['c']); ?>"><?php echo e($st['val']); ?></div>
+                <div class="text-xs text-slate-400 dark:text-slate-500 font-medium"><?php echo e($st['label']); ?></div>
+            </div>
         </div>
         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
     </div>
 
     
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200
-                dark:border-slate-700 p-3.5 shadow-sm">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200
+                dark:border-slate-700 p-5 shadow-sm">
         <form method="GET" action="<?php echo e(route('admin.pengumuman')); ?>"
-              class="flex flex-wrap gap-2.5 items-end">
-            <div class="flex-1 min-w-[150px]">
-                <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400
-                               mb-1 uppercase tracking-wide">Cari Judul</label>
+              class="flex flex-wrap gap-4 items-end">
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">Cari Judul</label>
                 <input type="text" name="search" value="<?php echo e(request('search')); ?>"
-                       placeholder="Ketik judul..."
-                       class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200
+                       placeholder="Cari pengumuman..."
+                       class="w-full px-4 py-2.5 text-sm rounded-2xl border border-slate-200
                               dark:border-slate-600 bg-slate-50 dark:bg-slate-700
                               text-slate-800 dark:text-slate-200
-                              focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                              focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition">
             </div>
-            <div class="min-w-[120px]">
-                <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400
-                               mb-1 uppercase tracking-wide">Target</label>
+            <div class="w-full sm:w-auto min-w-[140px]">
+                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">Target</label>
                 <select name="filter_audience"
-                        class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200
+                        class="w-full px-4 py-2.5 text-sm rounded-2xl border border-slate-200
                                dark:border-slate-600 bg-slate-50 dark:bg-slate-700
-                               text-slate-800 dark:text-slate-200
-                               focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                               text-slate-800 dark:text-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition">
                     <option value="">Semua Target</option>
                     <option value="semua" <?php echo e(request('filter_audience')=='semua'?'selected':''); ?>>Semua</option>
                     <option value="guru"  <?php echo e(request('filter_audience')=='guru' ?'selected':''); ?>>Guru</option>
                     <option value="siswa" <?php echo e(request('filter_audience')=='siswa'?'selected':''); ?>>Siswa</option>
                 </select>
             </div>
-            <div class="min-w-[120px]">
-                <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400
-                               mb-1 uppercase tracking-wide">Status</label>
+            <div class="w-full sm:w-auto min-w-[140px]">
+                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">Status</label>
                 <select name="filter_status"
-                        class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200
+                        class="w-full px-4 py-2.5 text-sm rounded-2xl border border-slate-200
                                dark:border-slate-600 bg-slate-50 dark:bg-slate-700
-                               text-slate-800 dark:text-slate-200
-                               focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                               text-slate-800 dark:text-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition">
                     <option value="">Semua Status</option>
                     <option value="aktif"    <?php echo e(request('filter_status')=='aktif'   ?'selected':''); ?>>Aktif</option>
                     <option value="nonaktif" <?php echo e(request('filter_status')=='nonaktif'?'selected':''); ?>>Nonaktif</option>
                 </select>
             </div>
-            <div class="flex gap-2">
+            <div class="flex gap-2 w-full sm:w-auto">
                 <button type="submit"
-                        class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white
-                               text-xs font-semibold rounded-xl transition">
+                        class="flex-1 sm:flex-none px-6 py-2.5 bg-slate-800 dark:bg-indigo-600 hover:bg-slate-900 dark:hover:bg-indigo-700 text-white
+                               text-sm font-semibold rounded-2xl transition shadow-md">
                     Filter
                 </button>
                 <?php if(request()->hasAny(['search','filter_audience','filter_status'])): ?>
                 <a href="<?php echo e(route('admin.pengumuman')); ?>"
-                   class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700
+                   class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700
                           dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300
-                          text-xs font-semibold rounded-xl transition">
+                          text-sm font-semibold rounded-2xl transition">
                     Reset
                 </a>
                 <?php endif; ?>
@@ -171,37 +167,29 @@
 
     
     <div id="pgBulkBar"
-         class="hidden items-center justify-between gap-3 px-4 py-3 rounded-2xl
-                bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200
-                dark:border-indigo-700 shadow-sm">
-        <div class="flex items-center gap-2">
-            <div class="w-6 h-6 rounded-lg bg-indigo-100 dark:bg-indigo-800 flex items-center justify-center text-indigo-600 dark:text-indigo-300 shrink-0">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+         class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[50] items-center gap-6 px-6 py-3 rounded-3xl
+                bg-slate-900 dark:bg-indigo-900 border border-slate-800 dark:border-indigo-700
+                shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-white shrink-0">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                 </svg>
             </div>
-            <span class="text-xs font-semibold text-indigo-700 dark:text-indigo-300">
-                <span id="pgSelectedCount">0</span> pengumuman dipilih
+            <span class="text-sm font-bold text-white whitespace-nowrap">
+                <span id="pgSelectedCount">0</span> Item Terpilih
             </span>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="h-8 w-px bg-white/20"></div>
+        <div class="flex items-center gap-3">
             <button onclick="pgDeselectAll()"
-                    class="px-3 py-1.5 text-xs font-semibold rounded-xl
-                           bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600
-                           text-slate-600 dark:text-slate-300 border border-slate-200
-                           dark:border-slate-600 transition">
-                Batal Pilih
+                    class="text-xs font-bold text-slate-300 hover:text-white transition">
+                Batal
             </button>
             <button onclick="pgBukaBulkModal()"
-                    class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold
-                           rounded-xl bg-red-600 hover:bg-red-700 text-white transition shadow-sm">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0
-                             01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0
-                             00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                </svg>
-                Hapus yang Dipilih
+                    class="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold
+                           rounded-xl bg-red-500 hover:bg-red-600 text-white transition shadow-lg shadow-red-500/20">
+                Hapus Massal
             </button>
         </div>
     </div>
@@ -214,51 +202,40 @@
     </form>
 
     
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200
-                dark:border-slate-700 shadow-sm overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200
+                dark:border-slate-700 shadow-sm overflow-hidden transition-all">
 
         <?php if($pengumuman->isEmpty()): ?>
-        <div class="text-center py-14">
-            <div class="text-4xl mb-2">📭</div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Belum ada pengumuman.</p>
+        <div class="text-center py-20">
+            <div class="text-6xl mb-4">📭</div>
+            <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">Belum Ada Pengumuman</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1 mb-6">Mulai buat pengumuman pertama Anda untuk dibagikan.</p>
             <a href="<?php echo e(route('admin.pengumuman.create')); ?>"
-               class="mt-3 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl
-                      bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition">
-                + Tambah Sekarang
+               class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl
+                      bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition">
+                + Tambah Pengumuman
             </a>
         </div>
         <?php else: ?>
         <div class="overflow-x-auto">
-            <table class="w-full">
+            <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-slate-200 dark:border-slate-700
-                               bg-slate-50 dark:bg-slate-900/50 text-left">
-                        
-                        <th class="px-4 py-2.5 w-8">
+                               bg-slate-50/50 dark:bg-slate-900/50 text-left">
+                        <th class="px-6 py-4 w-10">
                             <div class="flex items-center justify-center">
                                 <input type="checkbox" id="pgCheckAll"
                                        onchange="pgToggleAll(this)"
-                                       title="Pilih semua"
-                                       class="w-3.5 h-3.5 rounded border-slate-300 dark:border-slate-600
-                                              text-indigo-600 bg-white dark:bg-slate-700
-                                              focus:ring-indigo-500 focus:ring-offset-0 cursor-pointer
-                                              accent-indigo-600">
+                                       class="w-4 h-4 rounded-lg border-slate-300 dark:border-slate-600
+                                              text-indigo-600 focus:ring-indigo-500 cursor-pointer transition">
                             </div>
                         </th>
-                        <th class="px-4 py-2.5 text-[10px] font-semibold text-slate-500
-                                   dark:text-slate-400 uppercase tracking-wide">Pengumuman</th>
-                        <th class="px-3 py-2.5 text-[10px] font-semibold text-slate-500
-                                   dark:text-slate-400 uppercase tracking-wide">Target</th>
-                        <th class="px-3 py-2.5 text-[10px] font-semibold text-slate-500
-                                   dark:text-slate-400 uppercase tracking-wide">Tipe</th>
-                        <th class="px-3 py-2.5 text-[10px] font-semibold text-slate-500
-                                   dark:text-slate-400 uppercase tracking-wide">Dashboard</th>
-                        <th class="px-3 py-2.5 text-[10px] font-semibold text-slate-500
-                                   dark:text-slate-400 uppercase tracking-wide">Status</th>
-                        <th class="px-3 py-2.5 text-[10px] font-semibold text-slate-500
-                                   dark:text-slate-400 uppercase tracking-wide">Tanggal</th>
-                        <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-slate-500
-                                   dark:text-slate-400 uppercase tracking-wide">Aksi</th>
+                        <th class="px-4 py-4 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[11px]">Pengumuman</th>
+                        <th class="px-4 py-4 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[11px]">Target</th>
+                        <th class="px-4 py-4 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[11px]">Detail</th>
+                        <th class="px-4 py-4 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[11px]">Status</th>
+                        <th class="px-4 py-4 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[11px]">Terbit</th>
+                        <th class="px-6 py-4 text-right font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[11px]">Opsi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50" id="pgTableBody">
@@ -286,148 +263,97 @@
                         ];
                         $pgJson = json_encode($pgData, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_UNESCAPED_UNICODE);
                     ?>
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors group
-                               pg-row" data-id="<?php echo e($item->id); ?>">
-
-                        
-                        <td class="px-4 py-3 w-8">
+                    <tr class="hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10 transition-colors group pg-row" data-id="<?php echo e($item->id); ?>">
+                        <td class="px-6 py-4">
                             <div class="flex items-center justify-center">
                                 <input type="checkbox"
-                                       class="pg-row-check w-3.5 h-3.5 rounded border-slate-300
-                                              dark:border-slate-600 text-indigo-600 bg-white
-                                              dark:bg-slate-700 focus:ring-indigo-500
-                                              focus:ring-offset-0 cursor-pointer accent-indigo-600"
+                                       class="pg-row-check w-4 h-4 rounded-lg border-slate-300
+                                              dark:border-slate-600 text-indigo-600 focus:ring-indigo-500
+                                              cursor-pointer transition accent-indigo-600"
                                        value="<?php echo e($item->id); ?>"
                                        onchange="pgUpdateBulkBar()">
                             </div>
                         </td>
-
-                        
-                        <td class="px-4 py-3 max-w-xs">
+                        <td class="px-4 py-4 max-w-xs">
                             <button type="button" onclick='pgBuka(<?php echo e($pgJson); ?>)'
-                                    class="flex items-start gap-2 text-left w-full focus:outline-none">
-                                <span class="mt-0.5 shrink-0 leading-none" style="font-size:.85rem">
+                                    class="flex items-center gap-3 text-left w-full group/btn">
+                                <span class="w-10 h-10 shrink-0 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-xl group-hover/btn:bg-indigo-100 dark:group-hover/btn:bg-indigo-900 transition-colors">
                                     <?php echo e($item->tipeIcon()); ?>
 
                                 </span>
                                 <div class="min-w-0">
-                                    <p class="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate
-                                              group-hover:text-indigo-600 dark:group-hover:text-indigo-400
-                                              transition-colors">
+                                    <p class="font-bold text-slate-800 dark:text-slate-100 truncate group-hover/btn:text-indigo-600 transition-colors">
                                         <?php echo e($item->judul); ?>
 
                                     </p>
-                                    <?php if($item->isi): ?>
-                                    <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 line-clamp-1">
-                                        <?php echo e(strip_tags($item->isi)); ?>
+                                    <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 line-clamp-1">
+                                        <?php echo e(strip_tags($item->isi) ?: 'Tanpa keterangan teks'); ?>
 
                                     </p>
-                                    <?php endif; ?>
-                                    <?php if($item->tipe_konten === 'gambar' && $item->file_path): ?>
-                                    <div class="mt-1.5 w-12 h-7 rounded-lg overflow-hidden
-                                                bg-slate-100 dark:bg-slate-700">
-                                        <img src="<?php echo e(asset('storage/' . $item->file_path)); ?>" alt=""
-                                             class="w-full h-full object-cover"
-                                             onerror="pgThumbError(this)">
-                                    </div>
-                                    <?php endif; ?>
                                 </div>
                             </button>
                         </td>
-
-                        
-                        <td class="px-3 py-3">
-                            <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <span class="inline-flex px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider
                                          <?php echo e($item->audienceBadgeColor()); ?>">
                                 <?php echo e($item->audienceLabel()); ?>
 
                             </span>
                         </td>
+                        <td class="px-4 py-4">
+                            <div class="flex flex-col gap-1">
+                                <span class="text-[11px] font-medium text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                                    📁 <?php echo e(ucfirst($item->tipe_konten)); ?>
 
-                        
-                        <td class="px-3 py-3">
-                            <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full
-                                         text-[10px] font-semibold bg-slate-100 text-slate-600
-                                         dark:bg-slate-700 dark:text-slate-300 capitalize">
-                                <?php echo e($item->tipeIcon()); ?> <?php echo e($item->tipe_konten); ?>
-
-                            </span>
+                                </span>
+                                <?php if($item->show_di_dashboard): ?>
+                                <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                    📌 Dashboard
+                                </span>
+                                <?php endif; ?>
+                            </div>
                         </td>
-
-                        
-                        <td class="px-3 py-3">
-                            <?php if($item->show_di_dashboard): ?>
-                            <span class="inline-flex items-center gap-1 text-[10px] font-medium
-                                         text-emerald-600 dark:text-emerald-400">
-                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd"
-                                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0
-                                             01-1.414 0l-4-4a1 1 0 011.414-1.414L8
-                                             12.586l7.293-7.293a1 1 0 011.414 0z"
-                                          clip-rule="evenodd"/>
-                                </svg>
-                                Tampil
-                            </span>
-                            <?php else: ?>
-                            <span class="text-[10px] text-slate-400">—</span>
-                            <?php endif; ?>
-                        </td>
-
-                        
-                        <td class="px-3 py-3">
+                        <td class="px-4 py-4">
                             <button type="button"
                                     onclick="pgToggle(<?php echo e($item->id); ?>, this)"
                                     data-active="<?php echo e($item->is_active ? '1' : '0'); ?>"
-                                    class="relative inline-flex h-5 w-9 items-center rounded-full
-                                           transition-colors focus:outline-none
-                                           <?php echo e($item->is_active ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-600'); ?>">
-                                <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow
-                                             transition-transform"
-                                      style="<?php echo e($item->is_active ? 'transform:translateX(18px)' : 'transform:translateX(2px)'); ?>">
+                                    class="relative inline-flex h-6 w-11 items-center rounded-full
+                                           transition-all duration-300 focus:outline-none
+                                           <?php echo e($item->is_active ? 'bg-indigo-500 shadow-lg shadow-indigo-500/30' : 'bg-slate-300 dark:bg-slate-600'); ?>">
+                                <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-300"
+                                      style="<?php echo e($item->is_active ? 'transform:translateX(24px)' : 'transform:translateX(4px)'); ?>">
                                 </span>
                             </button>
                         </td>
-
-                        
-                        <td class="px-3 py-3 text-[10px] text-slate-400 dark:text-slate-500 whitespace-nowrap">
+                        <td class="px-4 py-4 text-[11px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
                             <?php echo e($item->created_at->format('d M Y')); ?>
 
                         </td>
-
-                        
-                        <td class="px-3 py-3">
-                            <div class="flex items-center justify-end gap-1">
-                                <button type="button" onclick='pgBuka(<?php echo e($pgJson); ?>)' title="Lihat"
-                                        class="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100
-                                               dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400
-                                               transition-colors">
-                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center justify-end gap-2">
+                                <button type="button" onclick='pgBuka(<?php echo e($pgJson); ?>)' title="Pratinjau"
+                                        class="p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 dark:bg-slate-700/50 dark:hover:bg-emerald-900/30
+                                               text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                     </svg>
                                 </button>
                                 <a href="<?php echo e(route('admin.pengumuman.edit', $item)); ?>" title="Edit"
-                                   class="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100
-                                          dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400
-                                          transition-colors">
-                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0
-                                                 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                   class="p-2 rounded-xl bg-slate-50 hover:bg-indigo-50 dark:bg-slate-700/50 dark:hover:bg-indigo-900/30
+                                          text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
                                 </a>
                                 <form method="POST" action="<?php echo e(route('admin.pengumuman.destroy', $item)); ?>"
-                                      onsubmit="return confirm('Yakin hapus pengumuman ini?')">
+                                      onsubmit="return confirm('Hapus pengumuman ini?')">
                                     <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
                                     <button type="submit" title="Hapus"
-                                            class="p-1.5 rounded-lg bg-red-50 hover:bg-red-100
-                                                   dark:bg-red-900/30 text-red-600 dark:text-red-400
-                                                   transition-colors">
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0
-                                                     01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0
-                                                     00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            class="p-2 rounded-xl bg-slate-50 hover:bg-red-50 dark:bg-slate-700/50 dark:hover:bg-red-900/30
+                                                   text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-all">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                         </svg>
                                     </button>
                                 </form>
@@ -440,7 +366,7 @@
         </div>
 
         <?php if($pengumuman->hasPages()): ?>
-        <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-700">
+        <div class="px-6 py-5 border-t border-slate-200 dark:border-slate-700 bg-slate-50/30 dark:bg-transparent">
             <?php echo e($pengumuman->links()); ?>
 
         </div>
@@ -453,29 +379,21 @@
 (function () {
     'use strict';
 
-    /* ─────────────────────────────────────────
-     * FIX UTAMA: semua onerror pakai fungsi
-     * global — tidak ada escaped-quote hell
-     * ───────────────────────────────────────── */
-
-    /** Thumbnail kecil di baris tabel gagal → sembunyikan wrapper */
     window.pgThumbError = function (img) {
         var wrap = img.parentElement;
         if (wrap) wrap.classList.add('hidden');
     };
 
-    /** Gambar di dalam modal gagal → tampilkan placeholder */
     window.pgModalImgError = function (img) {
         var wrap = img.closest('div');
         if (!wrap) return;
         wrap.innerHTML =
-            '<div class="p-6 text-center">' +
-                '<div class="text-3xl mb-1.5">🖼️</div>' +
-                '<p class="text-xs text-slate-400">Gambar tidak dapat dimuat.</p>' +
+            '<div class="p-10 text-center bg-slate-50 dark:bg-slate-900 rounded-2xl">' +
+                '<div class="text-4xl mb-3">🖼️</div>' +
+                '<p class="text-sm text-slate-400 font-medium">Gagal memuat gambar.</p>' +
             '</div>';
     };
 
-    /* ── Buka / Tutup modal detail ── */
     window.pgBuka = function (d) {
         var k = document.getElementById('pgModalKonten');
         if (!k) return;
@@ -500,45 +418,29 @@
         }
     });
 
-    /* ── Toggle aktif / nonaktif ── */
     window.pgToggle = function (id, btn) {
         var token = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
         fetch('/admin/pengumuman/' + id + '/toggle', {
             method : 'PATCH',
-            headers: {
-                'X-CSRF-TOKEN' : token,
-                'Content-Type' : 'application/json',
-                'Accept'       : 'application/json'
-            }
+            headers: { 'X-CSRF-TOKEN' : token, 'Content-Type' : 'application/json', 'Accept' : 'application/json' }
         })
         .then(function (r) { return r.json(); })
         .then(function (data) {
             if (!data.success) return;
             var on = data.is_active;
-            btn.className =
-                'relative inline-flex h-5 w-9 items-center rounded-full ' +
-                'transition-colors focus:outline-none ' +
-                (on ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-600');
-            btn.querySelector('span').style.transform =
-                on ? 'translateX(18px)' : 'translateX(2px)';
-            btn.dataset.active = on ? '1' : '0';
+            btn.className = 'relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 focus:outline-none ' +
+                (on ? 'bg-indigo-500 shadow-lg shadow-indigo-500/30' : 'bg-slate-300 dark:bg-slate-600');
+            btn.querySelector('span').style.transform = on ? 'translateX(24px)' : 'translateX(4px)';
         })
         .catch(function (err) { console.error('Toggle error:', err); });
     };
 
-    /* ════════════════════════════════════════
-     * BULK SELECT / DELETE
-     * ════════════════════════════════════════ */
-
-    /** Pilih / Batal pilih semua checkbox di halaman ini */
     window.pgToggleAll = function (masterCb) {
         var checks = document.querySelectorAll('.pg-row-check');
         checks.forEach(function (cb) { cb.checked = masterCb.checked; });
         pgUpdateBulkBar();
-        pgHighlightRows();
     };
 
-    /** Update tampilan bulk bar berdasar jumlah yang dicentang */
     window.pgUpdateBulkBar = function () {
         var checked = document.querySelectorAll('.pg-row-check:checked');
         var bar     = document.getElementById('pgBulkBar');
@@ -547,7 +449,6 @@
         var all     = document.querySelectorAll('.pg-row-check');
 
         if (!bar || !countEl) return;
-
         countEl.textContent = checked.length;
 
         if (checked.length > 0) {
@@ -558,49 +459,27 @@
             bar.classList.remove('flex');
         }
 
-        /* State checkbox master: checked / indeterminate / unchecked */
         if (master) {
-            if (checked.length === 0) {
-                master.checked       = false;
-                master.indeterminate = false;
-            } else if (checked.length === all.length) {
-                master.checked       = true;
-                master.indeterminate = false;
-            } else {
-                master.checked       = false;
-                master.indeterminate = true;
-            }
+            master.checked = checked.length === all.length && all.length > 0;
+            master.indeterminate = checked.length > 0 && checked.length < all.length;
         }
 
-        pgHighlightRows();
-    };
-
-    /** Highlight baris yang dicentang */
-    function pgHighlightRows() {
         document.querySelectorAll('.pg-row').forEach(function (row) {
             var cb = row.querySelector('.pg-row-check');
             if (cb && cb.checked) {
-                row.classList.add('bg-indigo-50', 'dark:bg-indigo-900/20');
-                row.classList.remove('hover:bg-slate-50');
+                row.classList.add('bg-indigo-50/50', 'dark:bg-indigo-900/20');
             } else {
-                row.classList.remove('bg-indigo-50', 'dark:bg-indigo-900/20');
-                row.classList.add('hover:bg-slate-50');
+                row.classList.remove('bg-indigo-50/50', 'dark:bg-indigo-900/20');
             }
         });
-    }
-
-    /** Batal pilih semua */
-    window.pgDeselectAll = function () {
-        var master = document.getElementById('pgCheckAll');
-        if (master) { master.checked = false; master.indeterminate = false; }
-        document.querySelectorAll('.pg-row-check').forEach(function (cb) {
-            cb.checked = false;
-        });
-        pgUpdateBulkBar();
-        pgHighlightRows();
     };
 
-    /** Buka modal konfirmasi hapus massal */
+    window.pgDeselectAll = function () {
+        document.querySelectorAll('.pg-row-check').forEach(function (cb) { cb.checked = false; });
+        if (document.getElementById('pgCheckAll')) document.getElementById('pgCheckAll').checked = false;
+        pgUpdateBulkBar();
+    };
+
     window.pgBukaBulkModal = function () {
         var checked = document.querySelectorAll('.pg-row-check:checked');
         if (checked.length === 0) return;
@@ -608,147 +487,88 @@
         var m = document.getElementById('pgBulkDeleteModal');
         m.classList.remove('hidden');
         m.classList.add('flex');
-        document.body.style.overflow = 'hidden';
     };
 
-    /** Tutup modal konfirmasi hapus massal */
     window.pgTutupBulkModal = function () {
         var m = document.getElementById('pgBulkDeleteModal');
-        if (!m) return;
-        m.classList.add('hidden');
-        m.classList.remove('flex');
-        document.body.style.overflow = '';
+        if (m) m.classList.add('hidden');
     };
 
-    /** Eksekusi hapus massal: inject hidden input → submit form */
     window.pgKonfirmasiBulkDelete = function () {
         var checked = document.querySelectorAll('.pg-row-check:checked');
-        if (checked.length === 0) return;
-
         var container = document.getElementById('pgBulkDeleteIds');
         container.innerHTML = '';
-
         checked.forEach(function (cb) {
             var inp = document.createElement('input');
-            inp.type  = 'hidden';
-            inp.name  = 'ids[]';
-            inp.value = cb.value;
+            inp.type = 'hidden'; inp.name = 'ids[]'; inp.value = cb.value;
             container.appendChild(inp);
         });
-
         document.getElementById('pgBulkDeleteForm').submit();
     };
 
-    /* ── Bangun HTML modal detail ── */
     function pgHtml(d) {
         var h = '';
-
-        /* Header judul + badge */
-        h += '<div class="flex items-start gap-2.5 mb-3.5 pr-7">';
-        h +=   '<div class="text-xl shrink-0 mt-0.5">' + d.tipeIcon + '</div>';
+        h += '<div class="flex items-start gap-4 mb-6 pr-8">';
+        h +=   '<div class="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-900/50 flex items-center justify-center text-3xl shrink-0">' + d.tipeIcon + '</div>';
         h +=   '<div class="flex-1 min-w-0">';
-        h +=     '<h2 class="text-sm font-bold text-slate-800 dark:text-slate-100 leading-snug break-words">' + e(d.judul) + '</h2>';
-        h +=     '<div class="flex gap-1.5 mt-1.5 flex-wrap">';
-        h +=       '<span class="px-1.5 py-0.5 rounded-full text-[10px] font-semibold ' + d.audienceColor + '">' + e(d.audience) + '</span>';
-        h +=       '<span class="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 capitalize">' + e(d.tipe) + '</span>';
+        h +=     '<h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 leading-tight break-words">' + e(d.judul) + '</h2>';
+        h +=     '<div class="flex gap-2 mt-2 flex-wrap">';
+        h +=       '<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider ' + d.audienceColor + '">' + e(d.audience) + '</span>';
+        h +=       '<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400 capitalize">' + e(d.tipe) + '</span>';
         h +=     '</div>';
         h +=   '</div>';
         h += '</div>';
 
-        /* Meta */
-        h += '<div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-slate-400 mb-3.5 pb-3.5 border-b border-slate-200 dark:border-slate-700">';
-        h +=   '<span>📅 ' + e(d.tanggal) + '</span>';
-        h +=   '<span>👤 ' + e(d.creator) + '</span>';
-        h +=   '<span>🕐 ' + e(d.diffHumans) + '</span>';
+        h += '<div class="flex flex-wrap gap-4 text-[11px] text-slate-400 mb-6 py-4 border-y border-slate-100 dark:border-slate-700">';
+        h +=   '<span class="flex items-center gap-1.5">📅 ' + e(d.tanggal) + '</span>';
+        h +=   '<span class="flex items-center gap-1.5">👤 ' + e(d.creator) + '</span>';
+        h +=   '<span class="flex items-center gap-1.5">🕐 ' + e(d.diffHumans) + '</span>';
         h += '</div>';
 
-        /* Gambar */
         if (d.tipe === 'gambar' && d.fileUrl) {
-            h += '<div class="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-600 mb-3.5 bg-slate-50 dark:bg-slate-900 flex items-center justify-center">';
-            h +=   '<img src="' + d.fileUrl + '"' +
-                       ' alt="' + e(d.judul) + '"' +
-                       ' class="w-full max-h-60 object-contain block"' +
-                       ' onerror="pgModalImgError(this)">';
+            h += '<div class="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700 mb-6 bg-slate-50 dark:bg-slate-900">';
+            h +=   '<img src="' + d.fileUrl + '" class="w-full max-h-72 object-contain block mx-auto" onerror="pgModalImgError(this)">';
             h += '</div>';
         }
 
-        /* Isi teks */
         if (d.isi && d.isi.trim()) {
-            var adaTag = /<[a-z][\s\S]*>/i.test(d.isi);
-            h += adaTag
-                ? '<div class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed mb-3.5 prose prose-sm dark:prose-invert max-w-none">' + s(d.isi) + '</div>'
-                : '<div class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed mb-3.5 whitespace-pre-line">' + e(d.isi) + '</div>';
+            var hasTags = /<[a-z][\s\S]*>/i.test(d.isi);
+            h += '<div class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-6 ' + (hasTags ? 'prose dark:prose-invert max-w-none' : 'whitespace-pre-line') + '">' + (hasTags ? s(d.isi) : e(d.isi)) + '</div>';
         }
 
-        /* Dokumen */
         if (d.tipe === 'dokumen' && d.fileUrl) {
-            h += '<div class="flex items-center justify-between gap-2 p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl border border-indigo-200 dark:border-indigo-700 mb-3.5">';
-            h +=   '<div class="flex items-center gap-2">';
-            h +=     '<div class="w-7 h-7 bg-indigo-100 dark:bg-indigo-800 rounded-lg flex items-center justify-center text-sm">📄</div>';
-            h +=     '<div>';
-            h +=       '<p class="text-xs font-bold text-indigo-700 dark:text-indigo-300">' + e(d.fileExt || 'FILE') + '</p>';
-            h +=       '<p class="text-[10px] text-slate-400 max-w-[150px] truncate">' + e(d.fileName) + '</p>';
-            h +=     '</div>';
+            h += '<div class="flex items-center justify-between gap-4 p-4 bg-indigo-50/50 dark:bg-indigo-900/20 rounded-2xl border border-indigo-100 dark:border-indigo-800 mb-6">';
+            h +=   '<div class="flex items-center gap-3">';
+            h +=     '<div class="w-10 h-10 bg-white dark:bg-slate-800 rounded-xl flex items-center justify-center text-xl shadow-sm">📄</div>';
+            h +=     '<div><p class="text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase">' + e(d.fileExt || 'FILE') + '</p><p class="text-[10px] text-slate-400 truncate max-w-[140px]">' + e(d.fileName) + '</p></div>';
             h +=   '</div>';
-            h +=   '<a href="' + d.fileUrl + '" target="_blank" download onclick="event.stopPropagation()"' +
-                      ' class="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg no-underline">';
-            h +=     '<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>';
-            h +=     'Unduh';
-            h +=   '</a>';
+            h +=   '<a href="' + d.fileUrl + '" target="_blank" download class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold rounded-xl transition shadow-lg shadow-indigo-200 dark:shadow-none">Unduh</a>';
             h += '</div>';
         }
 
-        /* Link */
         if (d.tipe === 'link' && d.linkUrl) {
-            h += '<div class="p-3 bg-sky-50 dark:bg-sky-900/30 rounded-xl border border-sky-200 dark:border-sky-700 mb-3.5">';
-            h +=   '<p class="text-[10px] text-slate-500 mb-2 font-medium">🔗 Tautan</p>';
-            h +=   '<a href="' + d.linkUrl + '" target="_blank" rel="noopener" onclick="event.stopPropagation()"' +
-                      ' class="inline-flex items-center gap-1 px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold rounded-lg no-underline">';
-            h +=     '<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
-            h +=     e(d.linkLabel || 'Buka Link');
+            h += '<div class="p-4 bg-sky-50 dark:bg-sky-900/20 rounded-2xl border border-sky-100 dark:border-sky-800 mb-6">';
+            h +=   '<p class="text-[10px] font-bold text-sky-600 uppercase mb-3 tracking-widest">Tautan Terkait</p>';
+            h +=   '<a href="' + d.linkUrl + '" target="_blank" class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-xl transition shadow-lg shadow-sky-200 dark:shadow-none">';
+            h +=     e(d.linkLabel || 'Buka Tautan') + ' ↗';
             h +=   '</a>';
             h += '</div>';
         }
 
-        /* Tanggal selesai */
         if (d.tglSelesai) {
-            h += '<div class="flex items-center gap-2 px-3 py-2 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-700 mb-3">';
-            h +=   '<span>⏰</span>';
-            h +=   '<p class="text-[10px] text-amber-700 dark:text-amber-300 font-medium">Berakhir: <strong>' + e(d.tglSelesai) + '</strong></p>';
+            h += '<div class="flex items-center gap-3 px-4 py-3 bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-100 dark:border-amber-800 mb-6">';
+            h +=   '<span class="text-lg">⏰</span>';
+            h +=   '<p class="text-[11px] text-amber-700 dark:text-amber-300 font-medium">Berakhir pada: <strong class="ml-1">' + e(d.tglSelesai) + '</strong></p>';
             h += '</div>';
         }
 
-        /* Tombol tutup */
-        h += '<div class="flex justify-end pt-1">';
-        h +=   '<button onclick="pgTutup()"' +
-                   ' class="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600' +
-                   ' text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl transition-colors">Tutup</button>';
-        h += '</div>';
-
+        h += '<div class="flex justify-end"><button onclick="pgTutup()" class="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-2xl transition">Tutup Detail</button></div>';
         return h;
     }
 
-    /* Escape HTML untuk output aman */
-    function e(v) {
-        if (v == null) return '';
-        return String(v)
-            .replace(/&/g,  '&amp;')
-            .replace(/</g,  '&lt;')
-            .replace(/>/g,  '&gt;')
-            .replace(/"/g,  '&quot;')
-            .replace(/'/g,  '&#039;');
-    }
-
-    /* Sanitasi HTML rich-text (buang script/iframe/on*) */
-    function s(h) {
-        return (h || '')
-            .replace(/<script[\s\S]*?<\/script>/gi, '')
-            .replace(/<iframe[\s\S]*?<\/iframe>/gi, '')
-            .replace(/\bon\w+=["'][^"']*["']/gi, '')
-            .replace(/javascript:/gi, '#');
-    }
+    function e(v) { return v ? String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;') : ''; }
+    function s(h) { return (h || '').replace(/<script[\s\S]*?<\/script>/gi,'').replace(/<iframe[\s\S]*?<\/iframe>/gi,'').replace(/\bon\w+=["'][^"']*["']/gi,'').replace(/javascript:/gi,'#'); }
 })();
 </script>
-
 <?php $__env->stopSection(); ?>
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH S:\PA3\smpn-kutime\resources\views/admin/pengumuman/index.blade.php ENDPATH**/ ?>

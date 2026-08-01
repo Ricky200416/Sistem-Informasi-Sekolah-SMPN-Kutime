@@ -90,7 +90,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::post('perizinan/{perizinan}/tolak', [AdminPerizinanController::class, 'reject'])->name('perizinan.tolak');
 
     // ALUMNI
-    Route::get('/', [AlumniController::class, 'index'])->name('index');
+    Route::get('alumni', [AlumniController::class, 'index'])->name('index');
     Route::get('/siswa-aktif', [AlumniController::class, 'daftarSiswaAktif'])->name('siswa-aktif');
     Route::post('/luluskan', [AlumniController::class, 'graduate'])->name('graduate');
     Route::get('/export/excel', [AlumniController::class, 'exportExcel'])->name('export-excel');

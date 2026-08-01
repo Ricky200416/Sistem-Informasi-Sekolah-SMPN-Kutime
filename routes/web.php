@@ -91,10 +91,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
 
     // ALUMNI
     Route::get('alumni', [AlumniController::class, 'index'])->name('alumni.index');
-    Route::get('/siswa-aktif', [AlumniController::class, 'daftarSiswaAktif'])->name('siswa-aktif');
-    Route::post('/luluskan', [AlumniController::class, 'graduate'])->name('graduate');
-    Route::get('/export/excel', [AlumniController::class, 'exportExcel'])->name('export-excel');
-    Route::get('/export/pdf', [AlumniController::class, 'exportPdf'])->name('export-pdf');
+    Route::get('/siswa-aktif', [AlumniController::class, 'daftarSiswaAktif'])->name('alumni.siswa-aktif');
+    Route::post('/luluskan', [AlumniController::class, 'graduate'])->name('alumni.graduate');
+    Route::get('/export/excel', [AlumniController::class, 'exportExcel'])->name('alumni.export-excel');
+    Route::get('/export/pdf', [AlumniController::class, 'exportPdf'])->name('alumni.export-pdf');
     Route::get('/{alumni}', [AlumniController::class, 'show'])->name('show');
     Route::post('/{alumni}/batalkan', [AlumniController::class, 'batalkan'])->name('batalkan');
     Route::delete('/{alumni}', [AlumniController::class, 'destroy'])->name('destroy');

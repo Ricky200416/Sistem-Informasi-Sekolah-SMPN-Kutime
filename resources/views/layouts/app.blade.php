@@ -1396,6 +1396,7 @@
                           letter-spacing:.06em;color:#94a3b8">Admin Panel</p>
 
                 @php
+                    // UPDATE: menu "Perizinan" ditambahkan setelah "Absensi Guru"
                     $adminNav = [
                         ['route'=>'admin.dashboard',            'label'=>'Dashboard',       'match'=>'admin.dashboard',
                          'icon'=>'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1v-5m10-10l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-5'],
@@ -1409,6 +1410,9 @@
                          'icon'=>'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9'],
                         ['route'=>'admin.absensi-guru.index',   'label'=>'Absensi Guru',     'match'=>'admin.absensi-guru*',
                          'icon'=>'M8 7V3m8 4V3M5 11h14M5 19h14M5 5h2m10 0h2'],
+                        // UPDATE: menu Perizinan (admin) — menampilkan daftar & detail pengajuan izin guru
+                        ['route'=>'admin.perizinan.index',      'label'=>'Perizinan',        'match'=>'admin.perizinan*',
+                         'icon'=>'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
                         ['route'=>'admin.academic-planner.index',  'label'=>'Data Akademik',    'match'=>'admin.data-akademik*',
                          'icon'=>'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
                         ['route'=>'admin.kelola-website',       'label'=>'Kelola Website',   'match'=>'admin.kelola-website*',
@@ -1459,6 +1463,8 @@
                                    ?? auth()->user()->guru?->waliKelas()->exists()
                                    ?? false;
 
+                    // UPDATE: menu "Absensi Foto" ditambahkan setelah "Jadwal Mengajar",
+                    // dan menu "Perizinan" ditambahkan setelah "Absensi Siswa"
                     $guruNav = [
                         ['route'=>'guru.dashboard',               'label'=>'Dashboard',        'match'=>'guru.dashboard',
                          'icon'=>'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1v-5m10-10l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-5'],
@@ -1466,8 +1472,14 @@
                          'icon'=>'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'],
                         ['route'=>'guru.jadwal-mengajar.index',   'label'=>'Jadwal Mengajar',   'match'=>'guru.jadwal-mengajar*',
                          'icon'=>'M8 7V3m8 4V3M5 11h14M5 19h14M5 5h2m10 0h2'],
+                        // UPDATE: menu Absensi Foto (guru) — upload foto sebelum/sesudah mengajar atau di kantor
+                        ['route'=>'guru.absensi-foto.index',      'label'=>'Absensi Foto',      'match'=>'guru.absensi-foto*',
+                         'icon'=>'M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9zM15 13a3 3 0 11-6 0 3 3 0 016 0z'],
                         ['route'=>'guru.absensi-siswa.index',     'label'=>'Absensi Siswa',     'match'=>'guru.absensi-siswa*',
                          'icon'=>'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4'],
+                        // UPDATE: menu Perizinan (guru) — form pengajuan izin ke Kepala Sekolah + status persetujuan
+                        ['route'=>'guru.perizinan.index',         'label'=>'Perizinan',         'match'=>'guru.perizinan*',
+                         'icon'=>'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
                         ['route'=>'guru.pengumuman',               'label'=>'Pengumuman',        'match'=>'guru.pengumuman*',
                          'icon'=>'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9'],
                     ];

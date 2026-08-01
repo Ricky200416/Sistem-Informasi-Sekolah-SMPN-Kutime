@@ -24,6 +24,9 @@ use App\Http\Controllers\PublicBeritaController;
 use App\Http\Controllers\PublicGaleriController;
 use App\Http\Controllers\Siswa\JadwalPelajaranController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Guru\AbsensiFotoController;
+use App\Http\Controllers\Guru\PerizinanController;
+use App\Http\Controllers\Admin\PerizinanController as AdminPerizinanController;
 
 // =================================================================
 // PUBLIC
@@ -78,8 +81,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
         Route::get('/template/import',         [UserController::class, 'downloadTemplate'])->name('template-import');
 
         Route::delete('bulk-destroy', [UserController::class, 'bulkDestroy'])->name('bulk-destroy');
-        
     });
+
+    Route::get('perizinan', [AdminPerizinanController::class, 'index'])->name('perizinan.index');
+    Route::post('perizinan/{perizinan}/setujui', [AdminPerizinanController::class, 'approve'])->name('perizinan.setujui');
+    Route::post('perizinan/{perizinan}/tolak', [AdminPerizinanController::class, 'reject'])->name('perizinan.tolak');
+
+
+
 Route::delete('admin/users/bulk-destroy', [UserController::class, 'bulkDestroy'])->name('admin/users/bulkDestroy');
 Route::delete('/admin/users/{id}', [UserController::class, 'destroy'])->name('admin.users.destroy');
 

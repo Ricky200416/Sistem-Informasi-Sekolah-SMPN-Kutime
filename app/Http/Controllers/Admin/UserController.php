@@ -1107,11 +1107,31 @@ class UserController extends Controller
 
     public function guru()
     {
-        // generate pdf guru
+        $users = User::whereIn('role', ['guru', 'kepala_sekolah'])
+            ->with('guru.kelas')
+            ->latest()
+            ->get();
+
+        $pdf = Pdf::loadView('admin.pdf.guru', [
+            'users' => $users,
+            'role'  => 'guru',
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->download('data_guru_' . now()->format('Ymd_His') . '.pdf');
     }
 
     public function siswa()
     {
-        // generate pdf siswa
+        $users = User::where('role', 'siswa')
+            ->with(['siswa.kelas', 'siswa.studyGroup'])
+            ->latest()
+            ->get();
+
+        $pdf = Pdf::loadView('admin.pdf.siswa', [
+            'users' => $users,
+            'role'  => 'siswa',
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->download('data_siswa_' . now()->format('Ymd_His') . '.pdf');
     }
 }

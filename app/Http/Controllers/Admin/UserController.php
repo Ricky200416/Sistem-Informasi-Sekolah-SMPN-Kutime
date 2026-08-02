@@ -1104,4 +1104,14 @@ class UserController extends Controller
             ->route('admin.users.index', ['tab' => $tab])
             ->with('success', "{$count} data akun user berhasil dibersihkan secara massal.");
     }
+
+    public function guru()
+    {
+        // generate pdf guru
+    }
+
+    public function siswa()
+    {
+        // generate pdf siswa
+    }
 }

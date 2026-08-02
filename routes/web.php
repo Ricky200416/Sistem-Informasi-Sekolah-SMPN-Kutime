@@ -81,7 +81,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
         // Import & Export
         Route::post('/import',                 [UserController::class, 'import'])->name('import');
         Route::get('/export/excel',            [UserController::class, 'exportExcel'])->name('export-excel');
-        Route::get('/export/pdf',              [UserController::class, 'exportPdf'])->name('export-pdf');
+        Route::get('/export/pdf',              [UserController::class, 'exportPdf'])->name('pdf.guru');
         Route::get('/template/import/{role?}', [UserController::class, 'downloadTemplate'])->name('template-import');
     });
 

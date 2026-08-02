@@ -21,6 +21,7 @@ use App\Http\Controllers\Guru\WaliKelasController;
 use App\Http\Controllers\Guru\JadwalMengajarController;
 use App\Http\Controllers\Guru\AbsensiFotoController;
 use App\Http\Controllers\Guru\PerizinanController;
+use App\Http\Controllers\Guru\StudySubjectController as GuruStudySubjectController;
 use App\Http\Controllers\Siswa\DashboardController as SiswaDashboardController;
 use App\Http\Controllers\Siswa\ProfilController as SiswaProfilController;
 use App\Http\Controllers\PengumumanController;
@@ -43,241 +44,233 @@ Route::get('/galeri/{galeri}',  [PublicGaleriController::class, 'show'])->name('
 // =================================================================
 // AUTH
 // =================================================================
-Route::middleware('guest')->group(function () {
-    Route::get('/login',  [LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [LoginController::class, 'login'])->name('login.post');
-});
-
-Route::post('/logout', [LoginController::class, 'logout'])
-    ->name('logout')
-    ->middleware('auth');
+Route::get('/login',  [LoginController::class, 'showLoginForm'])->name('login')->middleware('guest');
+Route::post('/login', [LoginController::class, 'login'])->name('login.post')->middleware('guest');
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 
 // =================================================================
-// ADMIN
+// ADMIN — SEMUA ROUTE DASHBOARD ADMIN ADA DI SINI, TIDAK DIKELOMPOKKAN
 // =================================================================
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
 
-    // ── Dashboard ────────────────────────────────────────────────
-    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+// ── Dashboard ──────────────────────────────────────────────────────
+Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard')->middleware(['auth', 'role:admin']);
+Route::get('/admin/dashboard/jadwal-hari-ini', [AdminDashboardController::class, 'jadwalHariIni'])->name('admin.dashboard.jadwal')->middleware(['auth', 'role:admin']);
+Route::get('/admin/dashboard/stats', [AdminDashboardController::class, 'stats'])->name('admin.dashboard.stats')->middleware(['auth', 'role:admin']);
 
-    // ── Profil Admin ─────────────────────────────────────────────
-    Route::get('/',      [AdminProfilController::class, 'show'])->name('profil');
-    Route::get('/profil/edit', [AdminProfilController::class, 'edit'])->name('profil.edit');
-    Route::put('/profil',      [AdminProfilController::class, 'update'])->name('profil.update');
+// ── Profil Admin ─────────────────────────────────────────────────
+Route::get('/admin/profil', [AdminProfilController::class, 'show'])->name('admin.profil')->middleware(['auth', 'role:admin']);
+Route::get('/admin/profil/edit', [AdminProfilController::class, 'edit'])->name('admin.profil.edit')->middleware(['auth', 'role:admin']);
+Route::put('/admin/profil', [AdminProfilController::class, 'update'])->name('admin.profil.update')->middleware(['auth', 'role:admin']);
 
-    // ── Users ────────────────────────────────────────────────────
-    // FIX: semua rute users digabung rapi dalam satu grup 'users.' —
-    //      tidak ada lagi duplikasi nama/path di luar grup ini.
-        Route::get('/users',                        [UserController::class, 'index'])->name('users.index');
-        Route::post('/users',                       [UserController::class, 'store'])->name('users.store');
-        Route::get('/{user}',                  [UserController::class, 'show'])->name('users.show');
-        Route::get('/{user}/edit',             [UserController::class, 'edit'])->name('edit');
-        Route::put('/{user}',                  [UserController::class, 'update'])->name('update');
-        Route::patch('/{user}/reset-password', [UserController::class, 'resetPassword'])->name('reset-password');
-        Route::delete('/bulk-destroy',         [UserController::class, 'bulkDestroy'])->name('bulk-destroy');
-        Route::delete('/{user}',               [UserController::class, 'destroy'])->name('destroy');
+// ── Kelola User ──────────────────────────────────────────────────
+Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users.index')->middleware(['auth', 'role:admin']);
+Route::post('/admin/users', [UserController::class, 'store'])->name('admin.users.store')->middleware(['auth', 'role:admin']);
+Route::get('/admin/users/export/excel', [UserController::class, 'exportExcel'])->name('admin.users.export-excel')->middleware(['auth', 'role:admin']);
+Route::get('/admin/users/export/pdf', [UserController::class, 'exportPdf'])->name('admin.users.export-pdf')->middleware(['auth', 'role:admin']);
+Route::get('/admin/users/template-import/{role?}', [UserController::class, 'downloadTemplate'])->name('admin.users.template-import')->middleware(['auth', 'role:admin']);
+Route::post('/admin/users/import', [UserController::class, 'import'])->name('admin.users.import')->middleware(['auth', 'role:admin']);
+Route::delete('/admin/users/bulk-destroy', [UserController::class, 'bulkDestroy'])->name('admin.users.bulk-destroy')->middleware(['auth', 'role:admin']);
+Route::get('/admin/users/{user}', [UserController::class, 'show'])->name('admin.users.show')->middleware(['auth', 'role:admin']);
+Route::get('/admin/users/{user}/edit', [UserController::class, 'edit'])->name('admin.users.edit')->middleware(['auth', 'role:admin']);
+Route::put('/admin/users/{user}', [UserController::class, 'update'])->name('admin.users.update')->middleware(['auth', 'role:admin']);
+Route::patch('/admin/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('admin.users.reset-password')->middleware(['auth', 'role:admin']);
+Route::delete('/admin/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy')->middleware(['auth', 'role:admin']);
 
-        // Import & Export
-        Route::post('/import',                 [UserController::class, 'import'])->name('import');
-        Route::get('/users',            [UserController::class, 'exportExcel'])->name('export-excel');
-        Route::get('/pdf',              [UserController::class, 'exportPdf'])->name('guru');
-        Route::get('/template/import/{role?}', [UserController::class, 'downloadTemplate'])->name('template-import');
+// ── Kelola Kelas ─────────────────────────────────────────────────
+Route::get('/admin/kelas', [KelasController::class, 'index'])->name('admin.kelas.index')->middleware(['auth', 'role:admin']);
+Route::get('/admin/kelas/create', [KelasController::class, 'create'])->name('admin.kelas.create')->middleware(['auth', 'role:admin']);
+Route::post('/admin/kelas', [KelasController::class, 'store'])->name('admin.kelas.store')->middleware(['auth', 'role:admin']);
+Route::delete('/admin/kelas/bulk-destroy', [KelasController::class, 'bulkDestroy'])->name('admin.kelas.bulk-destroy')->middleware(['auth', 'role:admin']);
+Route::get('/admin/kelas/{kelas}', [KelasController::class, 'show'])->name('admin.kelas.show')->middleware(['auth', 'role:admin']);
+Route::get('/admin/kelas/{kelas}/edit', [KelasController::class, 'edit'])->name('admin.kelas.edit')->middleware(['auth', 'role:admin']);
+Route::put('/admin/kelas/{kelas}', [KelasController::class, 'update'])->name('admin.kelas.update')->middleware(['auth', 'role:admin']);
+Route::delete('/admin/kelas/{kelas}', [KelasController::class, 'destroy'])->name('admin.kelas.destroy')->middleware(['auth', 'role:admin']);
 
-    // ── Perizinan ────────────────────────────────────────────────
-    Route::prefix('perizinan')->name('perizinan.')->group(function () {
-        Route::get('/',                  [AdminPerizinanController::class, 'index'])->name('index');
-        Route::post('/{perizinan}/setujui', [AdminPerizinanController::class, 'approve'])->name('setujui');
-        Route::post('/{perizinan}/tolak',   [AdminPerizinanController::class, 'reject'])->name('tolak');
-    });
+// ── Alumni ───────────────────────────────────────────────────────
+// PENTING: route spesifik (siswa-aktif, luluskan, export) diletakkan
+// SEBELUM route dinamis {alumni} agar tidak tertangkap sebagai parameter.
+Route::get('/admin/alumni', [AlumniController::class, 'index'])->name('admin.alumni.index')->middleware(['auth', 'role:admin']);
+Route::get('/admin/alumni/siswa-aktif', [AlumniController::class, 'daftarSiswaAktif'])->name('admin.alumni.siswa-aktif')->middleware(['auth', 'role:admin']);
+Route::post('/admin/alumni/luluskan', [AlumniController::class, 'graduate'])->name('admin.alumni.graduate')->middleware(['auth', 'role:admin']);
+Route::get('/admin/alumni/export/excel', [AlumniController::class, 'exportExcel'])->name('admin.alumni.export-excel')->middleware(['auth', 'role:admin']);
+Route::get('/admin/alumni/export/pdf', [AlumniController::class, 'exportPdf'])->name('admin.alumni.export-pdf')->middleware(['auth', 'role:admin']);
+Route::get('/admin/alumni/{alumni}', [AlumniController::class, 'show'])->name('admin.alumni.show')->middleware(['auth', 'role:admin']);
+Route::post('/admin/alumni/{alumni}/batalkan', [AlumniController::class, 'batalkan'])->name('admin.alumni.batalkan')->middleware(['auth', 'role:admin']);
+Route::delete('/admin/alumni/{alumni}', [AlumniController::class, 'destroy'])->name('admin.alumni.destroy')->middleware(['auth', 'role:admin']);
 
-    // ── Alumni ───────────────────────────────────────────────────
-    // FIX KRUSIAL: dibungkus prefix('alumni')/name('alumni.') supaya
-    //   TIDAK menghasilkan rute catch-all '/admin/{alumni}' yang sebelumnya
-    //   "menelan" semua rute lain (kelas, absensi-guru, academic-planner,
-    //   pengumuman, kelola-website, dst) yang didaftarkan setelahnya.
-    //   Rute spesifik (siswa-aktif, graduate, export) diletakkan
-    //   SEBELUM rute dinamis {alumni} agar tidak bentrok.
-    Route::prefix('alumni')->name('alumni.')->group(function () {
-        Route::get('/',                    [AlumniController::class, 'index'])->name('index');
-        Route::get('/siswa-aktif',         [AlumniController::class, 'daftarSiswaAktif'])->name('siswa-aktif');
-        Route::post('/luluskan',           [AlumniController::class, 'graduate'])->name('graduate');
-        Route::get('/export/excel',        [AlumniController::class, 'exportExcel'])->name('export-excel');
-        Route::get('/export/pdf',          [AlumniController::class, 'exportPdf'])->name('export-pdf');
-        Route::get('/{alumni}',            [AlumniController::class, 'show'])->name('show');
-        Route::post('/{alumni}/batalkan',  [AlumniController::class, 'batalkan'])->name('batalkan');
-        Route::delete('/{alumni}',         [AlumniController::class, 'destroy'])->name('destroy');
-    });
+// ── Pengumuman ───────────────────────────────────────────────────
+Route::get('/admin/pengumuman', [PengumumanController::class, 'adminIndex'])->name('admin.pengumuman')->middleware(['auth', 'role:admin']);
+Route::get('/admin/pengumuman/index', [PengumumanController::class, 'adminIndex'])->name('admin.pengumuman.index')->middleware(['auth', 'role:admin']);
+Route::get('/admin/pengumuman/create', [PengumumanController::class, 'adminCreate'])->name('admin.pengumuman.create')->middleware(['auth', 'role:admin']);
+Route::post('/admin/pengumuman', [PengumumanController::class, 'adminStore'])->name('admin.pengumuman.store')->middleware(['auth', 'role:admin']);
+Route::delete('/admin/pengumuman/bulk-destroy', [PengumumanController::class, 'bulkDestroy'])->name('admin.pengumuman.bulkDestroy')->middleware(['auth', 'role:admin']);
+Route::get('/admin/pengumuman/{pengumuman}/edit', [PengumumanController::class, 'adminEdit'])->name('admin.pengumuman.edit')->middleware(['auth', 'role:admin']);
+Route::put('/admin/pengumuman/{pengumuman}', [PengumumanController::class, 'adminUpdate'])->name('admin.pengumuman.update')->middleware(['auth', 'role:admin']);
+Route::delete('/admin/pengumuman/{pengumuman}', [PengumumanController::class, 'adminDestroy'])->name('admin.pengumuman.destroy')->middleware(['auth', 'role:admin']);
+Route::patch('/admin/pengumuman/{pengumuman}/toggle', [PengumumanController::class, 'adminToggle'])->name('admin.pengumuman.toggle')->middleware(['auth', 'role:admin']);
+Route::get('/admin/pengumuman/{pengumuman}', [PengumumanController::class, 'adminShow'])->name('admin.pengumuman.show')->middleware(['auth', 'role:admin']);
 
-    // ── Kelola Kelas ──────────────────────────────────────────────
-    Route::delete('kelas/bulk-destroy', [KelasController::class, 'bulkDestroy'])->name('kelas.bulk-destroy');
-    Route::resource('kelas', KelasController::class);
+// ── Absensi Guru ─────────────────────────────────────────────────
+Route::get('/admin/absensi-guru', [AbsensiGuruController::class, 'index'])->name('admin.absensi-guru.index')->middleware(['auth', 'role:admin']);
+Route::post('/admin/absensi-guru', [AbsensiGuruController::class, 'store'])->name('admin.absensi-guru.store')->middleware(['auth', 'role:admin']);
+Route::get('/admin/absensi-guru/rekap', [AbsensiGuruController::class, 'rekap'])->name('admin.absensi-guru.rekap')->middleware(['auth', 'role:admin']);
+Route::get('/admin/absensi-guru/export-excel', [AbsensiGuruController::class, 'exportExcel'])->name('admin.absensi-guru.export-excel')->middleware(['auth', 'role:admin']);
+Route::get('/admin/absensi-guru/export-pdf', [AbsensiGuruController::class, 'exportPdf'])->name('admin.absensi-guru.export-pdf')->middleware(['auth', 'role:admin']);
+Route::delete('/admin/absensi-guru/{absensiGuru}', [AbsensiGuruController::class, 'destroy'])->name('admin.absensi-guru.destroy')->middleware(['auth', 'role:admin']);
 
-    // ── Absensi Guru ──────────────────────────────────────────────
-    Route::get('/absensi-guru',                  [AbsensiGuruController::class, 'index'])->name('absensi-guru.index');
-    Route::post('/absensi-guru',                 [AbsensiGuruController::class, 'store'])->name('absensi-guru.store');
-    Route::delete('/absensi-guru/{absensiGuru}', [AbsensiGuruController::class, 'destroy'])->name('absensi-guru.destroy');
-    Route::get('/absensi-guru/rekap',            [AbsensiGuruController::class, 'rekap'])->name('absensi-guru.rekap');
-    Route::get('/absensi-guru/export-excel',     [AbsensiGuruController::class, 'exportExcel'])->name('absensi-guru.export-excel');
-    Route::get('/absensi-guru/export-pdf',       [AbsensiGuruController::class, 'exportPdf'])->name('absensi-guru.export-pdf');
+// ── Perizinan (Admin) ────────────────────────────────────────────
+Route::get('/admin/perizinan', [AdminPerizinanController::class, 'index'])->name('admin.perizinan.index')->middleware(['auth', 'role:admin']);
+Route::post('/admin/perizinan/{perizinan}/setujui', [AdminPerizinanController::class, 'approve'])->name('admin.perizinan.setujui')->middleware(['auth', 'role:admin']);
+Route::post('/admin/perizinan/{perizinan}/tolak', [AdminPerizinanController::class, 'reject'])->name('admin.perizinan.tolak')->middleware(['auth', 'role:admin']);
 
-    // ── Pengumuman ────────────────────────────────────────────────
-    Route::get('/pengumuman',                       [PengumumanController::class, 'adminIndex'])->name('pengumuman');
-    Route::get('/pengumuman/index',                 [PengumumanController::class, 'adminIndex'])->name('pengumuman.index');
-    Route::get('/pengumuman/create',                [PengumumanController::class, 'adminCreate'])->name('pengumuman.create');
-    Route::post('/pengumuman',                      [PengumumanController::class, 'adminStore'])->name('pengumuman.store');
-    Route::delete('/pengumuman/bulk-destroy',       [PengumumanController::class, 'bulkDestroy'])->name('pengumuman.bulkDestroy');
-    Route::get('/pengumuman/{pengumuman}/edit',     [PengumumanController::class, 'adminEdit'])->name('pengumuman.edit');
-    Route::put('/pengumuman/{pengumuman}',          [PengumumanController::class, 'adminUpdate'])->name('pengumuman.update');
-    Route::delete('/pengumuman/{pengumuman}',       [PengumumanController::class, 'adminDestroy'])->name('pengumuman.destroy');
-    Route::patch('/pengumuman/{pengumuman}/toggle', [PengumumanController::class, 'adminToggle'])->name('pengumuman.toggle');
-    Route::get('/pengumuman/{pengumuman}',          [PengumumanController::class, 'adminShow'])->name('pengumuman.show');
+// ── Kelola Website ───────────────────────────────────────────────
+Route::get('/admin/kelola-website', [WebsiteController::class, 'kelolaWebsite'])->name('admin.kelola-website')->middleware(['auth', 'role:admin']);
+Route::patch('/admin/kelola-website/home', [WebsiteController::class, 'updateHome'])->name('admin.kelola-website.update-home')->middleware(['auth', 'role:admin']);
+Route::post('/admin/kelola-website/hero-media', [WebsiteController::class, 'updateHeroMedia'])->name('admin.kelola-website.update-hero-media')->middleware(['auth', 'role:admin']);
+Route::delete('/admin/kelola-website/hero-media/file', [WebsiteController::class, 'deleteHeroFile'])->name('admin.kelola-website.delete-hero-file')->middleware(['auth', 'role:admin']);
+Route::patch('/admin/kelola-website/update-stats', [WebsiteController::class, 'updateStats'])->name('admin.kelola-website.update-stats')->middleware(['auth', 'role:admin']);
+Route::patch('/admin/kelola-website/update-kontak', [WebsiteController::class, 'updateKontak'])->name('admin.kelola-website.update-kontak')->middleware(['auth', 'role:admin']);
+Route::patch('/admin/kelola-website/update-school-settings', [WebsiteController::class, 'updateSchoolSettings'])->name('admin.kelola-website.update-school-settings')->middleware(['auth', 'role:admin']);
+Route::delete('/admin/kelola-website/delete-logo', [WebsiteController::class, 'deleteLogo'])->name('admin.kelola-website.delete-logo')->middleware(['auth', 'role:admin']);
+Route::delete('/admin/kelola-website/delete-sambutan-foto', [WebsiteController::class, 'deleteSambutanFoto'])->name('admin.kelola-website.delete-sambutan-foto')->middleware(['auth', 'role:admin']);
+Route::delete('/admin/kelola-website/berita/{id}', [WebsiteController::class, 'destroyTab'])->name('admin.kelola-website.berita.destroy')->middleware(['auth', 'role:admin']);
+Route::post('/admin/kelola-website/berita', [WebsiteController::class, 'storeBerita'])->name('admin.kelola-website.berita.store')->middleware(['auth', 'role:admin']);
 
-    // ── Kelola Website ────────────────────────────────────────────
-    Route::get('/kelola-website',                          [WebsiteController::class, 'kelolaWebsite'])->name('kelola-website');
-    Route::patch('/kelola-website/home',                   [WebsiteController::class, 'updateHome'])->name('kelola-website.update-home');
-    Route::post('/kelola-website/hero-media',              [WebsiteController::class, 'updateHeroMedia'])->name('kelola-website.update-hero-media');
-    Route::delete('/kelola-website/hero-media/file',       [WebsiteController::class, 'deleteHeroFile'])->name('kelola-website.delete-hero-file');
-    Route::patch('/kelola-website/update-stats',           [WebsiteController::class, 'updateStats'])->name('kelola-website.update-stats');
-    Route::patch('/kelola-website/update-kontak',          [WebsiteController::class, 'updateKontak'])->name('kelola-website.update-kontak');
-    Route::patch('/kelola-website/update-school-settings', [WebsiteController::class, 'updateSchoolSettings'])->name('kelola-website.update-school-settings');
-    Route::delete('/kelola-website/delete-logo',           [WebsiteController::class, 'deleteLogo'])->name('kelola-website.delete-logo');
-    Route::delete('/kelola-website/delete-sambutan-foto',  [WebsiteController::class, 'deleteSambutanFoto'])->name('kelola-website.delete-sambutan-foto');
-    Route::delete('/kelola-website/berita/{id}',           [WebsiteController::class, 'destroyTab'])->name('kelola-website.berita.destroy');
-    Route::post('/kelola-website/berita',                  [WebsiteController::class, 'storeBerita'])->name('kelola-website.berita.store');
+// ── Berita ───────────────────────────────────────────────────────
+Route::get('/admin/berita/create', [BeritaController::class, 'create'])->name('admin.berita.create')->middleware(['auth', 'role:admin']);
+Route::post('/admin/berita', [BeritaController::class, 'store'])->name('admin.berita.store')->middleware(['auth', 'role:admin']);
+Route::get('/admin/berita/{berita}/edit', [BeritaController::class, 'edit'])->name('admin.berita.edit')->middleware(['auth', 'role:admin']);
+Route::patch('/admin/berita/{berita}', [BeritaController::class, 'update'])->name('admin.berita.update')->middleware(['auth', 'role:admin']);
+Route::delete('/admin/berita/{berita}', [BeritaController::class, 'destroy'])->name('admin.berita.destroy')->middleware(['auth', 'role:admin']);
+Route::patch('/admin/berita/{berita}/toggle-status', [BeritaController::class, 'toggleStatus'])->name('admin.berita.toggle-status')->middleware(['auth', 'role:admin']);
 
-    // ── Berita ────────────────────────────────────────────────────
-    Route::prefix('berita')->name('berita.')->group(function () {
-        Route::get('/create',                   [BeritaController::class, 'create'])->name('create');
-        Route::post('/',                        [BeritaController::class, 'store'])->name('store');
-        Route::get('/{berita}/edit',            [BeritaController::class, 'edit'])->name('edit');
-        Route::patch('/{berita}',               [BeritaController::class, 'update'])->name('update');
-        Route::delete('/{berita}',              [BeritaController::class, 'destroy'])->name('destroy');
-        Route::patch('/{berita}/toggle-status', [BeritaController::class, 'toggleStatus'])->name('toggle-status');
-    });
+// ── Galeri ───────────────────────────────────────────────────────
+Route::get('/admin/galeri/create', [GaleriController::class, 'create'])->name('admin.galeri.create')->middleware(['auth', 'role:admin']);
+Route::post('/admin/galeri', [GaleriController::class, 'store'])->name('admin.galeri.store')->middleware(['auth', 'role:admin']);
+Route::get('/admin/galeri/{galeri}/edit', [GaleriController::class, 'edit'])->name('admin.galeri.edit')->middleware(['auth', 'role:admin']);
+Route::patch('/admin/galeri/{galeri}', [GaleriController::class, 'update'])->name('admin.galeri.update')->middleware(['auth', 'role:admin']);
+Route::delete('/admin/galeri/{galeri}', [GaleriController::class, 'destroy'])->name('admin.galeri.destroy')->middleware(['auth', 'role:admin']);
+Route::patch('/admin/galeri/{galeri}/toggle-status', [GaleriController::class, 'toggleStatus'])->name('admin.galeri.toggle-status')->middleware(['auth', 'role:admin']);
 
-    // ── Galeri ────────────────────────────────────────────────────
-    Route::prefix('galeri')->name('galeri.')->group(function () {
-        Route::get('/create',                   [GaleriController::class, 'create'])->name('create');
-        Route::post('/',                        [GaleriController::class, 'store'])->name('store');
-        Route::get('/{galeri}/edit',            [GaleriController::class, 'edit'])->name('edit');
-        Route::patch('/{galeri}',               [GaleriController::class, 'update'])->name('update');
-        Route::delete('/{galeri}',              [GaleriController::class, 'destroy'])->name('destroy');
-        Route::patch('/{galeri}/toggle-status', [GaleriController::class, 'toggleStatus'])->name('toggle-status');
-    });
+// ── Data Akademik / Academic Planner ─────────────────────────────
+Route::get('/admin/academic-planner', [AcademicPlannerController::class, 'index'])->name('admin.academic-planner.index')->middleware(['auth', 'role:admin']);
 
-    // ── Academic Planner ────────────────────────────────────────────
-    Route::prefix('academic-planner')->name('academic-planner.')->group(function () {
+// Study Group (Kelas Akademik)
+Route::post('/admin/academic-planner/study-group', [AcademicPlannerController::class, 'storeStudyGroup'])->name('admin.academic-planner.study-group.store')->middleware(['auth', 'role:admin']);
+Route::put('/admin/academic-planner/study-group/{id}', [AcademicPlannerController::class, 'updateStudyGroup'])->name('admin.academic-planner.study-group.update')->middleware(['auth', 'role:admin']);
+Route::delete('/admin/academic-planner/study-group/{id}', [AcademicPlannerController::class, 'destroyStudyGroup'])->name('admin.academic-planner.study-group.destroy')->middleware(['auth', 'role:admin']);
+Route::get('/admin/academic-planner/study-group/{id}', [AcademicPlannerController::class, 'showStudyGroup'])->name('admin.academic-planner.study-group.show')->middleware(['auth', 'role:admin']);
 
-        // MAIN PAGE
-        Route::get('/', [AcademicPlannerController::class, 'index'])->name('index'); // admin.academic-planner.index
+// Jadwal (dalam Study Group)
+Route::post('/admin/academic-planner/{groupId}/store-jadwal', [AcademicPlannerController::class, 'storeJadwal'])->name('admin.academic-planner.jadwal.store')->middleware(['auth', 'role:admin']);
+Route::put('/admin/academic-planner/jadwal/{id}/update', [AcademicPlannerController::class, 'updateJadwal'])->name('admin.academic-planner.jadwal.update')->middleware(['auth', 'role:admin']);
+Route::delete('/admin/academic-planner/jadwal/{id}/delete', [AcademicPlannerController::class, 'destroyJadwal'])->name('admin.academic-planner.jadwal.destroy')->middleware(['auth', 'role:admin']);
 
-        // Study Groups (Kelas)
-        Route::post('/study-group',                  [AcademicPlannerController::class, 'storeStudyGroup'])->name('study-group.store');
-        Route::put('/study-group/{id}',               [AcademicPlannerController::class, 'updateStudyGroup'])->name('study-group.update');
-        Route::delete('/study-group/{id}',            [AcademicPlannerController::class, 'destroyStudyGroup'])->name('study-group.destroy');
-        Route::get('/study-group/{id}',               [AcademicPlannerController::class, 'showStudyGroup'])->name('study-group.show');
-        Route::post('/{groupId}/store-jadwal',        [AcademicPlannerController::class, 'storeJadwal'])->name('jadwal.store');
-        Route::put('/jadwal/{id}/update',             [AcademicPlannerController::class, 'updateJadwal'])->name('jadwal.update');
-        Route::delete('/jadwal/{id}/delete',          [AcademicPlannerController::class, 'destroyJadwal'])->name('jadwal.destroy');
+// Study Subjects (Mata Pelajaran Master)
+Route::get('/admin/academic-planner/study-subjects', [AcademicPlannerController::class, 'indexStudySubject'])->name('admin.academic-planner.study-subjects.index')->middleware(['auth', 'role:admin']);
+Route::post('/admin/academic-planner/study-subjects', [AcademicPlannerController::class, 'storeStudySubject'])->name('admin.academic-planner.study-subjects.store')->middleware(['auth', 'role:admin']);
+Route::get('/admin/academic-planner/study-subjects/{id}/edit', [AcademicPlannerController::class, 'editStudySubject'])->name('admin.academic-planner.study-subjects.edit')->middleware(['auth', 'role:admin']);
+Route::put('/admin/academic-planner/study-subjects/{id}', [AcademicPlannerController::class, 'updateStudySubject'])->name('admin.academic-planner.study-subjects.update')->middleware(['auth', 'role:admin']);
+Route::delete('/admin/academic-planner/study-subjects/{id}', [AcademicPlannerController::class, 'destroyStudySubject'])->name('admin.academic-planner.study-subjects.destroy')->middleware(['auth', 'role:admin']);
 
-        // ── Study Subjects ─────────────────────────
-        Route::prefix('study-subjects')->name('study-subjects.')->group(function () {
-            Route::get('/',           [AcademicPlannerController::class, 'indexStudySubject'])->name('index');
-            Route::post('/',          [AcademicPlannerController::class, 'storeStudySubject'])->name('store');
-            Route::get('/{id}/edit',  [AcademicPlannerController::class, 'editStudySubject'])->name('edit');
-            Route::put('/{id}',       [AcademicPlannerController::class, 'updateStudySubject'])->name('update');
-            Route::delete('/{id}',    [AcademicPlannerController::class, 'destroyStudySubject'])->name('destroy');
-        });
+// Timetables (Jadwal Pelajaran Master)
+Route::get('/admin/academic-planner/timetables/create', [AcademicPlannerController::class, 'createTimetable'])->name('admin.academic-planner.timetables.create')->middleware(['auth', 'role:admin']);
+Route::post('/admin/academic-planner/timetables', [AcademicPlannerController::class, 'storeTimetable'])->name('admin.academic-planner.timetables.store')->middleware(['auth', 'role:admin']);
+Route::get('/admin/academic-planner/timetables/{id}/edit', [AcademicPlannerController::class, 'editTimetable'])->name('admin.academic-planner.timetables.edit')->middleware(['auth', 'role:admin']);
+Route::put('/admin/academic-planner/timetables/{id}', [AcademicPlannerController::class, 'updateTimetable'])->name('admin.academic-planner.timetables.update')->middleware(['auth', 'role:admin']);
+Route::delete('/admin/academic-planner/timetables/{id}', [AcademicPlannerController::class, 'destroyTimetable'])->name('admin.academic-planner.timetables.destroy')->middleware(['auth', 'role:admin']);
 
-        // ── Timetables ─────────────────────────
-        Route::prefix('timetables')->name('timetables.')->group(function () {
-            Route::get('/create',    [AcademicPlannerController::class, 'createTimetable'])->name('create');
-            Route::post('/',         [AcademicPlannerController::class, 'storeTimetable'])->name('store');
-            Route::get('/{id}/edit', [AcademicPlannerController::class, 'editTimetable'])->name('edit');
-            Route::put('/{id}',      [AcademicPlannerController::class, 'updateTimetable'])->name('update');
-            Route::delete('/{id}',   [AcademicPlannerController::class, 'destroyTimetable'])->name('destroy');
-        });
+// Assignments (Penugasan Guru ke Kelas/Mapel)
+Route::get('/admin/academic-planner/assignments/create', [StudyClassAssignmentController::class, 'create'])->name('admin.academic-planner.assignments.create')->middleware(['auth', 'role:admin']);
+Route::post('/admin/academic-planner/assignments', [StudyClassAssignmentController::class, 'store'])->name('admin.academic-planner.assignments.store')->middleware(['auth', 'role:admin']);
+Route::get('/admin/academic-planner/assignments/{id}/edit', [StudyClassAssignmentController::class, 'edit'])->name('admin.academic-planner.assignments.edit')->middleware(['auth', 'role:admin']);
+Route::put('/admin/academic-planner/assignments/{id}', [StudyClassAssignmentController::class, 'update'])->name('admin.academic-planner.assignments.update')->middleware(['auth', 'role:admin']);
+Route::delete('/admin/academic-planner/assignments/{id}', [StudyClassAssignmentController::class, 'destroy'])->name('admin.academic-planner.assignments.destroy')->middleware(['auth', 'role:admin']);
+Route::post('/admin/academic-planner/assignments/assign-teacher', [StudyClassAssignmentController::class, 'assignTeacher'])->name('admin.academic-planner.assignments.assign-teacher')->middleware(['auth', 'role:admin']);
 
-        // ── Assignments ─────────────────────────
-        Route::prefix('assignments')->name('assignments.')->group(function () {
-            Route::get('/create',    [StudyClassAssignmentController::class, 'create'])->name('create');
-            Route::post('/',         [StudyClassAssignmentController::class, 'store'])->name('store');
-            Route::get('/{id}/edit', [StudyClassAssignmentController::class, 'edit'])->name('edit');
-            Route::put('/{id}',      [StudyClassAssignmentController::class, 'update'])->name('update');
-            Route::delete('/{id}',   [StudyClassAssignmentController::class, 'destroy'])->name('destroy');
-            Route::post('/assign-teacher', [StudyClassAssignmentController::class, 'assignTeacher'])->name('assign-teacher');
-        });
-    });
+// ── Activity Log ─────────────────────────────────────────────────
+Route::get('/admin/activity-log', [ActivityLogController::class, 'index'])->name('admin.activity-log.index')->middleware(['auth', 'role:admin']);
+Route::get('/admin/activity-log/data', [ActivityLogController::class, 'data'])->name('admin.activity-log.data')->middleware(['auth', 'role:admin']);
+Route::delete('/admin/activity-log/purge', [ActivityLogController::class, 'purge'])->name('admin.activity-log.purge')->middleware(['auth', 'role:admin']);
+Route::delete('/admin/activity-log/{log}', [ActivityLogController::class, 'destroy'])->name('admin.activity-log.destroy')->middleware(['auth', 'role:admin']);
 
-    // ── Activity Log ─────────────────────────────────────────────
-    Route::prefix('activity-log')->name('activity-log.')->group(function () {
-        Route::get('/',        [ActivityLogController::class, 'index'])->name('index');
-        Route::get('/data',    [ActivityLogController::class, 'data'])->name('data');
-        Route::delete('/purge', [ActivityLogController::class, 'purge'])->name('purge');
-        Route::delete('/{log}', [ActivityLogController::class, 'destroy'])->name('destroy');
-    });
-
-    // ── Dashboard widget data endpoints (AJAX / JSON) ─────────────
-    Route::prefix('dashboard')->name('dashboard.')->group(function () {
-        Route::get('/jadwal-hari-ini', [AdminDashboardController::class, 'jadwalHariIni'])->name('jadwal');
-        Route::get('/stats',           [AdminDashboardController::class, 'stats'])->name('stats');
-    });
-
-});
 
 // =================================================================
-// GURU
+// GURU — SEMUA ROUTE DASHBOARD GURU ADA DI SINI, TIDAK DIKELOMPOKKAN
 // =================================================================
-Route::prefix('guru')->name('guru.')->middleware(['auth', 'role:guru'])->group(function () {
 
-    Route::get('/dashboard',   [GuruDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/profil',      [GuruProfilController::class, 'show'])->name('profil');
-    Route::get('/profil/edit', [GuruProfilController::class, 'edit'])->name('profil.edit');
-    Route::put('/profil',      [GuruProfilController::class, 'update'])->name('profil.update');
+// ── Dashboard & Profil ───────────────────────────────────────────
+Route::get('/guru/dashboard', [GuruDashboardController::class, 'index'])->name('guru.dashboard')->middleware(['auth', 'role:guru']);
+Route::get('/guru/profil', [GuruProfilController::class, 'show'])->name('guru.profil')->middleware(['auth', 'role:guru']);
+Route::get('/guru/profil/edit', [GuruProfilController::class, 'edit'])->name('guru.profil.edit')->middleware(['auth', 'role:guru']);
+Route::put('/guru/profil', [GuruProfilController::class, 'update'])->name('guru.profil.update')->middleware(['auth', 'role:guru']);
 
-    Route::get('/pengumuman', fn() => view('guru.pengumuman.index'))->name('pengumuman');
+// ── Jadwal Mengajar ──────────────────────────────────────────────
+Route::get('/guru/jadwal-mengajar', [JadwalMengajarController::class, 'index'])->name('guru.jadwal-mengajar.index')->middleware(['auth', 'role:guru']);
+Route::post('/guru/jadwal-mengajar', [JadwalMengajarController::class, 'store'])->name('guru.jadwal-mengajar.store')->middleware(['auth', 'role:guru']);
+Route::put('/guru/jadwal-mengajar/{jadwalMengajar}', [JadwalMengajarController::class, 'update'])->name('guru.jadwal-mengajar.update')->middleware(['auth', 'role:guru']);
+Route::delete('/guru/jadwal-mengajar/{jadwalMengajar}', [JadwalMengajarController::class, 'destroy'])->name('guru.jadwal-mengajar.destroy')->middleware(['auth', 'role:guru']);
 
-    // ── Absensi Siswa (oleh Guru) ─────────────────────────────────────────
-    Route::get('/absensi-siswa',       [AbsensiSiswaController::class, 'index'])->name('absensi-siswa.index');
-    Route::post('/absensi-siswa',      [AbsensiSiswaController::class, 'store'])->name('absensi-siswa.store');
-    Route::get('/absensi-siswa/rekap', [AbsensiSiswaController::class, 'rekap'])->name('absensi-siswa.rekap');
+// ── Mata Pelajaran (dikelola oleh guru sendiri) ──────────────────
+Route::post('/guru/study-subject', [GuruStudySubjectController::class, 'store'])->name('guru.study-subject.store')->middleware(['auth', 'role:guru']);
+Route::put('/guru/study-subject/{studySubject}', [GuruStudySubjectController::class, 'update'])->name('guru.study-subject.update')->middleware(['auth', 'role:guru']);
+Route::delete('/guru/study-subject/{studySubject}', [GuruStudySubjectController::class, 'destroy'])->name('guru.study-subject.destroy')->middleware(['auth', 'role:guru']);
 
-    Route::get('/wali-kelas', [WaliKelasController::class, 'index'])->name('wali-kelas');
+// ── Absensi Foto ─────────────────────────────────────────────────
+Route::get('/guru/absensi-foto', [AbsensiFotoController::class, 'index'])->name('guru.absensi-foto.index')->middleware(['auth', 'role:guru']);
+Route::post('/guru/absensi-foto/masuk', [AbsensiFotoController::class, 'storeMasuk'])->name('guru.absensi-foto.masuk')->middleware(['auth', 'role:guru']);
+Route::post('/guru/absensi-foto/pulang', [AbsensiFotoController::class, 'storePulang'])->name('guru.absensi-foto.pulang')->middleware(['auth', 'role:guru']);
+Route::post('/guru/absensi-foto/kantor', [AbsensiFotoController::class, 'storeKantor'])->name('guru.absensi-foto.kantor')->middleware(['auth', 'role:guru']);
 
-    // =================================================================
-    // JADWAL MENGAJAR
-    // =================================================================
-    Route::resource('jadwal-mengajar', JadwalMengajarController::class)
-         ->names('jadwal-mengajar')
-         ->only(['index', 'store', 'update', 'destroy']);
+// ── Absensi Siswa (oleh Guru) ────────────────────────────────────
+Route::get('/guru/absensi-siswa', [AbsensiSiswaController::class, 'index'])->name('guru.absensi-siswa.index')->middleware(['auth', 'role:guru']);
+Route::post('/guru/absensi-siswa', [AbsensiSiswaController::class, 'store'])->name('guru.absensi-siswa.store')->middleware(['auth', 'role:guru']);
+Route::get('/guru/absensi-siswa/rekap', [AbsensiSiswaController::class, 'rekap'])->name('guru.absensi-siswa.rekap')->middleware(['auth', 'role:guru']);
 
-    // Mata Pelajaran (oleh guru sendiri)
-    Route::resource('study-subject', App\Http\Controllers\Guru\StudySubjectController::class)
-         ->names('study-subject')
-         ->only(['store', 'update', 'destroy']);
+// ── Perizinan (Guru) ─────────────────────────────────────────────
+Route::get('/guru/perizinan', [PerizinanController::class, 'index'])->name('guru.perizinan.index')->middleware(['auth', 'role:guru']);
+Route::post('/guru/perizinan', [PerizinanController::class, 'store'])->name('guru.perizinan.store')->middleware(['auth', 'role:guru']);
 
-    // ── Absensi Foto ─────────────────────────────────────────────
-    Route::get('absensi-foto',         [AbsensiFotoController::class, 'index'])->name('absensi-foto.index');
-    Route::post('absensi-foto/masuk',  [AbsensiFotoController::class, 'storeMasuk'])->name('absensi-foto.masuk');
-    Route::post('absensi-foto/pulang', [AbsensiFotoController::class, 'storePulang'])->name('absensi-foto.pulang');
-    Route::post('absensi-foto/kantor', [AbsensiFotoController::class, 'storeKantor'])->name('absensi-foto.kantor');
+// ── Pengumuman ───────────────────────────────────────────────────
+Route::get('/guru/pengumuman', fn() => view('guru.pengumuman.index'))->name('guru.pengumuman')->middleware(['auth', 'role:guru']);
 
-    // ── Perizinan ────────────────────────────────────────────────
-    Route::get('perizinan',  [PerizinanController::class, 'index'])->name('perizinan.index');
-    Route::post('perizinan', [PerizinanController::class, 'store'])->name('perizinan.store');
+// ── Wali Kelas ───────────────────────────────────────────────────
+Route::get('/guru/wali-kelas', [WaliKelasController::class, 'index'])->name('guru.wali-kelas')->middleware(['auth', 'role:guru']);
 
-});
 
 // =================================================================
-// SISWA
+// SISWA — SEMUA ROUTE DASHBOARD SISWA ADA DI SINI, TIDAK DIKELOMPOKKAN
 // =================================================================
-Route::prefix('siswa')->name('siswa.')->middleware(['auth', 'role:siswa'])->group(function () {
-    Route::get('/dashboard',   [SiswaDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/profil',      [SiswaProfilController::class, 'show'])->name('profil');
-    Route::get('/profil/edit', [SiswaProfilController::class, 'edit'])->name('profil.edit');
-    Route::put('/profil',      [SiswaProfilController::class, 'update'])->name('profil.update');
-    Route::get('/pengumuman',  fn() => view('siswa.pengumuman.index'))->name('pengumuman');
 
-    // Jadwal Pelajaran (read-only)
-    Route::get('jadwal-pelajaran', [JadwalPelajaranController::class, 'index'])->name('jadwal-pelajaran');
-});
+// ── Dashboard & Profil ───────────────────────────────────────────
+Route::get('/siswa/dashboard', [SiswaDashboardController::class, 'index'])->name('siswa.dashboard')->middleware(['auth', 'role:siswa']);
+Route::get('/siswa/profil', [SiswaProfilController::class, 'show'])->name('siswa.profil')->middleware(['auth', 'role:siswa']);
+Route::get('/siswa/profil/edit', [SiswaProfilController::class, 'edit'])->name('siswa.profil.edit')->middleware(['auth', 'role:siswa']);
+Route::put('/siswa/profil', [SiswaProfilController::class, 'update'])->name('siswa.profil.update')->middleware(['auth', 'role:siswa']);
+
+// ── Jadwal Pelajaran (read-only) ─────────────────────────────────
+Route::get('/siswa/jadwal-pelajaran', [JadwalPelajaranController::class, 'index'])->name('siswa.jadwal-pelajaran')->middleware(['auth', 'role:siswa']);
+
+// ── Pengumuman ───────────────────────────────────────────────────
+Route::get('/siswa/pengumuman', fn() => view('siswa.pengumuman.index'))->name('siswa.pengumuman')->middleware(['auth', 'role:siswa']);
+
+
+// =================================================================
+// DEBUG (opsional — hapus di production)
+// =================================================================
+Route::get('/debug-wali', function () {
+    $user = auth()->user();
+    $guru = $user->guru;
+
+    return response()->json([
+        'user_id'           => $user->id,
+        'guru_id'           => $guru?->id,
+        'via_wali_guru_id'  => \App\Models\Kelas::where('wali_guru_id', $guru?->id)->first()?->toArray(),
+        'via_wali_kelas_id' => \App\Models\Kelas::where('wali_kelas_id', $guru?->id)->first()?->toArray(),
+        'method_isWaliKelas_exists' => method_exists($user, 'isWaliKelas'),
+        'method_isWaliKelas_result' => method_exists($user, 'isWaliKelas') ? $user->isWaliKelas() : 'method tidak ada',
+        'guru_relations'    => $guru ? array_keys($guru->getRelations()) : [],
+        'guru_attributes'   => $guru?->getAttributes(),
+        'kelas_columns'     => \Illuminate\Support\Facades\Schema::getColumnListing('kelas'),
+    ]);
+})->middleware('auth');

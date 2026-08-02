@@ -61,7 +61,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     // ── Profil Admin ─────────────────────────────────────────────
-    Route::get('/users',      [AdminProfilController::class, 'show'])->name('index');
+    Route::get('/',      [AdminProfilController::class, 'show'])->name('profil');
     Route::get('/profil/edit', [AdminProfilController::class, 'edit'])->name('profil.edit');
     Route::put('/profil',      [AdminProfilController::class, 'update'])->name('profil.update');
 

@@ -68,9 +68,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     // ── Users ────────────────────────────────────────────────────
     // FIX: semua rute users digabung rapi dalam satu grup 'users.' —
     //      tidak ada lagi duplikasi nama/path di luar grup ini.
-        Route::get('/users',                        [UserController::class, 'index'])->name('index');
-        Route::post('/users',                       [UserController::class, 'store'])->name('store');
-        Route::get('/{user}',                  [UserController::class, 'show'])->name('show');
+        Route::get('/users',                        [UserController::class, 'index'])->name('users.index');
+        Route::post('/users',                       [UserController::class, 'store'])->name('users.store');
+        Route::get('/{user}',                  [UserController::class, 'show'])->name('users.show');
         Route::get('/{user}/edit',             [UserController::class, 'edit'])->name('edit');
         Route::put('/{user}',                  [UserController::class, 'update'])->name('update');
         Route::patch('/{user}/reset-password', [UserController::class, 'resetPassword'])->name('reset-password');

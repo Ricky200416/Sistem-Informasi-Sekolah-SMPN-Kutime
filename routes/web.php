@@ -77,13 +77,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
         Route::patch('/{user}/reset-password', [UserController::class, 'resetPassword'])->name('reset-password');
         Route::delete('/bulk-destroy',         [UserController::class, 'bulkDestroy'])->name('bulk-destroy');
         Route::delete('/{user}',               [UserController::class, 'destroy'])->name('destroy');
+    });
 
         // Import & Export
         Route::post('/import',                 [UserController::class, 'import'])->name('import');
         Route::get('/export/excel',            [UserController::class, 'exportExcel'])->name('export-excel');
         Route::get('/pdf',              [UserController::class, 'exportPdf'])->name('guru');
         Route::get('/template/import/{role?}', [UserController::class, 'downloadTemplate'])->name('template-import');
-    });
 
     // ── Perizinan ────────────────────────────────────────────────
     Route::prefix('perizinan')->name('perizinan.')->group(function () {

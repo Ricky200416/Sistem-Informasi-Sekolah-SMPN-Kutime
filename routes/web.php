@@ -75,6 +75,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
     Route::patch('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    Route::get('/pdf/guru', [UserController::class, 'guru'])->name('pdf.guru');
+    Route::get('/pdf/siswa', [UserController::class, 'siswa'])->name('pdf.siswa');
 
     // ── Kelola Kelas ───────────────────────────────────────────
     // NOTE: KelasController tidak punya method create/show/edit terpisah —

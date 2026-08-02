@@ -117,6 +117,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::get('/absensi-guru/export-pdf', [AbsensiGuruController::class, 'exportPdf'])->name('absensi-guru.export-pdf');
     Route::delete('/absensi-guru/{absensiGuru}', [AbsensiGuruController::class, 'destroy'])->name('absensi-guru.destroy');
 
+    Route::resource('absensi-guru', AbsensiGuruController::class);
+
     // ── Perizinan (Admin) ────────────────────────────────────────
     Route::get('/perizinan', [AdminPerizinanController::class, 'index'])->name('perizinan.index');
     Route::post('/perizinan/{perizinan}/setujui', [AdminPerizinanController::class, 'approve'])->name('perizinan.setujui');

@@ -66,7 +66,7 @@ Route::put('/admin/profil', [AdminProfilController::class, 'update'])->name('adm
 Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users.index')->middleware(['auth', 'role:admin']);
 Route::post('/admin/users', [UserController::class, 'store'])->name('admin.users.store')->middleware(['auth', 'role:admin']);
 Route::get('/admin/users/export/excel', [UserController::class, 'exportExcel'])->name('admin.users.export-excel')->middleware(['auth', 'role:admin']);
-Route::get('/admin/users/export/pdf', [UserController::class, 'exportPdf'])->name('admin.users.export-pdf')->middleware(['auth', 'role:admin']);
+Route::get('/admin/pdf/guru', [UserController::class, 'exportPdf'])->name('admin.pdf.guru')->middleware(['auth', 'role:admin']);
 Route::get('/admin/users/template-import/{role?}', [UserController::class, 'downloadTemplate'])->name('admin.users.template-import')->middleware(['auth', 'role:admin']);
 Route::post('/admin/users/import', [UserController::class, 'import'])->name('admin.users.import')->middleware(['auth', 'role:admin']);
 Route::delete('/admin/users/bulk-destroy', [UserController::class, 'bulkDestroy'])->name('admin.users.bulk-destroy')->middleware(['auth', 'role:admin']);

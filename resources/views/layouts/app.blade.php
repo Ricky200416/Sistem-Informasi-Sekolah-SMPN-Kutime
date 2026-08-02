@@ -698,7 +698,7 @@
                     $adminNav = [
                         ['route'=>'admin.dashboard',            'label'=>'Dashboard',       'match'=>'admin.dashboard',
                          'icon'=>'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1v-5m10-10l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-5'],
-                        ['route'=>'admin.profil',               'label'=>'Data Diri',        'match'=>'admin.profil*',
+                        ['route'=>'admin.profil',               'label'=>'Data Diri',        'match'=>'admin.profil',
                          'icon'=>'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'],
                         ['route'=>'admin.users.index',          'label'=>'Kelola User',      'match'=>'admin.users*',
                          'icon'=>'M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2v-2a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2'],

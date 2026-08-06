@@ -91,11 +91,8 @@
     .ag-b-P{background:#dcfce7;color:#15803d;} .ag-b-A{background:#fee2e2;color:#b91c1c;}
     .ag-b-S{background:#fef9c3;color:#a16207;} .ag-b-I{background:#e0f2fe;color:#0369a1;}
     .ag-b-L{background:#fce7f3;color:#be185d;} .ag-b-W{background:#f3e8ff;color:#7e22ce;}
-    .ag-be { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:5px; color:#e2e8f0; font-size:14px; cursor:pointer; transition:background .1s,color .1s,transform .1s; }
-    .ag-be:hover { background:#eef2ff; color:#4f46e5; transform:scale(1.15); }
     .ag-rc { border-radius:4px; padding:1px 4px; font-size:9px; font-weight:700; display:inline-block; }
 
-    /* UPDATE: indikator kamera untuk sel absensi berbasis foto */
     .ag-cam-dot {
         position:absolute; top:-3px; right:-3px; width:9px; height:9px; border-radius:50%;
         background:#4f46e5; border:1.5px solid #fff; display:flex; align-items:center; justify-content:center;
@@ -109,7 +106,6 @@
     .ag-mov { display:none; position:fixed; inset:0; z-index:1000; background:rgba(15,23,42,.45); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:16px; }
     .ag-mov.show { display:flex; }
     .ag-mbox { background:#fff; border-radius:14px; padding:20px; width:275px; box-shadow:0 24px 60px rgba(0,0,0,.18); animation:agPop .2s cubic-bezier(.34,1.56,.64,1); max-height:90vh; overflow-y:auto; }
-    /* UPDATE: modal lebih lebar ketika menampilkan foto */
     .ag-mbox.ag-mbox-wide { width:340px; }
     @keyframes agPop { from{transform:scale(.88);opacity:0} to{transform:scale(1);opacity:1} }
     .ag-mh { display:flex; align-items:center; gap:10px; margin-bottom:13px; }
@@ -117,7 +113,6 @@
     .ag-mn  { font-size:13px; font-weight:700; color:#1e293b; line-height:1.2; }
     .ag-ms  { font-size:10px; color:#64748b; margin-top:2px; }
 
-    /* UPDATE: blok preview foto absensi */
     .ag-photo-block { margin-bottom:14px; }
     .ag-photo-badge {
         display:inline-flex; align-items:center; gap:5px; background:#eef2ff; color:#4338ca;
@@ -137,37 +132,28 @@
         display:flex; align-items:center; justify-content:center; height:100px; border-radius:8px;
         border:1.5px dashed #e2e8f0; color:#cbd5e1; font-size:9.5px;
     }
-    .ag-status-divider { display:flex; align-items:center; gap:8px; margin:12px 0 10px; }
-    .ag-status-divider hr { flex:1; border:none; border-top:1px solid #f1f5f9; }
-    .ag-status-divider span { font-size:9.5px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.04em; }
 
-    .ag-sg  { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:14px; }
-    .ag-sb  { display:flex; flex-direction:column; align-items:center; gap:3px; padding:9px 4px; border-radius:9px; border:2px solid #f1f5f9; cursor:pointer; transition:all .15s; background:#f8fafc; font-family:inherit; }
-    .ag-sb .sc { font-size:14px; font-weight:800; color:var(--sc); }
-    .ag-sb .sl { font-size:9px; font-weight:600; color:#94a3b8; }
-    .ag-sb:hover { border-color:var(--sc); transform:translateY(-1px); }
-    .ag-sb.active { border-color:var(--sc); background:var(--sbg); }
-    .ag-sb.active .sl { color:var(--sc); }
-    .ag-sb[data-s="P"]{--sc:#15803d;--sbg:#dcfce7} .ag-sb[data-s="A"]{--sc:#b91c1c;--sbg:#fee2e2}
-    .ag-sb[data-s="S"]{--sc:#a16207;--sbg:#fef9c3} .ag-sb[data-s="I"]{--sc:#0369a1;--sbg:#e0f2fe}
-    .ag-sb[data-s="L"]{--sc:#be185d;--sbg:#fce7f3} .ag-sb[data-s="W"]{--sc:#7e22ce;--sbg:#f3e8ff}
     .ag-ma { display:flex; gap:6px; }
     .ag-mb { flex:1; padding:8px; border-radius:7px; border:none; font-size:11.5px; font-weight:600; cursor:pointer; font-family:inherit; transition:background .15s; display:flex; align-items:center; justify-content:center; gap:4px; }
     .ag-mb-c{background:#f1f5f9;color:#64748b;} .ag-mb-c:hover{background:#e2e8f0;}
-    .ag-mb-s{background:#4f46e5;color:#fff;}    .ag-mb-s:hover{background:#4338ca;}
-    .ag-mb-d{background:#fee2e2;color:#b91c1c;flex:none;padding:8px 10px;} .ag-mb-d:hover{background:#fecaca;}
 
-    .ag-toast { position:fixed; bottom:20px; right:20px; z-index:9999; background:#1e293b; color:#fff; border-radius:9px; padding:10px 16px; font-size:12px; font-weight:500; display:flex; align-items:center; gap:8px; box-shadow:0 8px 24px rgba(0,0,0,.15); transform:translateY(80px); opacity:0; transition:all .28s cubic-bezier(.34,1.56,.64,1); pointer-events:none; }
-    .ag-toast.show { transform:translateY(0); opacity:1; }
-    .ag-toast.success i{color:#4ade80;} .ag-toast.error i{color:#f87171;}
     .ag-empty { padding:48px; text-align:center; color:#94a3b8; }
     .ag-empty i { font-size:36px; display:block; margin-bottom:10px; color:#cbd5e1; }
     .ag-empty p { font-size:12px; margin:0; line-height:1.7; }
 
-    /* UPDATE: lightbox zoom foto */
     .ag-lightbox { display:none; position:fixed; inset:0; z-index:1100; background:rgba(0,0,0,.8); align-items:center; justify-content:center; padding:24px; cursor:zoom-out; }
     .ag-lightbox.show { display:flex; }
     .ag-lightbox img { max-width:100%; max-height:100%; border-radius:10px; box-shadow:0 20px 60px rgba(0,0,0,.4); }
+
+    .ag-no-photo {
+        text-align:center; padding:14px 4px; color:#94a3b8; font-size:11px;
+    }
+    .ag-no-photo i { font-size:20px; display:block; margin-bottom:6px; color:#cbd5e1; }
+
+    .ag-viewonly-badge {
+        display:inline-flex; align-items:center; gap:5px; background:#fefce8; color:#92400e;
+        border:1px solid #fde68a; border-radius:6px; padding:3px 10px; font-size:10px; font-weight:700;
+    }
 </style>
 @endpush
 
@@ -206,7 +192,9 @@
         </h5>
 
         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-            {{-- UPDATE: tombol ke Perizinan --}}
+            <span class="ag-viewonly-badge">
+                <i class="bi bi-eye-fill"></i> Mode Lihat Saja
+            </span>
             <a href="{{ route('admin.perizinan.index') }}" class="ag-btn-kelola">
                 <i class="bi bi-file-earmark-text-fill"></i>
                 Perizinan
@@ -215,6 +203,11 @@
                class="ag-btn-kelola" style="background:#ef4444; border-color:#ef4444; color:white;">
                 <i class="bi bi-file-pdf-fill"></i>
                 PDF
+            </a>
+            <a href="{{ route('admin.absensi-guru.export-excel', ['bulan' => $bulan, 'tahun' => $tahun]) }}"
+               class="ag-btn-kelola" style="background:#16a34a; border-color:#16a34a; color:white;">
+                <i class="bi bi-file-earmark-excel-fill"></i>
+                Excel
             </a>
         </div>
     </div>
@@ -225,11 +218,19 @@
         </div>
     @endif
 
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:11.5px;color:#1e40af;display:flex;align-items:center;gap:7px;">
+        <i class="bi bi-info-circle-fill" style="color:#3b82f6;flex-shrink:0;"></i>
+        <span>
+            Data absensi di halaman ini <strong>hanya diisi oleh guru</strong> melalui menu Absensi Kehadiran (Foto) pada dashboard masing-masing.
+            Admin tidak dapat mengubah atau menghapus data absensi — klik sel untuk melihat bukti foto.
+        </span>
+    </div>
+
     @if($tanpaProfil > 0)
         <div style="background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:11.5px;color:#92400e;display:flex;align-items:center;gap:7px;">
             <i class="bi bi-exclamation-triangle-fill" style="color:#d97706;flex-shrink:0;"></i>
             <span>
-                <strong>{{ $tanpaProfil }} guru</strong> belum punya profil — sel absensinya tidak bisa diisi.
+                <strong>{{ $tanpaProfil }} guru</strong> belum punya profil — sel absensinya tidak dapat ditampilkan.
                 <a href="{{ route('admin.users.index', ['tab'=>'guru']) }}" style="color:#4f46e5;font-weight:600;">→ Lengkapi profil</a>
             </span>
         </div>
@@ -332,13 +333,13 @@
                     @for($d=1;$d<=$jumlahHari;$d++)
                         @php
                             $abs = ($gid && isset($absensiData[$gid][$d])) ? $absensiData[$gid][$d] : null;
-                            // UPDATE: cek apakah data ini berasal dari absensi foto
                             $hasFoto = $abs && !empty($abs->foto_masuk);
                             $fotoMasukUrl  = $hasFoto ? Storage::url($abs->foto_masuk) : null;
                             $fotoPulangUrl = ($abs && !empty($abs->foto_pulang)) ? Storage::url($abs->foto_pulang) : null;
                             $jamMasuk  = $abs->jam_masuk  ?? null;
                             $jamPulang = $abs->jam_pulang ?? null;
                             $tipeAbsen = $abs->tipe_absensi ?? null;
+                            $kelasNama = $abs?->kelas?->nama ?? null;
                         @endphp
                         <td id="ag-c-{{ $gid??'u'.$user->id }}-{{ $d }}"
                             class="{{ $todayDay===$d?'ag-td':'' }}">
@@ -346,7 +347,7 @@
                                 <span style="color:#f1f5f9;font-size:10px;" title="Profil belum ada">·</span>
                             @elseif($abs)
                                 <button class="ag-b ag-b-{{ $abs->status }}"
-                                    onclick="agM({{ $gid }},{{ $d }},'{{ $abs->status }}',@js($namaTampil),{{ $abs->id }},{{ $hasFoto ? 'true' : 'false' }},@js($fotoMasukUrl),@js($fotoPulangUrl),@js($jamMasuk),@js($jamPulang),@js($tipeAbsen))"
+                                    onclick="agV({{ $gid }},{{ $d }},'{{ $abs->status }}',@js($namaTampil),{{ $hasFoto ? 'true' : 'false' }},@js($fotoMasukUrl),@js($fotoPulangUrl),@js($jamMasuk),@js($jamPulang),@js($tipeAbsen),@js($kelasNama))"
                                     title="{{ $namaTampil }} · {{ $d }} {{ $bulanList[$bulan] }}{{ $hasFoto ? ' · Ada foto absensi' : '' }}">
                                     {{ $abs->status }}
                                     @if($hasFoto)
@@ -354,9 +355,7 @@
                                     @endif
                                 </button>
                             @else
-                                <span class="ag-be"
-                                    onclick="agM({{ $gid }},{{ $d }},'',@js($namaTampil),null,false,null,null,null,null,null)"
-                                    title="Isi absensi {{ $d }} {{ $bulanList[$bulan] }}">+</span>
+                                <span style="color:#f1f5f9;font-size:10px;" title="Belum absen">—</span>
                             @endif
                         </td>
                     @endfor
@@ -404,14 +403,13 @@
                     <span class="ag-ld" style="background:{{ $bg }};color:{{ $fc }};">{{ $k }}</span>{{ $lb }}
                 </span>
             @endforeach
-            {{-- UPDATE: keterangan ikon kamera --}}
             <span class="ag-li"><span class="ag-ld" style="background:#eef2ff;color:#4f46e5;"><i class="bi bi-camera-fill" style="font-size:8px;"></i></span>Absen via Foto</span>
-            <span style="margin-left:auto;font-size:10px;color:#cbd5e1;"><i class="bi bi-info-circle me-1"></i>Klik sel untuk isi / ubah</span>
+            <span style="margin-left:auto;font-size:10px;color:#cbd5e1;"><i class="bi bi-info-circle me-1"></i>Klik sel untuk melihat bukti foto</span>
         </div>
     </div>
 </div>
 
-{{-- MODAL --}}
+{{-- MODAL (VIEW-ONLY) --}}
 <div class="ag-mov" id="agModal" onclick="if(event.target.id==='agModal')agMC()">
     <div class="ag-mbox" id="agMbox">
         <div class="ag-mh">
@@ -419,36 +417,28 @@
             <div><div class="ag-mn" id="agMn">—</div><div class="ag-ms" id="agMs">—</div></div>
         </div>
 
-        {{-- UPDATE: blok preview foto absensi, hanya muncul jika ada foto --}}
         <div class="ag-photo-block" id="agPhotoBlock" style="display:none;">
             <span class="ag-photo-badge" id="agPhotoBadge"><i class="bi bi-camera-fill"></i> Absen via Foto</span>
             <div class="ag-photo-grid" id="agPhotoGrid"></div>
         </div>
-        <div class="ag-status-divider" id="agDivider" style="display:none;">
-            <hr><span>Ubah Status Manual</span><hr>
+
+        <div class="ag-no-photo" id="agNoPhoto" style="display:none;">
+            <i class="bi bi-camera"></i>
+            Tidak ada foto untuk absensi ini.
         </div>
 
-        <div class="ag-sg">
-            @foreach(['P'=>'Hadir','A'=>'Alpha','S'=>'Sakit','I'=>'Izin','L'=>'Terlambat','W'=>'WFH'] as $k=>$lb)
-                <button type="button" class="ag-sb" data-s="{{ $k }}" onclick="agSS('{{ $k }}')">
-                    <span class="sc">{{ $k }}</span><span class="sl">{{ $lb }}</span>
-                </button>
-            @endforeach
-        </div>
         <div class="ag-ma">
-            <button class="ag-mb ag-mb-c" onclick="agMC()"><i class="bi bi-x"></i> Batal</button>
-            <button class="ag-mb ag-mb-d" id="agDelBtn" onclick="agDel()" style="display:none;"><i class="bi bi-trash3"></i></button>
-            <button class="ag-mb ag-mb-s" id="agSaveBtn" onclick="agSave()"><i class="bi bi-check2"></i> Simpan</button>
+            <button class="ag-mb ag-mb-c" style="flex:1;" onclick="agMC()">
+                <i class="bi bi-x"></i> Tutup
+            </button>
         </div>
     </div>
 </div>
 
-{{-- UPDATE: lightbox untuk zoom foto --}}
+{{-- LIGHTBOX ZOOM FOTO --}}
 <div class="ag-lightbox" id="agLightbox" onclick="agLbC()">
     <img src="" id="agLbImg" alt="">
 </div>
-
-<div class="ag-toast" id="agToast"><i id="agTi"></i><span id="agTm"></span></div>
 
 @endsection
 
@@ -456,123 +446,101 @@
 <script>
 const AG_B = {{ (int)$bulan }}, AG_Y = {{ (int)$tahun }};
 const AG_BN = @js($bulanList[$bulan]);
-const AG_SU = "{{ route('admin.absensi-guru.store') }}";
-const AG_DB = "{{ url('admin/absensi-guru') }}";
-const agCS  = () => document.querySelector('meta[name="csrf-token"]').content;
-let ag = {gid:null,hari:null,status:null,aid:null,nama:''};
 
+/* ── Pencarian nama guru di tabel ── */
 function agFil(v){
-    const q=v.toLowerCase().trim();
-    document.querySelectorAll('.ag-row').forEach(r=>{r.style.display=(!q||r.dataset.nama.includes(q))?'':'none';});
+    const q = v.toLowerCase().trim();
+    document.querySelectorAll('.ag-row').forEach(r=>{
+        r.style.display = (!q || r.dataset.nama.includes(q)) ? '' : 'none';
+    });
 }
 
-// UPDATE: agM sekarang menerima data foto absensi
-function agM(gid,hari,status,nama,aid,hasFoto,fotoMasuk,fotoPulang,jamMasuk,jamPulang,tipeAbsen){
-    ag={gid,hari,status:status||null,aid,nama};
-    document.getElementById('agMav').textContent=nama.charAt(0).toUpperCase();
-    document.getElementById('agMn').textContent=nama;
-    document.getElementById('agMs').textContent=`${hari} ${AG_BN} ${AG_Y}`+(status?` · ${status}`:' · Belum diisi');
-    document.querySelectorAll('.ag-sb').forEach(b=>b.classList.toggle('active',b.dataset.s===status));
-    document.getElementById('agDelBtn').style.display=aid?'inline-flex':'none';
+/**
+ * Admin HANYA melihat data absensi guru (view-only).
+ * Tidak ada create/update/delete di dashboard admin — data hanya
+ * bisa diisi guru sendiri lewat Absensi Kehadiran (Foto).
+ */
+function agV(gid, hari, status, nama, hasFoto, fotoMasuk, fotoPulang, jamMasuk, jamPulang, tipeAbsen, kelasNama){
+    document.getElementById('agMav').textContent = nama.charAt(0).toUpperCase();
+    document.getElementById('agMn').textContent  = nama;
+    document.getElementById('agMs').textContent  = `${hari} ${AG_BN} ${AG_Y} · Status: ${status}`;
 
-    // UPDATE: render blok foto jika ada
     const photoBlock = document.getElementById('agPhotoBlock');
-    const photoGrid   = document.getElementById('agPhotoGrid');
-    const divider     = document.getElementById('agDivider');
-    const badge       = document.getElementById('agPhotoBadge');
-    const mbox        = document.getElementById('agMbox');
+    const photoGrid  = document.getElementById('agPhotoGrid');
+    const badge      = document.getElementById('agPhotoBadge');
+    const noPhoto    = document.getElementById('agNoPhoto');
+    const mbox       = document.getElementById('agMbox');
 
     if (hasFoto) {
         mbox.classList.add('ag-mbox-wide');
-        photoBlock.style.display='block';
-        divider.style.display='flex';
+        photoBlock.style.display = 'block';
+        noPhoto.style.display    = 'none';
 
-        const labelTipe = tipeAbsen === 'kantor' ? 'Absen di Kantor' : 'Absen Mengajar';
+        let labelTipe = tipeAbsen === 'kantor' ? 'Absen di Kantor' : 'Absen Mengajar';
+        if (tipeAbsen !== 'kantor' && kelasNama) {
+            labelTipe += ` · ${kelasNama}`;
+        }
         badge.innerHTML = `<i class="bi bi-camera-fill"></i> ${labelTipe}`;
 
-        let html = '';
-        html += `<div class="ag-photo-item">
-                    <img src="${fotoMasuk}" onclick="agLbO('${fotoMasuk}')">
-                    <div class="lbl">${tipeAbsen === 'kantor' ? 'Foto Kehadiran' : 'Foto Masuk'}${jamMasuk ? ' · '+jamMasuk.substring(0,5) : ''}</div>
-                  </div>`;
+        let html = `<div class="ag-photo-item">
+                        <img src="${fotoMasuk}" onclick="agLbO('${fotoMasuk}')">
+                        <div class="lbl">${tipeAbsen === 'kantor' ? 'Foto Kehadiran' : 'Foto Masuk'}${jamMasuk ? ' · ' + jamMasuk.substring(0,5) : ''}</div>
+                    </div>`;
+
         if (tipeAbsen !== 'kantor') {
             if (fotoPulang) {
                 html += `<div class="ag-photo-item">
                             <img src="${fotoPulang}" onclick="agLbO('${fotoPulang}')">
-                            <div class="lbl">Foto Pulang${jamPulang ? ' · '+jamPulang.substring(0,5) : ''}</div>
-                          </div>`;
+                            <div class="lbl">Foto Pulang${jamPulang ? ' · ' + jamPulang.substring(0,5) : ''}</div>
+                        </div>`;
             } else {
                 html += `<div class="ag-photo-item">
                             <div class="ag-photo-empty">Belum upload<br>foto pulang</div>
                             <div class="lbl">Foto Pulang</div>
-                          </div>`;
+                        </div>`;
             }
         }
+
         photoGrid.className = 'ag-photo-grid' + (tipeAbsen === 'kantor' ? ' single' : '');
         photoGrid.innerHTML = html;
     } else {
         mbox.classList.remove('ag-mbox-wide');
-        photoBlock.style.display='none';
-        divider.style.display='none';
-        photoGrid.innerHTML='';
+        photoBlock.style.display = 'none';
+        photoGrid.innerHTML = '';
+        noPhoto.style.display = 'block';
     }
 
     document.getElementById('agModal').classList.add('show');
 }
-function agMC(){document.getElementById('agModal').classList.remove('show');}
-function agSS(k){ag.status=k;document.querySelectorAll('.ag-sb').forEach(b=>b.classList.toggle('active',b.dataset.s===k));}
 
-// UPDATE: lightbox zoom foto
+function agMC(){
+    document.getElementById('agModal').classList.remove('show');
+}
+
+/* ── Lightbox zoom foto ── */
 function agLbO(url){
-    document.getElementById('agLbImg').src=url;
+    document.getElementById('agLbImg').src = url;
     document.getElementById('agLightbox').classList.add('show');
 }
-function agLbC(){document.getElementById('agLightbox').classList.remove('show');}
+function agLbC(){
+    document.getElementById('agLightbox').classList.remove('show');
+}
 
-async function agSave(){
-    if(!ag.status){agT('Pilih status','error');return;}
-    agBL(true);
-    const tgl=`${AG_Y}-${String(AG_B).padStart(2,'0')}-${String(ag.hari).padStart(2,'0')}`;
-    try{
-        const r=await fetch(AG_SU,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':agCS(),'Accept':'application/json'},body:JSON.stringify({guru_id:ag.gid,tanggal:tgl,status:ag.status,keterangan:''})});
-        const d=await r.json();
-        if(r.ok&&d.success){agMC();agT('Tersimpan ✓','success');agUC(ag.gid,ag.hari,ag.status,d.id??ag.aid);}
-        else agT(d.message??(d.errors?Object.values(d.errors).flat().join(', '):'Gagal'),'error');
-    }catch(e){agT('Gagal terhubung','error');}finally{agBL(false);}
-}
-async function agDel(){
-    if(!ag.aid)return;agBL(true);
-    try{
-        const r=await fetch(`${AG_DB}/${ag.aid}`,{method:'DELETE',headers:{'X-CSRF-TOKEN':agCS(),'Accept':'application/json'}});
-        const d=await r.json();
-        if(r.ok&&d.success){agMC();agT('Dihapus','success');agCC(ag.gid,ag.hari);}
-        else agT(d.message??'Gagal','error');
-    }catch(e){agT('Gagal terhubung','error');}finally{agBL(false);}
-}
-const AGS={P:['#dcfce7','#15803d'],A:['#fee2e2','#b91c1c'],S:['#fef9c3','#a16207'],I:['#e0f2fe','#0369a1'],L:['#fce7f3','#be185d'],W:['#f3e8ff','#7e22ce']};
-// UPDATE: setelah simpan manual, sel tidak lagi punya foto (agM dipanggil tanpa data foto)
-function agUC(gid,hari,status,aid){
-    const c=document.getElementById(`ag-c-${gid}-${hari}`);if(!c)return;
-    const[bg,fc]=AGS[status]??['#f1f5f9','#64748b'];
-    c.innerHTML=`<button class="ag-b" style="background:${bg};color:${fc};" onclick="agM(${gid},${hari},'${status}',${JSON.stringify(ag.nama)},${aid},false,null,null,null,null,null)">${status}</button>`;
-}
-function agCC(gid,hari){
-    const c=document.getElementById(`ag-c-${gid}-${hari}`);if(!c)return;
-    c.innerHTML=`<span class="ag-be" onclick="agM(${gid},${hari},'',${JSON.stringify(ag.nama)},null,false,null,null,null,null,null)">+</span>`;
-}
-function agBL(on){const b=document.getElementById('agSaveBtn');b.disabled=on;b.innerHTML=on?'<span style="opacity:.6">Menyimpan…</span>':'<i class="bi bi-check2"></i> Simpan';}
-let _at;
-function agT(msg,type='success'){
-    clearTimeout(_at);const el=document.getElementById('agToast');
-    document.getElementById('agTi').className=type==='success'?'bi bi-check-circle-fill':'bi bi-exclamation-circle-fill';
-    document.getElementById('agTm').textContent=msg;
-    el.className=`ag-toast ${type} show`;
-    _at=setTimeout(()=>{el.className=`ag-toast ${type}`;},3000);
-}
-document.addEventListener('DOMContentLoaded',()=>{
-    const th=document.querySelector('.ag-tbl thead th.ag-td');
-    if(th){const sc=document.getElementById('agScroll');sc.scrollLeft=Math.max(0,th.offsetLeft-240);}
+/* ── Auto-scroll ke kolom hari ini saat halaman dimuat ── */
+document.addEventListener('DOMContentLoaded', () => {
+    const th = document.querySelector('.ag-tbl thead th.ag-td');
+    if (th) {
+        const sc = document.getElementById('agScroll');
+        sc.scrollLeft = Math.max(0, th.offsetLeft - 240);
+    }
 });
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){agMC();agLbC();}});
+
+/* ── Tutup modal / lightbox dengan tombol Escape ── */
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        agMC();
+        agLbC();
+    }
+});
 </script>
 @endpush

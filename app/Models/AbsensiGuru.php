@@ -16,12 +16,12 @@ class AbsensiGuru extends Model
      * Status yang valid untuk kolom `status`.
      * P = Hadir, A = Alpha, S = Sakit, I = Izin, L = Terlambat, W = WFH
      */
-    public const STATUS_HADIR   = 'P';
-    public const STATUS_ALPHA   = 'A';
-    public const STATUS_SAKIT   = 'S';
-    public const STATUS_IZIN    = 'I';
-    public const STATUS_TELAT   = 'L';
-    public const STATUS_WFH     = 'W';
+    public const STATUS_HADIR = 'P';
+    public const STATUS_ALPHA = 'A';
+    public const STATUS_SAKIT = 'S';
+    public const STATUS_IZIN  = 'I';
+    public const STATUS_TELAT = 'L';
+    public const STATUS_WFH   = 'W';
 
     /**
      * Tipe absensi untuk absensi berbasis foto.
@@ -31,6 +31,7 @@ class AbsensiGuru extends Model
 
     protected $fillable = [
         'guru_id',
+        'timetable_id',
         'kelas_id',
         'tanggal',
         'status',
@@ -46,10 +47,6 @@ class AbsensiGuru extends Model
         'tanggal' => 'date',
     ];
 
-    /**
-     * Nilai default agar absensi baru (tanpa foto, absensi manual dari admin
-     * lama / import) tetap konsisten.
-     */
     protected $attributes = [
         'status' => self::STATUS_HADIR,
     ];
@@ -65,9 +62,19 @@ class AbsensiGuru extends Model
     }
 
     /**
-     * Kelas yang diajar guru pada absensi ini (hanya relevan untuk
+     * Sesi jadwal mengajar yang menjadi dasar absensi ini (khusus
      * tipe_absensi = 'mengajar'). Nullable — absensi kantor tidak
-     * punya kelas.
+     * terhubung ke jadwal manapun.
+     */
+    public function timetable()
+    {
+        return $this->belongsTo(Timetable::class, 'timetable_id');
+    }
+
+    /**
+     * @deprecated Sejak absensi dihubungkan ke Jadwal Mengajar, kelas
+     * diambil dari relasi timetable()->studyGroup. Relasi ini dibiarkan
+     * untuk kompatibilitas data lama.
      */
     public function kelas()
     {
@@ -76,19 +83,11 @@ class AbsensiGuru extends Model
 
     // ── Accessors ───────────────────────────────────────────────────
 
-    /**
-     * Apakah absensi ini punya bukti foto (dari halaman Absensi Foto guru),
-     * berbeda dengan absensi manual yang diisi lewat cara lain (mis. import).
-     */
     public function getHasFotoAttribute(): bool
     {
         return !empty($this->foto_masuk);
     }
 
-    /**
-     * Apakah absensi mengajar ini sudah lengkap (foto masuk + foto pulang).
-     * Untuk tipe kantor, dianggap lengkap begitu foto_masuk terisi.
-     */
     public function getLengkapAttribute(): bool
     {
         if ($this->tipe_absensi === self::TIPE_KANTOR) {
@@ -98,9 +97,6 @@ class AbsensiGuru extends Model
         return !empty($this->foto_masuk) && !empty($this->foto_pulang);
     }
 
-    /**
-     * Label tipe absensi yang enak dibaca di UI.
-     */
     public function getTipeLabelAttribute(): string
     {
         return match ($this->tipe_absensi) {
@@ -110,9 +106,6 @@ class AbsensiGuru extends Model
         };
     }
 
-    /**
-     * Label status huruf tunggal → nama lengkap.
-     */
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
@@ -126,35 +119,40 @@ class AbsensiGuru extends Model
         };
     }
 
-    // ── Scopes ──────────────────────────────────────────────────────
+    /**
+     * Nama mata pelajaran yang diajar pada absensi ini, diambil dari
+     * jadwal (timetable) yang dipilih guru saat absen masuk.
+     */
+    public function getMapelNamaAttribute(): ?string
+    {
+        return $this->timetable?->studySubject?->name;
+    }
 
     /**
-     * Scope: absensi pada tanggal tertentu (default hari ini).
+     * Nama kelas yang diajar pada absensi ini, diambil dari jadwal.
      */
+    public function getKelasNamaAttribute(): ?string
+    {
+        return $this->timetable?->studyGroup?->name;
+    }
+
+    // ── Scopes ──────────────────────────────────────────────────────
+
     public function scopeTanggal(Builder $query, ?string $tanggal = null): Builder
     {
         return $query->whereDate('tanggal', $tanggal ?? now()->toDateString());
     }
 
-    /**
-     * Scope: absensi milik guru tertentu.
-     */
     public function scopeMilikGuru(Builder $query, int $guruId): Builder
     {
         return $query->where('guru_id', $guruId);
     }
 
-    /**
-     * Scope: hanya absensi yang punya bukti foto.
-     */
     public function scopeDenganFoto(Builder $query): Builder
     {
         return $query->whereNotNull('foto_masuk');
     }
 
-    /**
-     * Scope: absensi pada bulan & tahun tertentu.
-     */
     public function scopePeriode(Builder $query, int $bulan, int $tahun): Builder
     {
         return $query->whereMonth('tanggal', $bulan)->whereYear('tanggal', $tahun);

@@ -12,11 +12,6 @@ use Illuminate\Database\QueryException;
 
 class AbsensiFotoController extends Controller
 {
-    /**
-     * Peta nomor hari Carbon (0=Minggu..6=Sabtu) ke label hari yang
-     * dipakai pada kolom `day_of_week` tabel timetables, konsisten
-     * dengan $hariList di halaman Jadwal Mengajar.
-     */
     private array $mapHari = [
         0 => 'Minggu',
         1 => 'Senin',
@@ -31,17 +26,16 @@ class AbsensiFotoController extends Controller
     {
         $guru   = Auth::user()->guru;
         $guruId = $guru->id;
-        $today  = Carbon::today();
+        $userId = Auth::id();
+
+        $today       = Carbon::today();
         $hariIniNama = $this->mapHari[$today->dayOfWeek];
 
-        // Absensi hari ini (kalau sudah ada), lengkap dengan data jadwal
-        // (mapel & kelas) yang dipakai saat absen masuk.
         $absensiHariIni = AbsensiGuru::with(['timetable.studySubject', 'timetable.studyGroup'])
             ->where('guru_id', $guruId)
             ->whereDate('tanggal', $today)
             ->first();
 
-        // Riwayat 14 absensi foto terakhir.
         $riwayat = AbsensiGuru::with(['timetable.studySubject', 'timetable.studyGroup'])
             ->where('guru_id', $guruId)
             ->whereNotNull('foto_masuk')
@@ -49,11 +43,9 @@ class AbsensiFotoController extends Controller
             ->limit(14)
             ->get();
 
-        // Jadwal mengajar milik guru ini yang jatuh pada HARI INI saja,
-        // diurutkan dari jam paling pagi. Inilah yang menjadi pilihan
-        // pada opsi "Saya Akan Mengajar".
         $jadwalHariIni = Timetable::with(['studySubject', 'studyGroup'])
-            ->where('guru_id', $guruId)
+            ->where('teacher_id', $userId)
+            ->where('is_active', true)
             ->where('day_of_week', $hariIniNama)
             ->orderBy('start_time')
             ->get();
@@ -66,14 +58,12 @@ class AbsensiFotoController extends Controller
         ));
     }
 
-    /**
-     * Absen masuk untuk sesi MENGAJAR — wajib memilih salah satu jadwal
-     * miliknya yang berlaku hari ini. Hanya boleh sekali per hari.
-     */
     public function storeMasuk(Request $request)
     {
         $guruId = Auth::user()->guru->id;
-        $today  = Carbon::today();
+        $userId = Auth::id();
+
+        $today       = Carbon::today();
         $hariIniNama = $this->mapHari[$today->dayOfWeek];
 
         if ($this->sudahAbsenHariIni($guruId, $today->toDateString())) {
@@ -89,11 +79,9 @@ class AbsensiFotoController extends Controller
             'timetable_id.exists'   => 'Jadwal yang dipilih tidak ditemukan.',
         ]);
 
-        // Pastikan jadwal yang dipilih benar-benar milik guru ini DAN
-        // memang berjadwal untuk hari ini juga — mencegah guru memilih
-        // jadwal orang lain atau jadwal hari lain lewat manipulasi form.
         $jadwal = Timetable::where('id', $request->timetable_id)
-            ->where('guru_id', $guruId)
+            ->where('teacher_id', $userId)
+            ->where('is_active', true)
             ->where('day_of_week', $hariIniNama)
             ->first();
 
@@ -114,8 +102,6 @@ class AbsensiFotoController extends Controller
                 'tipe_absensi' => AbsensiGuru::TIPE_MENGAJAR,
             ]);
         } catch (QueryException $e) {
-            // Race condition: dua request masuk hampir bersamaan,
-            // unique index (guru_id, tanggal) menahan yang kedua.
             return back()->with('error', 'Anda sudah melakukan absensi hari ini. Absensi hanya dapat dilakukan satu kali per hari.');
         }
 
@@ -125,10 +111,6 @@ class AbsensiFotoController extends Controller
         return back()->with('success', "Foto sebelum mengajar {$namaMapel} di kelas {$namaKelas} berhasil diunggah. Selamat mengajar!");
     }
 
-    /**
-     * Foto setelah selesai mengajar. Hanya sekali, hanya jika sudah ada
-     * foto masuk dengan tipe 'mengajar'.
-     */
     public function storePulang(Request $request)
     {
         $guruId = Auth::user()->guru->id;
@@ -162,11 +144,6 @@ class AbsensiFotoController extends Controller
         return back()->with('success', 'Foto setelah mengajar berhasil diunggah. Terima kasih!');
     }
 
-    /**
-     * Absensi KANTOR (tidak mengajar) — tidak terikat jadwal apapun.
-     * Bisa dipakai guru piket, rapat, atau saat tidak ada jadwal
-     * mengajar hari itu. Hanya satu foto, hanya sekali per hari.
-     */
     public function storeKantor(Request $request)
     {
         $guruId = Auth::user()->guru->id;

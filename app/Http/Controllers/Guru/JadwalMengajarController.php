@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\QueryException;
 
-class AbsensiFotoController extends Controller
+class JadwalMengajarController extends Controller
 {
     /**
      * Peta nomor hari Carbon (0=Minggu..6=Sabtu) ke label hari yang

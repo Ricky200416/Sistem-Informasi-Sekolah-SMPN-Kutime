@@ -53,9 +53,9 @@ class AlumniController extends Controller
     public function show(Alumni $alumni)
     {
         return response()->json(array_merge($alumni->toArray(), [
-            'is_editable'         => $alumni->is_editable,
-            'edit_deadline'       => $alumni->edit_deadline->toDateTimeString(),
-            'edit_time_left_label'=> $alumni->edit_time_left_label,
+            'is_editable'          => $alumni->is_editable,
+            'edit_deadline'        => $alumni->edit_deadline->toDateTimeString(),
+            'edit_time_left_label' => $alumni->edit_time_left_label,
         ]));
     }
 
@@ -145,93 +145,92 @@ class AlumniController extends Controller
      * - Baris Siswa & User dihapus PERMANEN, sehingga nama mereka otomatis
      *   hilang dari daftar Kelola User dan tidak bisa login lagi.
      */
-public function graduate(Request $request)
-{
-    $validated = $request->validate([
-        'siswa_ids'        => ['required', 'array', 'min:1'],
-        'siswa_ids.*'      => ['integer', 'exists:siswas,id'],
-        'tahun_lulus'      => ['required', 'digits:4'],
-        'tanggal_lulus'    => ['required', 'date'],
-        'no_ijazah_prefix' => ['nullable', 'string', 'max:50'],
-        'catatan'          => ['nullable', 'string', 'max:500'],
-    ]);
+    public function graduate(Request $request)
+    {
+        $validated = $request->validate([
+            'siswa_ids'        => ['required', 'array', 'min:1'],
+            'siswa_ids.*'      => ['integer', 'exists:siswas,id'],
+            'tahun_lulus'      => ['required', 'digits:4'],
+            'tanggal_lulus'    => ['required', 'date'],
+            'no_ijazah_prefix' => ['nullable', 'string', 'max:50'],
+            'catatan'          => ['nullable', 'string', 'max:500'],
+        ]);
 
-    $siswaList = Siswa::with(['user', 'kelas'])
-        ->whereIn('id', $validated['siswa_ids'])
-        ->where('status', 'aktif')
-        ->get();
+        $siswaList = Siswa::with(['user', 'kelas'])
+            ->whereIn('id', $validated['siswa_ids'])
+            ->where('status', 'aktif')
+            ->get();
 
-    if ($siswaList->isEmpty()) {
-        return back()->with('error', 'Tidak ada siswa aktif yang valid untuk diluluskan.');
-    }
+        if ($siswaList->isEmpty()) {
+            return back()->with('error', 'Tidak ada siswa aktif yang valid untuk diluluskan.');
+        }
 
-    DB::transaction(function () use ($siswaList, $validated) {
-        foreach ($siswaList as $siswa) {
-            Alumni::create([
-                'siswa_id'           => $siswa->id,
-                'user_id'            => $siswa->user_id,
-                'password_snapshot'  => $siswa->user?->password,
-                'kelas_id_snapshot'  => $siswa->kelas_id,
-                'nama'               => $siswa->nama ?? $siswa->user?->name,
-                'email'              => $siswa->user?->email,
-                'nidn'               => $siswa->nidn,
-                'nik'                => $siswa->nik,
-                'jk'                 => $siswa->jk,
-                'agama'              => $siswa->agama,
-                'tempat_lahir'       => $siswa->tempat_lahir,
-                'tgl_lahir'          => $siswa->tgl_lahir,
-                'no_telp'            => $siswa->no_telp,
-                'alamat'             => $siswa->alamat,
-                'rt'                 => $siswa->rt,
-                'rw'                 => $siswa->rw,
-                'dusun'              => $siswa->dusun,
-                'kecamatan'          => $siswa->kecamatan,
-                'kode_pos'           => $siswa->kode_pos,
-                'jenis_tinggal'      => $siswa->jenis_tinggal,
-                'jalan_transportasi' => $siswa->jalan_transportasi,
-                // Normalisasi eksplisit ke string 'Ya'/'Tidak', menangani
-                // kemungkinan data lama tersimpan sebagai boolean/1/0/'yes'.
-                'penerima_kps'       => $this->normalizeKps($siswa->penerima_kps),
-                'no_kps'             => $siswa->no_kps,
-                'foto'               => $siswa->user?->photo,
-                'kelas_terakhir'     => $siswa->kelas?->nama,
-                'tahun_lulus'        => $validated['tahun_lulus'],
-                'tanggal_lulus'      => $validated['tanggal_lulus'],
-                'no_ijazah'          => !empty($validated['no_ijazah_prefix'])
-                    ? $validated['no_ijazah_prefix'] . '-' . str_pad($siswa->id, 4, '0', STR_PAD_LEFT)
-                    : null,
-                'catatan'            => $validated['catatan'] ?? null,
-            ]);
+        DB::transaction(function () use ($siswaList, $validated) {
+            foreach ($siswaList as $siswa) {
+                Alumni::create([
+                    'siswa_id'           => $siswa->id,
+                    'user_id'            => $siswa->user_id,
+                    'password_snapshot'  => $siswa->user?->password,
+                    'kelas_id_snapshot'  => $siswa->kelas_id,
+                    'nama'               => $siswa->nama ?? $siswa->user?->name,
+                    'email'              => $siswa->user?->email,
+                    'nidn'               => $siswa->nidn,
+                    'nik'                => $siswa->nik,
+                    'jk'                 => $siswa->jk,
+                    'agama'              => $siswa->agama,
+                    'tempat_lahir'       => $siswa->tempat_lahir,
+                    'tgl_lahir'          => $siswa->tgl_lahir,
+                    'no_telp'            => $siswa->no_telp,
+                    'alamat'             => $siswa->alamat,
+                    'rt'                 => $siswa->rt,
+                    'rw'                 => $siswa->rw,
+                    'dusun'              => $siswa->dusun,
+                    'kecamatan'          => $siswa->kecamatan,
+                    'kode_pos'           => $siswa->kode_pos,
+                    'jenis_tinggal'      => $siswa->jenis_tinggal,
+                    'jalan_transportasi' => $siswa->jalan_transportasi,
+                    // Normalisasi eksplisit ke string 'Ya'/'Tidak'
+                    'penerima_kps'       => $this->normalizeKps($siswa->penerima_kps),
+                    'no_kps'             => $siswa->no_kps,
+                    'foto'               => $siswa->user?->photo,
+                    'kelas_terakhir'     => $siswa->kelas?->nama,
+                    'tahun_lulus'        => $validated['tahun_lulus'],
+                    'tanggal_lulus'      => $validated['tanggal_lulus'],
+                    'no_ijazah'          => !empty($validated['no_ijazah_prefix'])
+                        ? $validated['no_ijazah_prefix'] . '-' . str_pad($siswa->id, 4, '0', STR_PAD_LEFT)
+                        : null,
+                    'catatan'            => $validated['catatan'] ?? null,
+                ]);
 
-            $userId = $siswa->user_id;
+                $userId = $siswa->user_id;
 
-            $siswa->delete();
+                $siswa->delete();
 
-            if ($userId) {
-                User::where('id', $userId)->delete();
+                if ($userId) {
+                    User::where('id', $userId)->delete();
+                }
             }
-        },
-    });
+        });
 
-    return redirect()->route('admin.alumni.index')
-        ->with('success', count($siswaList) . ' siswa berhasil diluluskan. Data tersimpan di Data Alumni dan akunnya telah dihapus dari Kelola User.');
-}
-
-/**
- * Normalisasi berbagai kemungkinan representasi nilai KPS (boolean,
- * angka, atau string) menjadi string konsisten 'Ya' / 'Tidak', supaya
- * cocok dengan tipe kolom penerima_kps di tabel alumni.
- */
-private function normalizeKps($value): string
-{
-    if (is_bool($value)) {
-        return $value ? 'Ya' : 'Tidak';
+        return redirect()->route('admin.alumni.index')
+            ->with('success', count($siswaList) . ' siswa berhasil diluluskan. Data tersimpan di Data Alumni dan akunnya telah dihapus dari Kelola User.');
     }
 
-    $normalized = strtolower(trim((string) $value));
+    /**
+     * Normalisasi berbagai kemungkinan representasi nilai KPS (boolean,
+     * angka, atau string) menjadi string konsisten 'Ya' / 'Tidak', supaya
+     * cocok dengan tipe kolom penerima_kps di tabel alumni.
+     */
+    private function normalizeKps($value): string
+    {
+        if (is_bool($value)) {
+            return $value ? 'Ya' : 'Tidak';
+        }
 
-    return in_array($normalized, ['ya', 'yes', '1', 'y', 'true'], true) ? 'Ya' : 'Tidak';
-}
+        $normalized = strtolower(trim((string) $value));
+
+        return in_array($normalized, ['ya', 'yes', '1', 'y', 'true'], true) ? 'Ya' : 'Tidak';
+    }
 
     /**
      * Membatalkan status alumni: membuat ULANG akun User + Siswa dari
@@ -307,18 +306,18 @@ private function normalizeKps($value): string
         return Excel::download(new AlumniExport($tahun), $filename);
     }
 
-public function exportPdf(Request $request)
-{
-    $tahun = $request->tahun;
+    public function exportPdf(Request $request)
+    {
+        $tahun = $request->tahun;
 
-    $alumni = Alumni::query()
-        ->when($tahun, fn ($q) => $q->tahun($tahun))
-        ->orderByDesc('tahun_lulus')
-        ->orderBy('nama')
-        ->get();
+        $alumni = Alumni::query()
+            ->when($tahun, fn ($q) => $q->tahun($tahun))
+            ->orderByDesc('tahun_lulus')
+            ->orderBy('nama')
+            ->get();
 
-    $pdf = Pdf::loadView('admin.alumni.pdf', compact('alumni', 'tahun'));
+        $pdf = Pdf::loadView('admin.alumni.pdf', compact('alumni', 'tahun'));
 
-    return $pdf->download('Data-Alumni-SMPN-Kutime' . ($tahun ? "-{$tahun}" : '') . '.pdf');
-}
+        return $pdf->download('Data-Alumni-SMPN-Kutime' . ($tahun ? "-{$tahun}" : '') . '.pdf');
+    }
 }

@@ -210,7 +210,7 @@ public function graduate(Request $request)
             if ($userId) {
                 User::where('id', $userId)->delete();
             }
-        }
+        },
     });
 
     return redirect()->route('admin.alumni.index')

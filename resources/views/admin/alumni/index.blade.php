@@ -174,12 +174,13 @@
                         <th>Kelas Terakhir</th>
                         <th>Tahun Lulus</th>
                         <th>No. Ijazah</th>
+                        <th>Status Edit</th>
                         <th class="text-right">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($alumni as $i => $a)
-                    <tr>
+                    <tr data-alumni-id="{{ $a->id }}">
                         <td>{{ $alumni->firstItem() + $i }}</td>
                         <td>
                             <div class="avatar avatar-sm bg-indigo-100 text-indigo-600">
@@ -196,6 +197,20 @@
                         <td><span class="badge badge-info">{{ $a->tahun_lulus }}</span></td>
                         <td>{{ $a->no_ijazah ?? '—' }}</td>
                         <td>
+                            @if($a->is_editable)
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold
+                                             bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                                      title="Bisa diedit hingga {{ $a->edit_deadline->translatedFormat('d M Y, H:i') }}">
+                                    <i class="bi bi-pencil-square"></i> {{ $a->edit_time_left_label }} lagi
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold
+                                             bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400">
+                                    <i class="bi bi-lock-fill"></i> Terkunci
+                                </span>
+                            @endif
+                        </td>
+                        <td>
                             <div class="flex items-center justify-end gap-1">
                                 <button onclick="openDetailAlumni({{ $a->id }})"
                                         class="icon-btn" title="Detail">
@@ -208,10 +223,20 @@
                                     </svg>
                                 </button>
 
+                                @if($a->is_editable)
+                                <button onclick="openEditAlumni({{ $a->id }})"
+                                        class="icon-btn hover:!text-amber-500 hover:!border-amber-300" title="Edit">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </button>
+                                @endif
+
                                 <form action="{{ route('admin.alumni.batalkan', $a->id) }}" method="POST"
-                                      onsubmit="return confirm('Batalkan status alumni dan kembalikan siswa ini ke status aktif?');">
+                                      onsubmit="return confirm('Batalkan status alumni? Akun siswa akan dipulihkan (aktif kembali) dan muncul lagi di Kelola User.');">
                                     @csrf
-                                    <button type="submit" class="icon-btn" title="Batalkan status alumni">
+                                    <button type="submit" class="icon-btn" title="Batalkan status alumni (pulihkan akun)">
                                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                   d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/>
@@ -232,7 +257,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8">
+                        <td colspan="9">
                             <div class="empty-state">
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -256,6 +281,7 @@
 </div>
 
 @include('admin.alumni._modal_detail')
+@include('admin.alumni._modal_edit')
 @include('admin.alumni._modal_luluskan')
 @include('admin.alumni._modal_hapus')
 
@@ -286,7 +312,10 @@ document.querySelectorAll('[id^="modal"]').forEach(modal => {
 });
 
 // ── Modal Detail Alumni ─────────────────────────────────────────────────
+let __currentAlumniId = null;
+
 function openDetailAlumni(id) {
+    __currentAlumniId = id;
     fetch(`{{ url('admin/alumni') }}/${id}`, {
         headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
     })
@@ -322,6 +351,77 @@ function buildAlumniDetailModal(a) {
     fotoWrap.innerHTML = a.foto
         ? `<img src="/storage/${a.foto}" class="w-full h-full object-cover">`
         : `<div class="w-full h-full flex items-center justify-center text-xl font-bold text-indigo-600 bg-indigo-100">${(a.nama || '?').charAt(0).toUpperCase()}</div>`;
+
+    // Badge & tombol edit sesuai status is_editable
+    const badge   = document.getElementById('da_editBadge');
+    const btnEdit = document.getElementById('da_btnEdit');
+    if (a.is_editable) {
+        badge.className = 'flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800';
+        badge.innerHTML  = `<i class="bi bi-pencil-square text-amber-500"></i>
+                             <p class="text-[11px] text-amber-700 dark:text-amber-300 font-medium">
+                                Data ini masih bisa diedit — sisa waktu ${a.edit_time_left_label ?? ''}.
+                             </p>`;
+        btnEdit.classList.remove('hidden');
+    } else {
+        badge.className = 'flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-700';
+        badge.innerHTML  = `<i class="bi bi-lock-fill text-slate-400"></i>
+                             <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                                Batas waktu edit (2 hari) sudah berakhir. Data ini hanya dapat dilihat.
+                             </p>`;
+        btnEdit.classList.add('hidden');
+    }
+    badge.classList.remove('hidden');
+}
+
+function openEditFromDetail() {
+    if (!__currentAlumniId) return;
+    closeModal('modalDetailAlumni');
+    openEditAlumni(__currentAlumniId);
+}
+
+// ── Modal Edit Alumni ────────────────────────────────────────────────────
+function openEditAlumni(id) {
+    fetch(`{{ url('admin/alumni') }}/${id}/edit`, {
+        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(async r => {
+        const data = await r.json();
+        if (!r.ok) {
+            alert(data.message || 'Data ini sudah tidak dapat diedit.');
+            return;
+        }
+        buildAlumniEditModal(data);
+        openModal('modalEditAlumni');
+    })
+    .catch(() => alert('Gagal memuat data alumni.'));
+}
+
+function buildAlumniEditModal(a) {
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val ?? ''; };
+
+    set('ea_nama', a.nama);
+    set('ea_nidn', a.nidn);
+    set('ea_nik', a.nik);
+    set('ea_jk', a.jk);
+    set('ea_agama', a.agama);
+    set('ea_tempat_lahir', a.tempat_lahir);
+    set('ea_tgl_lahir', a.tgl_lahir ? a.tgl_lahir.substring(0, 10) : '');
+    set('ea_no_telp', a.no_telp);
+    set('ea_kelas_terakhir', a.kelas_terakhir);
+    set('ea_alamat', a.alamat);
+    set('ea_rt', a.rt);
+    set('ea_rw', a.rw);
+    set('ea_dusun', a.dusun);
+    set('ea_kecamatan', a.kecamatan);
+    set('ea_tahun_lulus', a.tahun_lulus);
+    set('ea_tanggal_lulus', a.tanggal_lulus ? a.tanggal_lulus.substring(0, 10) : '');
+    set('ea_no_ijazah', a.no_ijazah);
+    set('ea_catatan', a.catatan);
+
+    document.getElementById('ea_sisaWaktu').textContent =
+        'Sisa waktu edit: ' + (a.edit_time_left_label ?? '—');
+
+    document.getElementById('formEditAlumni').action = `{{ url('admin/alumni') }}/${a.id}`;
 }
 
 // ── Modal Hapus Alumni ───────────────────────────────────────────────────
@@ -331,65 +431,158 @@ function openHapusAlumni(id, nama) {
     openModal('modalHapusAlumni');
 }
 
-// ── Modal Luluskan Siswa: load daftar siswa aktif & filter kelas ─────────
+// ── Modal Luluskan Siswa: load semua siswa aktif, kelompokkan per kelas ──
 let __daftarSiswaAktif = [];
 
-function loadSiswaAktif(kelasId = '') {
+function loadSiswaAktif() {
     const wrap = document.getElementById('luluskan_listSiswa');
     wrap.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Memuat data siswa...</p>';
 
-    const url = new URL(`{{ route('admin.alumni.siswa-aktif') }}`);
-    if (kelasId) url.searchParams.set('kelas_id', kelasId);
-
-    fetch(url, { headers: { 'Accept': 'application/json' } })
+    fetch(`{{ route('admin.alumni.siswa-aktif') }}`, { headers: { 'Accept': 'application/json' } })
         .then(r => r.json())
         .then(data => {
             __daftarSiswaAktif = data.siswa;
-            renderSiswaAktif(data.siswa);
-
-            const selKelas = document.getElementById('luluskan_kelasFilter');
-            if (selKelas.options.length <= 1) {
-                data.kelas.forEach(k => {
-                    const opt = document.createElement('option');
-                    opt.value = k.id;
-                    opt.textContent = k.name;
-                    selKelas.appendChild(opt);
-                });
-            }
+            renderSiswaGrouped(data.siswa);
         })
         .catch(() => {
             wrap.innerHTML = '<p class="text-xs text-red-500 text-center py-4">Gagal memuat daftar siswa.</p>';
         });
 }
 
-function renderSiswaAktif(list) {
+/**
+ * Render daftar siswa dikelompokkan per kelas. Setiap grup punya
+ * checkbox "pilih semua kelas ini", dan setiap siswa punya checkbox
+ * sendiri — sehingga admin bisa memilih satu kelas penuh, sebagian
+ * siswa saja, atau gabungan lintas kelas sekaligus.
+ */
+function renderSiswaGrouped(list) {
     const wrap = document.getElementById('luluskan_listSiswa');
+
     if (!list.length) {
-        wrap.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Tidak ada siswa aktif untuk filter ini.</p>';
+        wrap.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Tidak ada siswa aktif untuk saat ini.</p>';
+        updateTotalTerpilih();
         return;
     }
-    wrap.innerHTML = list.map(s => `
-        <label class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/60 cursor-pointer">
-            <input type="checkbox" name="siswa_ids[]" value="${s.id}" class="siswa-checkbox rounded border-slate-300">
-            <span class="text-xs text-slate-700 dark:text-slate-300 flex-1 truncate">${s.nama}</span>
-            <span class="text-[10px] text-slate-400">${s.nidn ?? '-'}</span>
-            <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 shrink-0">${s.kelas}</span>
-        </label>
-    `).join('');
+
+    const groups = {};
+    list.forEach(s => {
+        const key = s.kelas_id ?? 'none';
+        if (!groups[key]) groups[key] = { nama: s.kelas || 'Tanpa Kelas', siswa: [] };
+        groups[key].siswa.push(s);
+    });
+
+    let html = '';
+    Object.entries(groups).forEach(([kelasId, group]) => {
+        html += `
+        <div class="kelas-group" data-kelas-id="${kelasId}">
+            <div class="flex items-center justify-between px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900/40 sticky top-0">
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" class="kelas-group-check rounded border-slate-300" data-kelas-id="${kelasId}">
+                    <span class="text-[11px] font-bold text-slate-600 dark:text-slate-300">${group.nama}</span>
+                    <span class="text-[9px] text-slate-400">(${group.siswa.length} siswa)</span>
+                </label>
+            </div>
+            <div>
+                ${group.siswa.map(s => `
+                    <label class="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700/60 cursor-pointer siswa-row" data-nama="${(s.nama||'').toLowerCase()}" data-nidn="${(s.nidn||'').toLowerCase()}">
+                        <input type="checkbox" name="siswa_ids[]" value="${s.id}"
+                               class="siswa-checkbox rounded border-slate-300" data-kelas-id="${kelasId}">
+                        <span class="text-xs text-slate-700 dark:text-slate-300 flex-1 truncate">${s.nama}</span>
+                        <span class="text-[10px] text-slate-400">${s.nidn ?? '-'}</span>
+                    </label>
+                `).join('')}
+            </div>
+        </div>`;
+    });
+
+    wrap.innerHTML = html;
+    attachSiswaListeners();
+    updateTotalTerpilih();
 }
 
-document.getElementById('luluskan_kelasFilter')?.addEventListener('change', function () {
-    loadSiswaAktif(this.value);
-});
+function attachSiswaListeners() {
+    document.querySelectorAll('.siswa-checkbox').forEach(cb => {
+        cb.addEventListener('change', function () {
+            syncKelasGroupCheckbox(this.dataset.kelasId);
+            syncPilihSemuaCheckbox();
+            updateTotalTerpilih();
+        });
+    });
+
+    document.querySelectorAll('.kelas-group-check').forEach(cb => {
+        cb.addEventListener('change', function () {
+            const kelasId = this.dataset.kelasId;
+            document.querySelectorAll(`.siswa-checkbox[data-kelas-id="${kelasId}"]`).forEach(sc => {
+                sc.checked = this.checked;
+            });
+            syncPilihSemuaCheckbox();
+            updateTotalTerpilih();
+        });
+    });
+}
+
+function syncKelasGroupCheckbox(kelasId) {
+    const groupCb  = document.querySelector(`.kelas-group-check[data-kelas-id="${kelasId}"]`);
+    const siswaCbs = document.querySelectorAll(`.siswa-checkbox[data-kelas-id="${kelasId}"]`);
+    const checked  = Array.from(siswaCbs).filter(cb => cb.checked);
+    if (!groupCb) return;
+
+    if (checked.length === 0) {
+        groupCb.checked = false;
+        groupCb.indeterminate = false;
+    } else if (checked.length === siswaCbs.length) {
+        groupCb.checked = true;
+        groupCb.indeterminate = false;
+    } else {
+        groupCb.checked = false;
+        groupCb.indeterminate = true;
+    }
+}
+
+function syncPilihSemuaCheckbox() {
+    const all     = document.querySelectorAll('.siswa-checkbox');
+    const checked = document.querySelectorAll('.siswa-checkbox:checked');
+    const master  = document.getElementById('luluskan_pilihSemua');
+    if (!master) return;
+
+    if (checked.length === 0) {
+        master.checked = false;
+        master.indeterminate = false;
+    } else if (checked.length === all.length) {
+        master.checked = true;
+        master.indeterminate = false;
+    } else {
+        master.checked = false;
+        master.indeterminate = true;
+    }
+}
+
+function updateTotalTerpilih() {
+    const total = document.querySelectorAll('.siswa-checkbox:checked').length;
+    const el = document.getElementById('luluskan_totalTerpilih');
+    if (el) el.textContent = `${total} dipilih`;
+}
 
 document.getElementById('luluskan_pilihSemua')?.addEventListener('change', function () {
     document.querySelectorAll('.siswa-checkbox').forEach(cb => cb.checked = this.checked);
+    document.querySelectorAll('.kelas-group-check').forEach(cb => {
+        cb.checked = this.checked;
+        cb.indeterminate = false;
+    });
+    updateTotalTerpilih();
 });
 
 document.getElementById('luluskan_searchSiswa')?.addEventListener('input', function () {
     const q = this.value.toLowerCase();
-    const filtered = __daftarSiswaAktif.filter(s => s.nama.toLowerCase().includes(q) || (s.nidn ?? '').toLowerCase().includes(q));
-    renderSiswaAktif(filtered);
+    document.querySelectorAll('.siswa-row').forEach(row => {
+        const match = row.dataset.nama.includes(q) || row.dataset.nidn.includes(q);
+        row.style.display = match ? '' : 'none';
+    });
+    // Sembunyikan grup kelas yang seluruh siswanya ter-filter out
+    document.querySelectorAll('.kelas-group').forEach(group => {
+        const visibleRows = group.querySelectorAll('.siswa-row:not([style*="display: none"])');
+        group.style.display = visibleRows.length ? '' : 'none';
+    });
 });
 
 // Load daftar siswa pertama kali tombol "Luluskan Siswa" diklik
@@ -407,6 +600,10 @@ document.getElementById('formLuluskan')?.addEventListener('submit', function (e)
     if (checked.length === 0) {
         e.preventDefault();
         alert('Pilih minimal satu siswa yang akan diluluskan.');
+        return;
+    }
+    if (!confirm(`Luluskan ${checked.length} siswa terpilih? Akun mereka akan dihapus dari Kelola User dan datanya disalin ke Data Alumni.`)) {
+        e.preventDefault();
     }
 });
 </script>

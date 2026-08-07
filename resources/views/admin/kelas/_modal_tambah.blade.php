@@ -43,7 +43,6 @@
         <div class="flex-1 overflow-y-auto p-5 space-y-4">
             <form id="formTambahKelas" action="{{ route('admin.kelas.store') }}" method="POST">
                 @csrf
-                {{-- Input method spoofing untuk keperluan edit via JavaScript jika diperlukan --}}
                 <input type="hidden" name="_method" id="formMethod" value="POST">
 
                 {{-- Baris 1: Nama Kelas & Tingkat --}}
@@ -96,10 +95,13 @@
                                 class="w-full text-xs rounded-xl border-slate-200 dark:border-slate-700
                                        bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100
                                        focus:border-indigo-500 focus:ring-indigo-500 transition shadow-sm">
-                            <option value="" selected>-- Tanpa Wali Kelas --</option>
+                            <option value="">-- Tanpa Wali Kelas --</option>
                             @foreach($gurus as $guru)
                                 <option value="{{ $guru->id }}" {{ old('homeroom_teacher_id') == $guru->id ? 'selected' : '' }}>
                                     {{ $guru->name }}
+                                    @if($guru->guru && $guru->guru->nip)
+                                        — {{ $guru->guru->nip }}
+                                    @endif
                                 </option>
                             @endforeach
                         </select>
@@ -153,13 +155,13 @@
                     </div>
                 </div>
 
-                {{-- Baris 4: Kapasitas Kelas (Kapasitas tidak terbatas, atribut max="60" sudah dibuang sepenuhnya) --}}
+                {{-- Baris 4: Kapasitas Kelas --}}
                 <div class="mb-4">
                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                         Kapasitas Siswa <span class="text-rose-500">*</span>
                     </label>
                     <input type="number" name="capacity" id="input_capacity" required value="{{ old('capacity', 32) }}" min="1"
-                           placeholder="Masukkan jumlah kapasitas siswa (Bebas tanpa batas maksimal)"
+                           placeholder="Masukkan jumlah kapasitas siswa"
                            class="w-full text-xs rounded-xl border-slate-200 dark:border-slate-700
                                   bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100
                                   focus:border-indigo-500 focus:ring-indigo-500 transition shadow-sm">

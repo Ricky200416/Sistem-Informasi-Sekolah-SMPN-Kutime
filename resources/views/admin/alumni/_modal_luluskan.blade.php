@@ -71,31 +71,36 @@
             <div class="border-t border-slate-100 dark:border-slate-700 pt-3">
                 <div class="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
                     <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex-1">
-                        Pilih Siswa Aktif
+                        Pilih Siswa yang Akan Diluluskan
                     </p>
-                    <select id="luluskan_kelasFilter"
-                            class="rounded-lg border border-slate-200 dark:border-slate-600 text-xs px-2 py-1.5
-                                   bg-white dark:bg-slate-900 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                        <option value="">Semua Kelas</option>
-                    </select>
                     <input type="text" id="luluskan_searchSiswa" placeholder="Cari nama/NISN..."
                            class="rounded-lg border border-slate-200 dark:border-slate-600 text-xs px-2 py-1.5
                                   bg-white dark:bg-slate-900 dark:text-slate-300 placeholder:text-slate-400
                                   focus:outline-none focus:ring-2 focus:ring-indigo-300">
                 </div>
 
-                <label class="flex items-center gap-2 px-2.5 py-1.5 mb-1 border-b border-slate-100 dark:border-slate-700">
-                    <input type="checkbox" id="luluskan_pilihSemua" class="rounded border-slate-300">
-                    <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Pilih Semua</span>
-                </label>
+                <div class="flex items-center justify-between px-2.5 py-1.5 mb-1 border-b border-slate-100 dark:border-slate-700">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="luluskan_pilihSemua" class="rounded border-slate-300">
+                        <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Pilih Semua Siswa (Semua Kelas)</span>
+                    </label>
+                    <span class="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold" id="luluskan_totalTerpilih">
+                        0 dipilih
+                    </span>
+                </div>
 
+                {{-- Daftar dikelompokkan per kelas. Setiap kelas punya
+                     checkbox "Pilih Semua Kelas Ini" sendiri, plus
+                     checkbox per siswa untuk memilih sebagian saja. --}}
                 <div id="luluskan_listSiswa"
-                     class="max-h-56 overflow-y-auto rounded-xl border border-slate-100 dark:border-slate-700 divide-y divide-slate-50 dark:divide-slate-700/60">
+                     class="max-h-72 overflow-y-auto rounded-xl border border-slate-100 dark:border-slate-700 divide-y divide-slate-50 dark:divide-slate-700/60">
                     <p class="text-xs text-slate-400 text-center py-4">Memuat data siswa...</p>
                 </div>
 
                 <p class="text-[10px] text-amber-500 mt-2">
-                    ⚠ Setelah diluluskan, data siswa akan disalin ke Data Alumni dan akun login siswa dinonaktifkan otomatis.
+                    ⚠ Setelah diluluskan: data siswa disalin ke Data Alumni, dan akun (nama, login) siswa
+                    <strong>dihapus permanen dari Kelola User</strong>. Admin masih bisa mengedit data
+                    kelulusan selama <strong>2 hari</strong> — setelah itu data terkunci (hanya bisa dilihat).
                 </p>
             </div>
 
@@ -103,7 +108,7 @@
                 <button type="submit"
                         class="flex-1 bg-indigo-600 hover:bg-indigo-700 active:scale-95
                                text-white py-2 rounded-xl text-xs font-bold transition shadow-sm">
-                    Proses Kelulusan
+                    Luluskan Sekarang
                 </button>
                 <button type="button" onclick="closeModal('modalLuluskan')"
                         class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600

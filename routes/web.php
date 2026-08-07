@@ -99,6 +99,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::post('/alumni/{alumni}/batalkan', [AlumniController::class, 'batalkan'])->name('alumni.batalkan');
     Route::delete('/alumni/{alumni}', [AlumniController::class, 'destroy'])->name('alumni.destroy');
 
+    Route::get('alumni/{alumni}/edit', [AlumniController::class, 'edit'])->name('admin.alumni.edit');
+    Route::put('alumni/{alumni}', [AlumniController::class, 'update'])->name('admin.alumni.update');
+
     // ── Pengumuman ─────────────────────────────────────────────
     Route::get('/pengumuman', [PengumumanController::class, 'adminIndex'])->name('pengumuman');
     Route::get('/pengumuman/index', [PengumumanController::class, 'adminIndex'])->name('pengumuman.index');

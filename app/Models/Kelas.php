@@ -28,9 +28,9 @@ class Kelas extends Model
     ];
 
     /** Wali kelas → relasi ke tabel gurus */
-    public function guru(): BelongsTo
+    public function guru()
     {
-        return $this->belongsTo(Guru::class, 'guru_id');
+        return $this->belongsTo(Guru::class);
     }
 
     /** Siswa-siswa di kelas ini */

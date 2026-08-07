@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Excel;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Pdf;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Str;
 
 class AlumniController extends Controller
@@ -307,18 +307,18 @@ private function normalizeKps($value): string
         return Excel::download(new AlumniExport($tahun), $filename);
     }
 
-    public function exportPdf(Request $request)
-    {
-        $tahun = $request->get('tahun_lulus');
+public function exportPdf(Request $request)
+{
+    $tahun = $request->tahun;
 
-        $alumni = Alumni::query()
-            ->when($tahun, fn ($q) => $q->tahun($tahun))
-            ->orderByDesc('tahun_lulus')
-            ->orderBy('nama')
-            ->get();
+    $alumni = Alumni::query()
+        ->when($tahun, fn ($q) => $q->tahun($tahun))
+        ->orderByDesc('tahun_lulus')
+        ->orderBy('nama')
+        ->get();
 
-        $pdf = Pdf::loadView('admin.alumni.pdf', compact('alumni', 'tahun'));
+    $pdf = Pdf::loadView('admin.alumni.pdf', compact('alumni', 'tahun'));
 
-        return $pdf->download('Data-Alumni-SMPN-Kutime' . ($tahun ? "-{$tahun}" : '') . '.pdf');
-    }
+    return $pdf->download('Data-Alumni-SMPN-Kutime' . ($tahun ? "-{$tahun}" : '') . '.pdf');
+}
 }

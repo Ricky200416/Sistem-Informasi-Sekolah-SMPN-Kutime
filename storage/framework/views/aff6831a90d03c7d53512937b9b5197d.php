@@ -43,7 +43,6 @@
         <div class="flex-1 overflow-y-auto p-5 space-y-4">
             <form id="formTambahKelas" action="<?php echo e(route('admin.kelas.store')); ?>" method="POST">
                 <?php echo csrf_field(); ?>
-                
                 <input type="hidden" name="_method" id="formMethod" value="POST">
 
                 
@@ -96,11 +95,15 @@
                                 class="w-full text-xs rounded-xl border-slate-200 dark:border-slate-700
                                        bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100
                                        focus:border-indigo-500 focus:ring-indigo-500 transition shadow-sm">
-                            <option value="" selected>-- Tanpa Wali Kelas --</option>
+                            <option value="">-- Tanpa Wali Kelas --</option>
                             <?php $__currentLoopData = $gurus; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $guru): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <option value="<?php echo e($guru->id); ?>" <?php echo e(old('homeroom_teacher_id') == $guru->id ? 'selected' : ''); ?>>
                                     <?php echo e($guru->name); ?>
 
+                                    <?php if($guru->guru && $guru->guru->nip): ?>
+                                        — <?php echo e($guru->guru->nip); ?>
+
+                                    <?php endif; ?>
                                 </option>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
@@ -161,7 +164,7 @@
                         Kapasitas Siswa <span class="text-rose-500">*</span>
                     </label>
                     <input type="number" name="capacity" id="input_capacity" required value="<?php echo e(old('capacity', 32)); ?>" min="1"
-                           placeholder="Masukkan jumlah kapasitas siswa (Bebas tanpa batas maksimal)"
+                           placeholder="Masukkan jumlah kapasitas siswa"
                            class="w-full text-xs rounded-xl border-slate-200 dark:border-slate-700
                                   bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100
                                   focus:border-indigo-500 focus:ring-indigo-500 transition shadow-sm">

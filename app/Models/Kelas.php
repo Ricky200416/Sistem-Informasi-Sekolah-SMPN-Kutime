@@ -10,15 +10,20 @@ class Kelas extends Model
 {
     protected $table = 'kelas';
 
+    /**
+     * WAJIB: 'id' harus ada di fillable
+     * supaya forceFill / updateOrCreate bisa memaksa ID yang sama
+     * dengan study_groups.id
+     */
     protected $fillable = [
+        'id',               // ← PENTING! Jangan dihapus
         'nama',
         'tingkat',
         'rombel',
         'tahun_ajaran',
-        'guru_id',
-        'semester',       // ← semester (1 atau 2)
-        'guru_id',        // ← wali kelas (FK ke users)
-        'ruang', 
+        'semester',
+        'guru_id',          // FK ke tabel gurus (bukan users)
+        'ruang',
         'kapasitas',
     ];
 
@@ -27,13 +32,17 @@ class Kelas extends Model
         'kapasitas' => 'integer',
     ];
 
-    /** Wali kelas → relasi ke tabel gurus */
-    public function guru()
+    /**
+     * Wali kelas → relasi ke tabel gurus
+     */
+    public function guru(): BelongsTo
     {
-        return $this->belongsTo(Guru::class);
+        return $this->belongsTo(Guru::class, 'guru_id');
     }
 
-    /** Siswa-siswa di kelas ini */
+    /**
+     * Siswa-siswa di kelas ini
+     */
     public function siswas(): HasMany
     {
         return $this->hasMany(Siswa::class, 'kelas_id');

@@ -178,13 +178,46 @@ class AbsensiGuruController extends Controller
                     ->orderBy('nama')
                     ->get();
 
-                $absensiHariSiswa = \App\Models\AbsensiSiswa::where(
-                    'kelas_id',
-                 ,   $kelasIdSiswa
-                )
-                    ->whereDate('tanggal', $tanggalSiswa)
-                    ->get()
-                    ->keyBy('siswa_id');
+                if ($kelasIdSiswa) {
+
+                    $siswaList = \App\Models\Siswa::where(
+                        'kelas_id',
+                        $kelasIdSiswa
+                    )
+                        ->with('user')
+                        ->orderBy('nama')
+                        ->get();
+
+                    // Ambil ID siswa yang berada di kelas terpilih
+                    $siswaIds = $siswaList->pluck('id');
+
+                    // Ambil absensi berdasarkan siswa dan tanggal
+                    $absensiHariSiswa = \App\Models\AbsensiSiswa::whereIn(
+                        'siswa_id',
+                        $siswaIds
+                    )
+                        ->whereDate('tanggal', $tanggalSiswa)
+                        ->get()
+                        ->keyBy('siswa_id');
+
+                    $ringkasanSiswa = [
+                        'hadir' => $absensiHariSiswa
+                            ->where('status', 'hadir')
+                            ->count(),
+
+                        'sakit' => $absensiHariSiswa
+                            ->where('status', 'sakit')
+                            ->count(),
+
+                        'izin' => $absensiHariSiswa
+                            ->where('status', 'izin')
+                            ->count(),
+
+                        'alpha' => $absensiHariSiswa
+                            ->where('status', 'alpha')
+                            ->count(),
+                    ];
+                }
 
                 /**
                  * Ringkasan absensi siswa.

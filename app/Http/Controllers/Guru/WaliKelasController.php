@@ -25,29 +25,51 @@ class WaliKelasController extends Controller
 
         /* ══════════════════════════════════════════════════════
            KELAS WALI
-           Coba berbagai relasi/kolom yang mungkin ada
+           FIX UTAMA:
+           Sumber kebenaran yang sebenarnya dipakai di seluruh
+           aplikasi (lihat admin/users/_table_guru.blade.php)
+           adalah StudyGroup.homeroom_teacher_id via relasi
+           $user->homeroomGroups(). Field guru->kelas_id / Kelas
+           model lama TIDAK PERNAH di-set oleh form "Edit Kelas"
+           admin, jadi sebelumnya $kelas selalu null di sini.
+
+           Urutan pencarian:
+           1) StudyGroup via $user->homeroomGroups() (SUMBER UTAMA)
+           2) Fallback ke sistem Kelas lama (tetap dipertahankan
+              untuk kompatibilitas, TIDAK dihapus)
         ══════════════════════════════════════════════════════ */
         $kelas = null;
 
         try {
-            // Opsi 1: guru punya kelas_id langsung
-            if ($guru->kelas_id) {
-                $kelas = $guru->kelas;
-            }
-
-            // Opsi 2: relasi waliKelas di model Guru
-            if (!$kelas && method_exists($guru, 'waliKelas')) {
-                $wk    = $guru->waliKelas;
-                $kelas = $wk?->kelas ?? $wk ?? null;
-            }
-
-            // Opsi 3: method isWaliKelas + cari dari tabel kelas
-            if (!$kelas) {
-                $kelas = \App\Models\Kelas::where('wali_guru_id', $guru->id)->first()
-                      ?? \App\Models\Kelas::where('wali_kelas_id', $guru->id)->first();
+            if (method_exists($user, 'homeroomGroups')) {
+                $kelas = $user->homeroomGroups()->first();
             }
         } catch (\Exception $e) {
             $kelas = null;
+        }
+
+        // ── Fallback ke sistem lama (Kelas) — dipertahankan apa adanya ──
+        if (!$kelas) {
+            try {
+                // Opsi 1: guru punya kelas_id langsung
+                if ($guru->kelas_id) {
+                    $kelas = $guru->kelas;
+                }
+
+                // Opsi 2: relasi waliKelas di model Guru
+                if (!$kelas && method_exists($guru, 'waliKelas')) {
+                    $wk    = $guru->waliKelas;
+                    $kelas = $wk?->kelas ?? $wk ?? null;
+                }
+
+                // Opsi 3: method isWaliKelas + cari dari tabel kelas
+                if (!$kelas) {
+                    $kelas = \App\Models\Kelas::where('wali_guru_id', $guru->id)->first()
+                          ?? \App\Models\Kelas::where('wali_kelas_id', $guru->id)->first();
+                }
+            } catch (\Exception $e) {
+                $kelas = null;
+            }
         }
 
         if (!$kelas) {
@@ -66,12 +88,16 @@ class WaliKelasController extends Controller
 
         /* ══════════════════════════════════════════════════════
            AMBIL SISWA + HITUNG STATISTIK
+           FIX: tambahkan pengecekan relasi 'students' terlebih
+           dahulu (nama relasi khas StudyGroup), sebelum fallback
+           ke relasi/nama lama 'siswas' / 'siswa' / query manual.
         ══════════════════════════════════════════════════════ */
         $siswa = collect();
 
         try {
-            // Relasi siswas() atau siswa() di model Kelas
-            if (method_exists($kelas, 'siswas')) {
+            if (method_exists($kelas, 'students')) {
+                $siswaRaw = $kelas->students()->with('user')->get();
+            } elseif (method_exists($kelas, 'siswas')) {
                 $siswaRaw = $kelas->siswas()->with('user')->get();
             } elseif (method_exists($kelas, 'siswa')) {
                 $siswaRaw = $kelas->siswa()->with('user')->get();

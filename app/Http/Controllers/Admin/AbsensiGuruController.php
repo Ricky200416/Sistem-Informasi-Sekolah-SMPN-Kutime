@@ -55,6 +55,34 @@ class AbsensiGuruController extends Controller
         $daftarKelas = collect();
         $namaHari = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
 
+        if ($request->input('tab') === 'siswa') {
+    $kelasListSiswa = \App\Models\Kelas::orderBy('nama')->get();
+    $kelasIdSiswa   = $request->input('kelas_id');
+    $tanggalSiswa   = $request->input('tanggal', now()->toDateString());
+
+    $siswaList = collect();
+    $absensiHariSiswa = collect();
+    $ringkasanSiswa = ['hadir'=>0,'sakit'=>0,'izin'=>0,'alpha'=>0];
+
+    if ($kelasIdSiswa) {
+        $siswaList = \App\Models\Siswa::where('kelas_id', $kelasIdSiswa)
+            ->with('user')
+            ->orderBy('nama')
+            ->get();
+
+        $absensiHariSiswa = \App\Models\AbsensiSiswa::where('kelas_id', $kelasIdSiswa)
+            ->whereDate('tanggal', $tanggalSiswa)
+            ->get()
+            ->keyBy('siswa_id');
+
+        $ringkasanSiswa = [
+            'hadir' => $absensiHariSiswa->where('status', 'hadir')->count(),
+            'sakit' => $absensiHariSiswa->where('status', 'sakit')->count(),
+            'izin'  => $absensiHariSiswa->where('status', 'izin')->count(),
+            'alpha' => $absensiHariSiswa->where('status', 'alpha')->count(),
+        ];
+    }
+
         return [
             'daftarGuru'   => $daftarGuru,
             'absensiData'  => $absensiData,

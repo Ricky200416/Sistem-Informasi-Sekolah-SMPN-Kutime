@@ -415,6 +415,16 @@
     $today   = \Carbon\Carbon::today()->format('Y-m-d');
     $bulanNm = \Carbon\Carbon::now()->isoFormat('MMMM Y');
 
+    /*
+     * FIX: $kelas sekarang bisa berupa StudyGroup (field: name,
+     * grade, academic_year) ATAU Kelas lama (field: nama, tingkat,
+     * tahun_ajaran) tergantung mana yang ditemukan controller.
+     * Normalisasi di sini supaya view tidak perlu tahu asalnya.
+     */
+    $kelasNamaTampil   = $kelas?->name ?? $kelas?->nama ?? 'Belum Ditugaskan';
+    $kelasTingkatTampil= $kelas?->grade ?? $kelas?->tingkat ?? null;
+    $kelasTahunTampil  = $kelas?->academic_year ?? $kelas?->tahun_ajaran ?? null;
+
     // ── Statistik dari kolom yang sudah di-set di controller ──
     $totalSiswa  = $siswa->count();
     $totalL      = $siswa->where('jk', 'L')->count();
@@ -442,13 +452,13 @@
     <div>
         <p class="wk-banner-title">
             ⭐ Kelas Wali &nbsp;—&nbsp;
-            {{ $kelas?->nama ?? 'Belum Ditugaskan' }}
+            {{ $kelasNamaTampil }}
         </p>
         <p class="wk-banner-sub">
             @if($kelas)
-                {{ $kelas->tingkat ?? '' }}
-                @if($kelas->tingkat ?? null) &nbsp;·&nbsp; @endif
-                {{ $kelas->tahun_ajaran ?? '' }}
+                {{ $kelasTingkatTampil ?? '' }}
+                @if($kelasTingkatTampil) &nbsp;·&nbsp; @endif
+                {{ $kelasTahunTampil ?? '' }}
                 &nbsp;·&nbsp; Bulan {{ $bulanNm }}
             @else
                 Hubungi admin untuk ditugaskan sebagai wali kelas
@@ -626,7 +636,7 @@
             @if($kelas)
                 <span style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;
                              border-radius:5px;padding:1px 8px;font-size:.58rem;font-weight:700;">
-                    {{ $kelas->nama }}
+                    {{ $kelasNamaTampil }}
                 </span>
             @endif
         </div>

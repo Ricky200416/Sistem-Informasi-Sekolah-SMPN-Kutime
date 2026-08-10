@@ -35,7 +35,7 @@ class UserController extends Controller
         $activeTab = $request->get('tab', 'guru');
 
         $gurus = User::whereIn('role', ['guru', 'kepala_sekolah'])
-            ->with(['guru.studyGroup', 'guru.kelas'])
+            ->with(['guru.kelas', 'homeroomGroups'])
             ->latest()
             ->get();
 
@@ -59,7 +59,11 @@ class UserController extends Controller
     // =========================================================================
     public function show(User $user)
     {
-        $user->load(['guru.studyGroup', 'guru.kelas', 'siswa.kelas', 'siswa.studyGroup']);
+        // PERBAIKAN: 'guru.studyGroup' DIHAPUS karena relasi ini TIDAK ADA
+        // di model Guru dan menyebabkan error 500 (Gagal memuat data user).
+        // Wali kelas sekarang diambil lewat relasi User->homeroomGroups
+        // (persis seperti yang dipakai di _table_guru.blade.php).
+        $user->load(['guru.kelas', 'siswa.kelas', 'siswa.studyGroup', 'homeroomGroups']);
 
         $role    = $user->role;
         $profile = null;
@@ -87,9 +91,15 @@ class UserController extends Controller
                 ];
             }
         } elseif (in_array($role, ['guru', 'kepala_sekolah']) && $user->guru) {
-            $profile       = $user->guru->toArray();
-            $kelas         = $user->guru->studyGroup ?? $user->guru->kelas;
-            $profile['kelas'] = $kelas ? $kelas->toArray() : null;
+            $profile = $user->guru->toArray();
+
+            // Wali kelas: utamakan relasi resmi homeroomGroups (User -> StudyGroup),
+            // fallback ke kelas_id lama pada tabel gurus jika ada.
+            $waliKelas = $user->homeroomGroups->first()
+                ?? ($user->guru->kelas_id ? StudyGroup::find($user->guru->kelas_id) : null);
+
+            $profile['kelas']         = $waliKelas ? $waliKelas->toArray() : null;
+            $profile['wali_kelas_id'] = $waliKelas?->id;
         }
 
         return response()->json([
@@ -154,7 +164,10 @@ class UserController extends Controller
     // =========================================================================
     public function edit(User $user)
     {
-        $user->load(['guru.studyGroup', 'guru.kelas', 'siswa.kelas', 'siswa.studyGroup']);
+        // PERBAIKAN: 'guru.studyGroup' DIHAPUS (relasi tidak ada di model Guru,
+        // penyebab error "Gagal memuat data user."). Ditambahkan 'homeroomGroups'
+        // untuk mengambil kelas yang diwalikan oleh guru ini.
+        $user->load(['guru.kelas', 'siswa.kelas', 'siswa.studyGroup', 'homeroomGroups']);
 
         $kelasList    = $this->getKelasList();
         $semesterList = $this->getSemesterList();
@@ -168,6 +181,15 @@ class UserController extends Controller
                 $profile['tahun_ajaran_kelas']   = $kelasData['tahun_ajaran'] ?? null;
                 $profile['ruang_kelas']          = $user->siswa->studyGroup?->room ?? null;
             }
+        }
+
+        // BARU: siapkan data wali kelas untuk role guru / kepala_sekolah
+        if (in_array($user->role, ['guru', 'kepala_sekolah']) && $user->guru) {
+            $waliKelas = $user->homeroomGroups->first()
+                ?? ($user->guru->kelas_id ? StudyGroup::find($user->guru->kelas_id) : null);
+
+            $profile                   = $profile ? $profile->toArray() : [];
+            $profile['wali_kelas_id']  = $waliKelas?->id;
         }
 
         return response()->json([
@@ -192,6 +214,11 @@ class UserController extends Controller
 
         if ($user->role === 'siswa') {
             $validationRules['kelas_id'] = ['nullable'];
+        }
+
+        // BARU: validasi wali_kelas_id untuk guru / kepala sekolah
+        if (in_array($user->role, ['guru', 'kepala_sekolah'])) {
+            $validationRules['wali_kelas_id'] = ['nullable', 'exists:study_groups,id'];
         }
 
         $request->validate($validationRules);
@@ -251,6 +278,19 @@ class UserController extends Controller
             $user->guru()->update($data);
         } else {
             $user->guru()->create($data);
+        }
+
+        // =====================================================================
+        // BARU: SINKRONISASI WALI KELAS (StudyGroup.homeroom_teacher_id)
+        // =====================================================================
+        // 1. Lepaskan status wali kelas guru ini dari kelas manapun sebelumnya,
+        //    supaya satu guru tidak jadi wali kelas ganda tanpa sengaja.
+        StudyGroup::where('homeroom_teacher_id', $user->id)->update(['homeroom_teacher_id' => null]);
+
+        // 2. Jika admin memilih kelas baru, jadikan guru ini wali kelasnya.
+        if ($request->filled('wali_kelas_id')) {
+            StudyGroup::where('id', $request->wali_kelas_id)
+                ->update(['homeroom_teacher_id' => $user->id]);
         }
     }
 
@@ -381,6 +421,8 @@ class UserController extends Controller
 
         DB::beginTransaction();
         try {
+            // Lepaskan status wali kelas sebelum user dihapus (jaga integritas data kelas)
+            DB::table('study_groups')->where('homeroom_teacher_id', $user->id)->update(['homeroom_teacher_id' => null]);
             DB::table('gurus')->where('user_id', $user->id)->delete();
             DB::table('siswas')->where('user_id', $user->id)->delete();
             DB::table('users')->where('id', $user->id)->delete();
@@ -728,11 +770,12 @@ class UserController extends Controller
                 'No SK Terakhir', 'Wali Kelas',
             ];
 
-            $data = User::where('role', 'guru')->with('guru.kelas')->latest()->get();
+            $data = User::where('role', 'guru')->with(['guru.kelas', 'homeroomGroups'])->latest()->get();
             $rows = [];
 
             foreach ($data as $i => $user) {
-                $g      = $user->guru;
+                $g         = $user->guru;
+                $waliKelas = $user->homeroomGroups->first() ?? ($g?->kelas);
                 $rows[] = [
                     $i + 1,
                     $g?->nama              ?? $user->name,
@@ -746,7 +789,7 @@ class UserController extends Controller
                     $g?->pangkat_gol_ruang ?? '-',
                     $g?->no_sk_pertama     ?? '-',
                     $g?->no_sk_terakhir    ?? '-',
-                    $g?->kelas?->nama      ?? '-',
+                    $waliKelas?->name      ?? '-',
                 ];
             }
         } else {
@@ -857,7 +900,7 @@ class UserController extends Controller
         abort_unless(in_array($role, ['guru', 'siswa'], true), 404);
 
         if ($role === 'guru') {
-            $users    = User::where('role', 'guru')->with('guru.kelas')->latest()->get();
+            $users    = User::where('role', 'guru')->with(['guru.kelas', 'homeroomGroups'])->latest()->get();
             $filename = 'data_guru_' . date('Ymd_His') . '.pdf';
             $view     = 'admin.pdf.guru';
         } else {
@@ -1091,6 +1134,8 @@ class UserController extends Controller
         
         DB::beginTransaction();
         try {
+            // Lepaskan status wali kelas dari user-user yang akan dihapus
+            DB::table('study_groups')->whereIn('homeroom_teacher_id', $ids)->update(['homeroom_teacher_id' => null]);
             DB::table('gurus')->whereIn('user_id', $ids)->delete();
             DB::table('siswas')->whereIn('user_id', $ids)->delete();
             DB::table('users')->whereIn('id', $ids)->delete();
@@ -1108,7 +1153,7 @@ class UserController extends Controller
     public function guru()
     {
         $users = User::whereIn('role', ['guru', 'kepala_sekolah'])
-            ->with('guru.kelas')
+            ->with(['guru.kelas', 'homeroomGroups'])
             ->latest()
             ->get();
 

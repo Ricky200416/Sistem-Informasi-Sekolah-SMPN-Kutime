@@ -180,7 +180,7 @@ class AbsensiGuruController extends Controller
 
                 $absensiHariSiswa = \App\Models\AbsensiSiswa::where(
                     'kelas_id',
-                    $kelasIdSiswa
+                 ,   $kelasIdSiswa
                 )
                     ->whereDate('tanggal', $tanggalSiswa)
                     ->get()

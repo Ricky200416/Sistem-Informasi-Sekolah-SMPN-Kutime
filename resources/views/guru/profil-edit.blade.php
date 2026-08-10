@@ -121,6 +121,23 @@
             <h3 class="text-base font-semibold text-slate-700 mb-5 pb-2 border-b border-slate-100">
                 Identitas & Tugas
             </h3>
+            @php
+                /*
+                 * FIX: cari kelas wali guru ini dari StudyGroup via
+                 * homeroom_teacher_id (sumber kebenaran yang sama
+                 * dengan yang dipakai admin/kelas & _table_guru).
+                 * Fallback ke guru->kelas_id (sistem lama) tetap ada.
+                 */
+                $currentWaliKelasId = null;
+                try {
+                    if (method_exists($user, 'homeroomGroups')) {
+                        $currentWaliKelasId = $user->homeroomGroups()->first()?->id;
+                    }
+                } catch (\Exception $e) {
+                    $currentWaliKelasId = null;
+                }
+                $currentWaliKelasId = $currentWaliKelasId ?? $user->guru?->kelas_id;
+            @endphp
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <x-form-group label="NIP" name="nip">
                     <x-form-input name="nip" :value="old('nip', $user->guru?->nip)"
@@ -133,9 +150,14 @@
                                    px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400">
                         <option value="">— Tidak Menjadi Wali Kelas —</option>
                         @foreach($kelasList ?? [] as $kelas)
+                            @php
+                                $klsNama = $kelas->name ?? $kelas->nama ?? '';
+                                $klsTkt  = $kelas->grade ?? $kelas->tingkat ?? '';
+                                $klsThn  = $kelas->academic_year ?? $kelas->tahun_ajaran ?? '';
+                            @endphp
                             <option value="{{ $kelas->id }}"
-                                {{ old('wali_kelas', $user->guru?->kelas_id) == $kelas->id ? 'selected' : '' }}>
-                                {{ $kelas->nama }} • {{ $kelas->tingkat }} • {{ $kelas->tahun_ajaran }}
+                                {{ old('wali_kelas', $currentWaliKelasId) == $kelas->id ? 'selected' : '' }}>
+                                {{ $klsNama }} • {{ $klsTkt }} • {{ $klsThn }}
                             </option>
                         @endforeach
                     </select>

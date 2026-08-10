@@ -224,6 +224,57 @@
                                           focus:outline-none focus:ring-2
                                           focus:ring-indigo-300 transition">
                         </div>
+
+                        
+                        
+                        
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-medium text-slate-700
+                                          dark:text-slate-300 mb-1">
+                                Wali Kelas
+                            </label>
+                            <?php if(isset($kelasList) && $kelasList->count()): ?>
+                                <select name="wali_kelas_id" id="edit_wali_kelas_id"
+                                        class="w-full rounded-xl border border-slate-200
+                                               dark:border-slate-600 px-3 py-2 text-sm
+                                               bg-white dark:bg-slate-900 text-slate-700
+                                               dark:text-slate-300
+                                               focus:outline-none focus:ring-2
+                                               focus:ring-indigo-300 transition">
+                                    <option value="">— Bukan Wali Kelas —</option>
+                                    <?php $__currentLoopData = $kelasList; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $kelas): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <option value="<?php echo e($kelas->id); ?>">
+                                            <?php echo e($kelas->name); ?>
+
+                                            <?php if($kelas->grade): ?>
+                                                — Kelas <?php echo e($kelas->grade); ?><?php echo e($kelas->section ? ' '.$kelas->section : ''); ?>
+
+                                            <?php endif; ?>
+                                            <?php if($kelas->academic_year): ?>
+                                                (<?php echo e($kelas->academic_year); ?>)
+                                            <?php endif; ?>
+                                            <?php if($kelas->semester): ?>
+                                                Sem.<?php echo e($kelas->semester); ?>
+
+                                            <?php endif; ?>
+                                        </option>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                </select>
+                                <p class="text-[10px] text-slate-400 mt-1">
+                                    Pilih kelas jika guru ini menjadi wali kelas. Jika guru sudah menjadi
+                                    wali kelas lain, penugasan lama akan otomatis dipindahkan.
+                                </p>
+                            <?php else: ?>
+                                <div class="px-3 py-3 bg-amber-50 dark:bg-amber-950/30
+                                            border border-amber-200 dark:border-amber-800
+                                            rounded-xl text-xs text-amber-700 dark:text-amber-400">
+                                    Belum ada kelas. Tambahkan dulu di
+                                    <a href="<?php echo e(route('admin.kelas.index')); ?>"
+                                       class="underline font-medium">Kelola Kelas</a>.
+                                </div>
+                                <input type="hidden" name="wali_kelas_id" value="">
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
 
@@ -585,7 +636,7 @@ function populateEditModal(data) {
         if (el) el.value = v ?? '';
     };
 
-    if (role === 'guru') {
+    if (role === 'guru' || role === 'kepala_sekolah') {
         document.getElementById('editSectionGuru').classList.remove('hidden');
         val('edit_nip',                profile?.nip);
         val('edit_jk_guru',            profile?.jk);
@@ -597,6 +648,9 @@ function populateEditModal(data) {
         val('edit_no_sk_pertama',      profile?.no_sk_pertama);
         val('edit_no_sk_terakhir',     profile?.no_sk_terakhir);
         val('edit_no_telp_guru',       profile?.no_telp);
+
+        // BARU: set pilihan Wali Kelas sesuai data dari server
+        val('edit_wali_kelas_id',      profile?.wali_kelas_id);
 
     } else if (role === 'siswa') {
         document.getElementById('editSectionSiswa').classList.remove('hidden');

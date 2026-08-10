@@ -5,15 +5,33 @@
     $g = $user->guru;
 
     /*
-     * KELAS WALI — ambil dari variabel eksplisit $kelasWali (dikirim controller)
-     * jika tidak ada, fallback ke relasi $g->kelas
-     * Ini memastikan data tampil meski struktur DB berbeda-beda.
+     * KELAS WALI — FIX:
+     * Prioritas 1: relasi $user->homeroomGroups() (StudyGroup via
+     * homeroom_teacher_id) — INI SUMBER KEBENARAN YANG DIPAKAI
+     * ADMIN saat assign wali kelas lewat "Kelola Kelas".
+     * Prioritas 2 & 3: fallback ke $kelasWali (dikirim controller)
+     * dan $g->kelas (sistem lama) — dipertahankan agar tidak
+     * merusak data lama.
      */
-    $kelasWaliObj  = $kelasWali ?? $g?->kelas ?? null;
+    $kelasWaliObj  = null;
+    try {
+        if (method_exists($user, 'homeroomGroups')) {
+            $kelasWaliObj = $user->homeroomGroups()->first();
+        }
+    } catch (\Exception $e) {
+        $kelasWaliObj = null;
+    }
+    $kelasWaliObj  = $kelasWaliObj ?? ($kelasWali ?? null) ?? $g?->kelas ?? null;
+
     $kelasWaliId   = $kelasWaliObj?->id
                   ?? $g?->kelas_id
                   ?? $g?->kelas_wali_id
                   ?? null;
+
+    // Normalisasi field nama/tingkat/tahun_ajaran vs name/grade/academic_year
+    $kelasWaliNama    = $kelasWaliObj?->name ?? $kelasWaliObj?->nama ?? null;
+    $kelasWaliTingkat = $kelasWaliObj?->grade ?? $kelasWaliObj?->tingkat ?? null;
+    $kelasWaliTahun   = $kelasWaliObj?->academic_year ?? $kelasWaliObj?->tahun_ajaran ?? null;
 
     /*
      * $kelasList dikirim dari controller->show().
@@ -91,11 +109,11 @@
             <div class="mt-3 pt-3 border-t border-slate-100">
                 <p class="text-[10px] text-slate-400 font-medium mb-0.5">Wali Kelas</p>
                 <p class="text-xs font-semibold text-indigo-700">
-                    <?php echo e($kelasWaliObj->nama); ?>
+                    <?php echo e($kelasWaliNama); ?>
 
                     <span class="text-slate-400 font-normal">
-                        <?php if($kelasWaliObj->tingkat): ?> · <?php echo e($kelasWaliObj->tingkat); ?> <?php endif; ?>
-                        <?php if($kelasWaliObj->tahun_ajaran): ?> · <?php echo e($kelasWaliObj->tahun_ajaran); ?> <?php endif; ?>
+                        <?php if($kelasWaliTingkat): ?> · <?php echo e($kelasWaliTingkat); ?> <?php endif; ?>
+                        <?php if($kelasWaliTahun): ?> · <?php echo e($kelasWaliTahun); ?> <?php endif; ?>
                     </span>
                 </p>
             </div>
@@ -144,10 +162,10 @@
                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md
                                      bg-amber-50 border border-amber-200 text-amber-700
                                      text-[10px] font-semibold">
-                            ⭐ <?php echo e($kelasWaliObj->nama); ?>
+                            ⭐ <?php echo e($kelasWaliNama); ?>
 
-                            <?php if($kelasWaliObj->tingkat): ?>
-                                <span class="text-amber-500">· <?php echo e($kelasWaliObj->tingkat); ?></span>
+                            <?php if($kelasWaliTingkat): ?>
+                                <span class="text-amber-500">· <?php echo e($kelasWaliTingkat); ?></span>
                             <?php endif; ?>
                         </span>
                     </div>
@@ -351,10 +369,10 @@
                     <span class="text-amber-500 text-sm">⭐</span>
                     <div class="flex-1 min-w-0">
                         <p class="text-xs font-bold text-amber-800 truncate">
-                            <?php echo e($kelasWaliObj->nama); ?>
+                            <?php echo e($kelasWaliNama); ?>
 
-                            <?php if($kelasWaliObj->tingkat): ?> · <?php echo e($kelasWaliObj->tingkat); ?> <?php endif; ?>
-                            <?php if($kelasWaliObj->tahun_ajaran): ?> · <?php echo e($kelasWaliObj->tahun_ajaran); ?> <?php endif; ?>
+                            <?php if($kelasWaliTingkat): ?> · <?php echo e($kelasWaliTingkat); ?> <?php endif; ?>
+                            <?php if($kelasWaliTahun): ?> · <?php echo e($kelasWaliTahun); ?> <?php endif; ?>
                         </p>
                         <p class="text-[10px] text-amber-600">Kelas wali saat ini</p>
                     </div>
@@ -371,19 +389,23 @@
                             /*
                              * old() diutamakan (setelah validation error).
                              * Jika tidak ada old, bandingkan dengan $kelasWaliId
-                             * yang sudah di-resolve oleh controller.
+                             * yang sudah di-resolve dari StudyGroup di atas.
                              */
+                            $klsNama   = $kls->name ?? $kls->nama ?? '';
+                            $klsTkt    = $kls->grade ?? $kls->tingkat ?? null;
+                            $klsThn    = $kls->academic_year ?? $kls->tahun_ajaran ?? null;
+
                             $isSelected = old('wali_kelas') !== null
                                 ? (string) old('wali_kelas') === (string) $kls->id
                                 : (string) $kelasWaliId === (string) $kls->id;
                         ?>
                         <option value="<?php echo e($kls->id); ?>"
-                                data-label="<?php echo e($kls->nama); ?><?php echo e($kls->tingkat ? ' · '.$kls->tingkat : ''); ?><?php echo e($kls->tahun_ajaran ? ' · '.$kls->tahun_ajaran : ''); ?>"
+                                data-label="<?php echo e($klsNama); ?><?php echo e($klsTkt ? ' · '.$klsTkt : ''); ?><?php echo e($klsThn ? ' · '.$klsThn : ''); ?>"
                                 <?php echo e($isSelected ? 'selected' : ''); ?>>
-                            <?php echo e($kls->nama); ?>
+                            <?php echo e($klsNama); ?>
 
-                            <?php if($kls->tingkat): ?> · <?php echo e($kls->tingkat); ?> <?php endif; ?>
-                            <?php if($kls->tahun_ajaran): ?> · <?php echo e($kls->tahun_ajaran); ?> <?php endif; ?>
+                            <?php if($klsTkt): ?> · <?php echo e($klsTkt); ?> <?php endif; ?>
+                            <?php if($klsThn): ?> · <?php echo e($klsThn); ?> <?php endif; ?>
                         </option>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </select>

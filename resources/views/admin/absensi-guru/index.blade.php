@@ -137,6 +137,12 @@
     }
     .ag-cam-dot i { font-size:6px; color:#fff; }
 
+    .ag-loc-warn-dot {
+        position:absolute; bottom:-3px; right:-3px; width:9px; height:9px; border-radius:50%;
+        background:#dc2626; border:1.5px solid #fff; display:flex; align-items:center; justify-content:center;
+    }
+    .ag-loc-warn-dot i { font-size:6px; color:#fff; }
+
     .ag-legend { display:flex; gap:10px; flex-wrap:wrap; padding:8px 14px; border-top:1px solid #f1f5f9; background:#fafbfd; align-items:center; }
     .ag-li { display:flex; align-items:center; gap:4px; font-size:10px; color:#64748b; font-weight:500; }
     .ag-ld { width:16px; height:16px; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; }
@@ -150,6 +156,17 @@
     .ag-mav { width:34px; height:34px; border-radius:9px; background:#e0e7ff; color:#4f46e5; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; }
     .ag-mn  { font-size:13px; font-weight:700; color:#1e293b; line-height:1.2; }
     .ag-ms  { font-size:10px; color:#64748b; margin-top:2px; }
+
+    .ag-loc-block {
+        display:flex; align-items:center; gap:8px; margin-bottom:12px;
+        background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 10px;
+    }
+    .ag-loc-block.invalid { background:#fef2f2; border-color:#fecaca; }
+    .ag-loc-icon { font-size:14px; color:#4f46e5; flex-shrink:0; }
+    .ag-loc-block.invalid .ag-loc-icon { color:#dc2626; }
+    .ag-loc-text { font-size:10.5px; color:#475569; line-height:1.4; }
+    .ag-loc-block.invalid .ag-loc-text { color:#b91c1c; }
+    .ag-loc-text strong { font-weight:700; }
 
     .ag-photo-block { margin-bottom:14px; }
     .ag-photo-badge {
@@ -353,8 +370,8 @@
         <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:11.5px;color:#1e40af;display:flex;align-items:center;gap:7px;">
             <i class="bi bi-info-circle-fill" style="color:#3b82f6;flex-shrink:0;"></i>
             <span>
-                Data absensi di halaman ini <strong>hanya diisi oleh guru</strong> melalui menu Absensi Kehadiran (Foto) pada dashboard masing-masing.
-                Admin tidak dapat mengubah atau menghapus data absensi — klik sel untuk melihat bukti foto.
+                Data absensi di halaman ini <strong>hanya diisi oleh guru</strong> melalui menu Absensi Saya pada dashboard masing-masing (dengan verifikasi lokasi GPS &amp; foto).
+                Admin tidak dapat mengubah atau menghapus data absensi — klik sel untuk melihat bukti foto dan lokasi.
             </span>
         </div>
 
@@ -472,7 +489,15 @@
                                 $jamMasuk  = $abs->jam_masuk  ?? null;
                                 $jamPulang = $abs->jam_pulang ?? null;
                                 $tipeAbsen = $abs->tipe_absensi ?? null;
-                                $kelasNama = $abs?->kelas?->nama ?? null;
+                                $kelasNama = $abs?->kelas_nama ?? $abs?->kelas?->nama ?? null;
+
+                                // ── Info lokasi & keterlambatan (dari fitur Absensi Saya GPS) ──
+                                $jarakMasuk     = $abs->jarak_masuk ?? null;
+                                $jarakPulang    = $abs->jarak_pulang ?? null;
+                                $lokasiValidM   = $abs->lokasi_valid_masuk ?? null;
+                                $lokasiValidP   = $abs->lokasi_valid_pulang ?? null;
+                                $keterlambatan  = $abs->keterlambatan_menit ?? null;
+                                $lokasiBermasalah = $abs && (($lokasiValidM === false) || ($lokasiValidP === false));
                             @endphp
                             <td id="ag-c-{{ $gid??'u'.$user->id }}-{{ $d }}"
                                 class="{{ $todayDay===$d?'ag-td':'' }}">
@@ -480,11 +505,14 @@
                                     <span style="color:#f1f5f9;font-size:10px;" title="Profil belum ada">·</span>
                                 @elseif($abs)
                                     <button class="ag-b ag-b-{{ $abs->status }}"
-                                        onclick="agV({{ $gid }},{{ $d }},'{{ $abs->status }}',@js($namaTampil),{{ $hasFoto ? 'true' : 'false' }},@js($fotoMasukUrl),@js($fotoPulangUrl),@js($jamMasuk),@js($jamPulang),@js($tipeAbsen),@js($kelasNama))"
-                                        title="{{ $namaTampil }} · {{ $d }} {{ $bulanList[$bulan] }}{{ $hasFoto ? ' · Ada foto absensi' : '' }}">
+                                        onclick="agV({{ $gid }},{{ $d }},'{{ $abs->status }}',@js($namaTampil),{{ $hasFoto ? 'true' : 'false' }},@js($fotoMasukUrl),@js($fotoPulangUrl),@js($jamMasuk),@js($jamPulang),@js($tipeAbsen),@js($kelasNama),@js($jarakMasuk),@js($jarakPulang),@js($lokasiValidM),@js($lokasiValidP),@js($keterlambatan))"
+                                        title="{{ $namaTampil }} · {{ $d }} {{ $bulanList[$bulan] }}{{ $hasFoto ? ' · Ada foto absensi' : '' }}{{ $lokasiBermasalah ? ' · Lokasi di luar area' : '' }}">
                                         {{ $abs->status }}
                                         @if($hasFoto)
                                             <span class="ag-cam-dot"><i class="bi bi-camera-fill"></i></span>
+                                        @endif
+                                        @if($lokasiBermasalah)
+                                            <span class="ag-loc-warn-dot" title="Lokasi di luar area sekolah"><i class="bi bi-exclamation"></i></span>
                                         @endif
                                     </button>
                                 @else
@@ -537,7 +565,8 @@
                     </span>
                 @endforeach
                 <span class="ag-li"><span class="ag-ld" style="background:#eef2ff;color:#4f46e5;"><i class="bi bi-camera-fill" style="font-size:8px;"></i></span>Absen via Foto</span>
-                <span style="margin-left:auto;font-size:10px;color:#cbd5e1;"><i class="bi bi-info-circle me-1"></i>Klik sel untuk melihat bukti foto</span>
+                <span class="ag-li"><span class="ag-ld" style="background:#fee2e2;color:#dc2626;"><i class="bi bi-exclamation" style="font-size:8px;"></i></span>Lokasi di Luar Area</span>
+                <span style="margin-left:auto;font-size:10px;color:#cbd5e1;"><i class="bi bi-info-circle me-1"></i>Klik sel untuk melihat bukti foto &amp; lokasi</span>
             </div>
         </div>
     </div>
@@ -702,6 +731,11 @@
             <div><div class="ag-mn" id="agMn">—</div><div class="ag-ms" id="agMs">—</div></div>
         </div>
 
+        <div class="ag-loc-block" id="agLocBlock" style="display:none;">
+            <i class="bi bi-geo-alt-fill ag-loc-icon" id="agLocIcon"></i>
+            <div class="ag-loc-text" id="agLocText">—</div>
+        </div>
+
         <div class="ag-photo-block" id="agPhotoBlock" style="display:none;">
             <span class="ag-photo-badge" id="agPhotoBadge"><i class="bi bi-camera-fill"></i> Absen via Foto</span>
             <div class="ag-photo-grid" id="agPhotoGrid"></div>
@@ -732,6 +766,10 @@
 const AG_B = {{ (int)$bulan }}, AG_Y = {{ (int)$tahun }};
 const AG_BN = @js($bulanList[$bulan] ?? '');
 
+const AG_STATUS_LABEL = {
+    P: 'Hadir', A: 'Alpha', S: 'Sakit', I: 'Izin', L: 'Terlambat', W: 'WFH',
+};
+
 /* ── Pencarian nama guru di tabel ── */
 function agFil(v){
     const q = v.toLowerCase().trim();
@@ -742,11 +780,39 @@ function agFil(v){
 
 /**
  * Admin HANYA melihat data absensi guru (view-only).
+ * Termasuk info lokasi GPS (jarak dari sekolah) & keterlambatan,
+ * yang berasal dari proses "Absensi Saya" guru (GPS + foto selfie).
  */
-function agV(gid, hari, status, nama, hasFoto, fotoMasuk, fotoPulang, jamMasuk, jamPulang, tipeAbsen, kelasNama){
+function agV(gid, hari, status, nama, hasFoto, fotoMasuk, fotoPulang, jamMasuk, jamPulang, tipeAbsen, kelasNama, jarakMasuk, jarakPulang, lokasiValidMasuk, lokasiValidPulang, keterlambatan){
     document.getElementById('agMav').textContent = nama.charAt(0).toUpperCase();
     document.getElementById('agMn').textContent  = nama;
-    document.getElementById('agMs').textContent  = `${hari} ${AG_BN} ${AG_Y} · Status: ${status}`;
+
+    let subInfo = `${hari} ${AG_BN} ${AG_Y} · Status: ${AG_STATUS_LABEL[status] || status}`;
+    if (status === 'L' && keterlambatan) {
+        subInfo += ` (telat ${keterlambatan} menit)`;
+    }
+    document.getElementById('agMs').textContent = subInfo;
+
+    /* ── Blok info lokasi ── */
+    const locBlock = document.getElementById('agLocBlock');
+    const locIcon  = document.getElementById('agLocIcon');
+    const locText  = document.getElementById('agLocText');
+
+    if (jarakMasuk !== null && jarakMasuk !== undefined) {
+        const validMasuk = lokasiValidMasuk === true || lokasiValidMasuk === 1 || lokasiValidMasuk === '1';
+        let html = `<strong>Lokasi Masuk:</strong> ${validMasuk ? 'Valid ✓' : 'Di luar area ✕'} · ${jarakMasuk} meter dari sekolah`;
+
+        if (jarakPulang !== null && jarakPulang !== undefined) {
+            const validPulang = lokasiValidPulang === true || lokasiValidPulang === 1 || lokasiValidPulang === '1';
+            html += `<br><strong>Lokasi Pulang:</strong> ${validPulang ? 'Valid ✓' : 'Di luar area ✕'} · ${jarakPulang} meter dari sekolah`;
+        }
+
+        locText.innerHTML = html;
+        locBlock.classList.toggle('invalid', !validMasuk || (jarakPulang !== null && jarakPulang !== undefined && lokasiValidPulang !== true && lokasiValidPulang !== 1 && lokasiValidPulang !== '1'));
+        locBlock.style.display = 'flex';
+    } else {
+        locBlock.style.display = 'none';
+    }
 
     const photoBlock = document.getElementById('agPhotoBlock');
     const photoGrid  = document.getElementById('agPhotoGrid');

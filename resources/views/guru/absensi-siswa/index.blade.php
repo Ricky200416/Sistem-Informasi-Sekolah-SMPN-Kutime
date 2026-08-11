@@ -559,6 +559,8 @@
     $absensiHari   = $absensiHari   ?? collect();
     $sudahDisimpan = $sudahDisimpan ?? false;
     $ringkasan     = $ringkasan     ?? [];
+    $mataPelajaran = $mataPelajaran ?? '';       {{-- BARU --}}
+    $mapelList     = $mapelList     ?? collect(); {{-- BARU --}}
 
     $selectedKelas = $kelasList->firstWhere('id', $kelasId);
 @endphp

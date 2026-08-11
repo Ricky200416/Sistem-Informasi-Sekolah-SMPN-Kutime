@@ -221,6 +221,8 @@ Route::prefix('guru')->name('guru.')->middleware(['auth', 'role:guru'])->group(f
     Route::post('/absensi-foto/masuk', [AbsensiFotoController::class, 'storeMasuk'])->name('absensi-foto.masuk');
     Route::post('/absensi-foto/pulang', [AbsensiFotoController::class, 'storePulang'])->name('absensi-foto.pulang');
     Route::post('/absensi-foto/kantor', [AbsensiFotoController::class, 'storeKantor'])->name('absensi-foto.kantor');
+    Route::post('/masuk',  [\App\Http\Controllers\Guru\AbsensiFotoController::class, 'storeMasuk'])->name('masuk');
+    Route::post('/pulang', [\App\Http\Controllers\Guru\AbsensiFotoController::class, 'storePulang'])->name('pulang');
 
     // ── Absensi Siswa (oleh Guru) ──────────────────────────────
     Route::get('/absensi-siswa', [AbsensiSiswaController::class, 'index'])->name('absensi-siswa.index');

@@ -1,5 +1,5 @@
 <?php
-// database/migrations/2026_08_11_000000_add_guru_id_mapel_to_absensi_siswas_table.php
+// database/migrations/2026_08_11_000000_add_guru_id_mapel_to_absensi_siswa_table.php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

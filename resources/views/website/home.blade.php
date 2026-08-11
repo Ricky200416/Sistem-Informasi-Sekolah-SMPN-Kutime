@@ -194,6 +194,16 @@ body { font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--text); 
             ->limit(8)
             ->get();
     }
+
+    /*
+    =====================================================
+    LOAD AMBIL DATA KOMENTAR AKTIF
+    =====================================================
+    */
+    $publicComments = collect();
+    if (class_exists('App\Models\Comment')) {
+        $publicComments = \App\Models\Comment::where('is_active', true)->latest()->get();
+    }
 @endphp
 
 {{-- ═══════════════════ §1 HERO ═══════════════════ --}}
@@ -708,7 +718,136 @@ body { font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--text); 
 </section>
 @endif
 
-{{-- ═══════════════════ §9 KONTAK & PETA ═══════════════════ --}}
+{{-- ═══════════════════ §9 SESI KOMENTAR & MASUKAN (UPDATED FITUR) ═══════════════════ --}}
+<section class="bg-white py-8 lg:py-12 border-t border-slate-200" id="sesi-komentar" x-data="{ showForm: false }">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {{-- Section Header --}}
+        <div class="sec-head text-center max-w-2xl mx-auto mb-6">
+            <div class="chip">Apresiasi & Masukan</div>
+            <h2 class="text-lg sm:text-2xl font-bold font-lora mt-1 text-slate-900">Masukan Anda Sangat Membantu Kami</h2>
+            <div class="gold-bar justify-center mt-1"><span></span><span></span></div>
+            <p class="text-xs sm:text-sm text-slate-600 mt-2">
+                Masukan Anda akan sangat membantu kami dalam pengembangan website resmi {{ $schoolName }} untuk kedepannya.
+            </p>
+
+            {{-- Tombol untuk Menampilkan / Sembunyikan Form Komentar --}}
+            <button @click="showForm = !showForm" 
+                    type="button"
+                    class="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white shadow-md hover:shadow-lg transition-all"
+                    style="background:var(--navy)">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                <span x-text="showForm ? 'Tutup Form Komentar' : 'Tulis Komentar / Masukan'"></span>
+            </button>
+        </div>
+
+        {{-- Alert Sukses Pengiriman Komentar --}}
+        @if(session('success_comment'))
+        <div class="max-w-xl mx-auto mb-6 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm flex items-center gap-2">
+            <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span>{{ session('success_comment') }}</span>
+        </div>
+        @endif
+
+        {{-- Form Tulis Komentar (Hidden Default, Toggle via AlpineJS) --}}
+        <div x-show="showForm" x-transition class="max-w-xl mx-auto bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-6 mb-8 shadow-sm">
+            <form action="{{ route('comments.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Komentar / Masukan <span class="text-red-500">*</span></label>
+                    <textarea name="komentar" rows="3" required placeholder="Tulis masukan Anda untuk sekolah kami..."
+                              class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:border-navy focus:ring-1 focus:ring-navy"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Nama (Opsional)</label>
+                        <input type="text" name="nama" placeholder="Biarkan kosong jika tanpa nama"
+                               class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:border-navy">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Foto Profil (Opsional)</label>
+                        <input type="file" name="foto" accept="image/*"
+                               class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300">
+                    </div>
+                </div>
+
+                <div class="text-right pt-2">
+                    <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold text-white shadow hover:opacity-90 transition" style="background:var(--navy)">
+                        Kirim Komentar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {{-- Carousel Slider Titik-Titik Komentar User --}}
+        @if($publicComments->count() > 0)
+        <div x-data="{ 
+            active: 0, 
+            total: {{ $publicComments->count() }},
+            next() { this.active = (this.active + 1) % this.total },
+            prev() { this.active = (this.active - 1 + this.total) % this.total }
+        }" class="relative max-w-2xl mx-auto px-4 py-6 bg-slate-50 rounded-2xl border border-slate-200/80">
+            
+            <div class="overflow-hidden relative min-h-[130px] flex items-center">
+                @foreach($publicComments as $idx => $c)
+                <div x-show="active === {{ $idx }}" 
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 translate-x-4"
+                     x-transition:enter-end="opacity-100 translate-x-0"
+                     x-transition:leave="transition ease-in duration-200"
+                     x-transition:leave-start="opacity-100 translate-x-0"
+                     x-transition:leave-end="opacity-0 -translate-x-4"
+                     class="w-full flex flex-col items-center text-center">
+                    
+                    <img src="{{ $c->avatar_url }}" alt="Avatar" class="w-12 h-12 rounded-full object-cover border-2 border-amber-400 mb-3 shadow-sm">
+                    
+                    <p class="text-xs sm:text-sm text-slate-700 italic max-w-lg mb-2">
+                        "{{ $c->komentar }}"
+                    </p>
+                    
+                    <h4 class="text-xs font-bold" style="color:var(--navy)">
+                        {{ $c->nama ?? 'Unknown' }}
+                    </h4>
+                    <span class="text-[10px] text-slate-400">{{ $c->created_at->diffForHumans() }}</span>
+                </div>
+                @endforeach
+            </div>
+
+            {{-- Navigasi Titik-Titik & Panah --}}
+            @if($publicComments->count() > 1)
+            <div class="flex items-center justify-center gap-1.5 mt-4">
+                <button @click="prev()" type="button" class="p-1 text-slate-400 hover:text-navy transition" aria-label="Sebelumnya">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                
+                @foreach($publicComments as $idx => $c)
+                <button @click="active = {{ $idx }}" 
+                        type="button" 
+                        class="h-2 rounded-full transition-all duration-300"
+                        :class="active === {{ $idx }} ? 'w-6 bg-amber-500' : 'w-2 bg-slate-300 hover:bg-slate-400'"
+                        aria-label="Slide {{ $idx + 1 }}"></button>
+                @endforeach
+
+                <button @click="next()" type="button" class="p-1 text-slate-400 hover:text-navy transition" aria-label="Selanjutnya">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+            @endif
+
+        </div>
+        @else
+        <div class="text-center py-6 text-xs text-slate-400 italic">
+            Belum ada komentar. Jadilah yang pertama memberikan masukan!
+        </div>
+        @endif
+
+    </div>
+</section>
+
+{{-- ═══════════════════ §10 KONTAK & PETA ═══════════════════ --}}
 @if($kontakRow && ($kontakRow->kontak_alamat || $kontakRow->kontak_telepon || $kontakRow->kontak_email))
 <section class="bg-white py-7 lg:py-8" id="kontak">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">

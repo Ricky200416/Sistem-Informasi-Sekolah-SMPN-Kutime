@@ -504,6 +504,20 @@
 }
 .as-alert-info i { flex-shrink: 0; margin-top: 1px; color: #3b82f6; }
 
+.as-alert-warn {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 0.538rem;
+    padding: 0.538rem 0.692rem;
+    margin-bottom: 0.692rem;
+    font-size: 0.677rem;
+    color: #92400e;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.462rem;
+}
+.as-alert-warn i { flex-shrink: 0; margin-top: 1px; color: #d97706; }
+
 /* ── Empty state ── */
 .as-empty {
     padding: 2.5rem 1rem;
@@ -586,7 +600,8 @@
     $sudahDisimpan = $sudahDisimpan ?? false;
     $ringkasan     = $ringkasan     ?? [];
     $mataPelajaran = $mataPelajaran ?? '';
-    $mapelList     = $mapelList     ?? collect();
+    $mapelList     = $mapelList     ?? collect();   // mapel yang pernah dipakai guru ini
+    $daftarMapel   = $daftarMapel   ?? collect();   // ← BARU: semua mapel untuk dropdown
 
     $selectedKelas = $kelasList->firstWhere('id', $kelasId);
 @endphp
@@ -617,6 +632,17 @@
         <strong>tidak akan tertimpa</strong> — masing-masing tersimpan terpisah.
     </div>
 </div>
+
+{{-- ── Peringatan jika daftar mapel kosong ── --}}
+@if($daftarMapel->isEmpty())
+    <div class="as-alert-warn">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <div>
+            Belum ada data master Mata Pelajaran. Hubungi admin untuk menambahkan data mata pelajaran,
+            atau mata pelajaran akan muncul otomatis setelah pernah digunakan.
+        </div>
+    </div>
+@endif
 
 {{-- ── Flash messages ── --}}
 @if(session('success'))
@@ -652,15 +678,15 @@
     </div>
     <div class="as-filter-group">
         <label><i class="bi bi-book"></i> Mata Pelajaran</label>
-        <input type="text" name="mata_pelajaran" list="mapelDatalist"
-               placeholder="cth: Matematika"
-               value="{{ $mataPelajaran }}"
-               autocomplete="off">
-        <datalist id="mapelDatalist">
-            @foreach($mapelList as $mp)
-                <option value="{{ $mp }}">
+        {{-- ── DROPDOWN mata pelajaran (BUKAN input teks manual lagi) ── --}}
+        <select name="mata_pelajaran" onchange="this.form.submit()">
+            <option value="">— Pilih Mata Pelajaran —</option>
+            @foreach($daftarMapel as $mp)
+                <option value="{{ $mp }}" {{ $mataPelajaran === $mp ? 'selected' : '' }}>
+                    {{ $mp }}
+                </option>
             @endforeach
-        </datalist>
+        </select>
     </div>
     <button type="submit" class="as-btn as-btn-primary">
         <i class="bi bi-arrow-clockwise"></i> Muat
@@ -781,9 +807,9 @@
     @elseif(!$mataPelajaran)
         <div class="as-empty">
             <i class="bi bi-book"></i>
-            <h3>Isi Mata Pelajaran Terlebih Dahulu</h3>
+            <h3>Pilih Mata Pelajaran Terlebih Dahulu</h3>
             <p>
-                Ketik nama mata pelajaran (contoh: Matematika), lalu klik "Muat".<br>
+                Pilih mata pelajaran dari dropdown di atas, lalu klik "Muat".<br>
                 Ini membuat sesi absensi Anda <strong>terpisah</strong> dari guru lain yang mengajar di kelas yang sama.
             </p>
         </div>
@@ -952,7 +978,7 @@ async function simpanAbsensi() {
     if (errBox) errBox.style.display = 'none';
 
     if (!MAPEL) {
-        asToast('Isi mata pelajaran terlebih dahulu', 'error');
+        asToast('Pilih mata pelajaran terlebih dahulu', 'error');
         return;
     }
 

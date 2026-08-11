@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\WebsiteController;
 use App\Http\Controllers\Admin\BeritaController;
 use App\Http\Controllers\Admin\GaleriController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\KelasController;
 use App\Http\Controllers\Admin\AbsensiGuruController;

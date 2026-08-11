@@ -41,10 +41,31 @@ class AbsensiGuru extends Model
         'jam_masuk',
         'jam_pulang',
         'tipe_absensi',
+
+        // ── Lokasi GPS saat absen masuk ──
+        'latitude_masuk',
+        'longitude_masuk',
+        'jarak_masuk',
+        'lokasi_valid_masuk',
+
+        // ── Lokasi GPS saat absen pulang ──
+        'latitude_pulang',
+        'longitude_pulang',
+        'jarak_pulang',
+        'lokasi_valid_pulang',
+
+        // ── Keterlambatan ──
+        'keterlambatan_menit',
     ];
 
     protected $casts = [
-        'tanggal' => 'date',
+        'tanggal'             => 'date',
+        'lokasi_valid_masuk'  => 'boolean',
+        'lokasi_valid_pulang' => 'boolean',
+        'latitude_masuk'      => 'decimal:7',
+        'longitude_masuk'     => 'decimal:7',
+        'latitude_pulang'     => 'decimal:7',
+        'longitude_pulang'    => 'decimal:7',
     ];
 
     protected $attributes = [
@@ -136,6 +157,35 @@ class AbsensiGuru extends Model
         return $this->timetable?->studyGroup?->name;
     }
 
+    /**
+     * Label ringkas lokasi saat absen masuk, untuk ditampilkan di
+     * tabel/modal admin. Contoh: "Valid · 38m" atau "Di luar area · 1.250m".
+     */
+    public function getLokasiMasukLabelAttribute(): ?string
+    {
+        if ($this->jarak_masuk === null) {
+            return null;
+        }
+
+        $status = $this->lokasi_valid_masuk ? 'Valid' : 'Di luar area';
+
+        return "{$status} · {$this->jarak_masuk}m";
+    }
+
+    /**
+     * Label ringkas lokasi saat absen pulang.
+     */
+    public function getLokasiPulangLabelAttribute(): ?string
+    {
+        if ($this->jarak_pulang === null) {
+            return null;
+        }
+
+        $status = $this->lokasi_valid_pulang ? 'Valid' : 'Di luar area';
+
+        return "{$status} · {$this->jarak_pulang}m";
+    }
+
     // ── Scopes ──────────────────────────────────────────────────────
 
     public function scopeTanggal(Builder $query, ?string $tanggal = null): Builder
@@ -156,6 +206,26 @@ class AbsensiGuru extends Model
     public function scopePeriode(Builder $query, int $bulan, int $tahun): Builder
     {
         return $query->whereMonth('tanggal', $bulan)->whereYear('tanggal', $tahun);
+    }
+
+    /**
+     * Filter absensi dengan status terlambat.
+     */
+    public function scopeTerlambat(Builder $query): Builder
+    {
+        return $query->where('status', self::STATUS_TELAT);
+    }
+
+    /**
+     * Filter absensi yang lokasinya tidak valid (di luar radius sekolah)
+     * saat absen masuk maupun pulang.
+     */
+    public function scopeLokasiTidakValid(Builder $query): Builder
+    {
+        return $query->where(function (Builder $q) {
+            $q->where('lokasi_valid_masuk', false)
+              ->orWhere('lokasi_valid_pulang', false);
+        });
     }
 
     // ── Helper statis ───────────────────────────────────────────────

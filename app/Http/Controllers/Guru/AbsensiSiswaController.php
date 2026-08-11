@@ -97,7 +97,7 @@ class AbsensiSiswaController extends Controller
 
         $hariIni = Carbon::parse($tanggal)->locale('id')->isoFormat('dddd, D MMMM Y');
 
-        // Daftar mapel yang pernah dipakai guru ini (untuk datalist/autocomplete)
+        // Daftar mapel yang PERNAH dipakai guru ini sendiri (untuk info/riwayat)
         $mapelList = AbsensiSiswa::where('guru_id', $guru?->id)
             ->whereNotNull('mata_pelajaran')
             ->where('mata_pelajaran', '!=', '')
@@ -105,10 +105,13 @@ class AbsensiSiswaController extends Controller
             ->orderBy('mata_pelajaran')
             ->pluck('mata_pelajaran');
 
+        // ── BARU: Daftar SEMUA mata pelajaran (untuk dropdown pilihan) ──
+        $daftarMapel = $this->getDaftarMapel();
+
         return view('guru.absensi-siswa.index', compact(
             'kelasList', 'kelasId', 'tanggal', 'hariIni',
             'siswaList', 'absensiHari', 'sudahDisimpan', 'ringkasan',
-            'mataPelajaran', 'mapelList'
+            'mataPelajaran', 'mapelList', 'daftarMapel'
         ));
     }
 
@@ -201,12 +204,16 @@ class AbsensiSiswaController extends Controller
         $rekapData  = [];
         $jumlahHari = Carbon::create($tahun, $bulan, 1)->daysInMonth;
 
+        // Daftar mapel yang PERNAH dipakai guru ini sendiri (untuk info/riwayat)
         $mapelList = AbsensiSiswa::where('guru_id', $guru?->id)
             ->whereNotNull('mata_pelajaran')
             ->where('mata_pelajaran', '!=', '')
             ->distinct()
             ->orderBy('mata_pelajaran')
             ->pluck('mata_pelajaran');
+
+        // ── BARU: Daftar SEMUA mata pelajaran (untuk dropdown pilihan) ──
+        $daftarMapel = $this->getDaftarMapel();
 
         if ($kelasId) {
             $siswaList = Siswa::where('kelas_id', $kelasId)
@@ -241,7 +248,70 @@ class AbsensiSiswaController extends Controller
         return view('guru.absensi-siswa.rekap', compact(
             'kelasList', 'kelasId', 'bulan', 'tahun', 'bulanList',
             'siswaList', 'rekapData', 'jumlahHari',
-            'mataPelajaran', 'mapelList'
+            'mataPelajaran', 'mapelList', 'daftarMapel'
         ));
+    }
+
+    /**
+     * ── BARU ──────────────────────────────────────────────────────────────
+     * Ambil daftar SEMUA mata pelajaran untuk dropdown, supaya guru tidak
+     * perlu mengetik manual dan tidak ada variasi penulisan berbeda
+     * (misal "Matematika" vs "matematika" vs "MTK").
+     *
+     * Prioritas sumber data:
+     * 1) Tabel master mata pelajaran, jika model tersedia:
+     *    - App\Models\MataPelajaran  (kolom nama: 'nama' atau 'nama_mapel')
+     *    - App\Models\Mapel          (fallback nama model alternatif)
+     *    - App\Models\Subject        (fallback nama model alternatif)
+     * 2) Fallback: semua mata_pelajaran unik yang PERNAH diinput oleh
+     *    guru manapun di tabel absensi_siswas (supaya tetap berfungsi
+     *    walau belum ada tabel master).
+     * ────────────────────────────────────────────────────────────────────
+     */
+    private function getDaftarMapel()
+    {
+        // ── 1) Coba dari tabel master mata pelajaran ──
+        $kandidatModel = [
+            \App\Models\MataPelajaran::class,
+            \App\Models\Mapel::class,
+            \App\Models\Subject::class,
+        ];
+
+        foreach ($kandidatModel as $modelClass) {
+            try {
+                if (!class_exists($modelClass)) {
+                    continue;
+                }
+
+                $model = new $modelClass();
+
+                // Coba beberapa kemungkinan nama kolom
+                $kolomKandidat = ['nama', 'nama_mapel', 'name', 'mata_pelajaran'];
+                $query = $modelClass::query();
+
+                foreach ($kolomKandidat as $kolom) {
+                    if (Schema::hasColumn($model->getTable(), $kolom)) {
+                        $hasil = $query->orderBy($kolom)->pluck($kolom);
+                        if ($hasil->isNotEmpty()) {
+                            return $hasil;
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                // model/tabel tidak ada atau kolom tidak cocok — lanjut ke kandidat berikutnya
+                continue;
+            }
+        }
+
+        // ── 2) Fallback: mapel unik dari SEMUA data absensi yang sudah pernah ada ──
+        try {
+            return AbsensiSiswa::whereNotNull('mata_pelajaran')
+                ->where('mata_pelajaran', '!=', '')
+                ->distinct()
+                ->orderBy('mata_pelajaran')
+                ->pluck('mata_pelajaran');
+        } catch (\Throwable $e) {
+            return collect();
+        }
     }
 }

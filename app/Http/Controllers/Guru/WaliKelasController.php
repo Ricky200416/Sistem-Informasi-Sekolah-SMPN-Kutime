@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
 use App\Models\AbsensiSiswa;
 
@@ -216,5 +218,194 @@ class WaliKelasController extends Controller
         })->sortBy('nama_tampil')->values();
 
         return view('guru.wali-kelas.index', compact('kelas', 'siswa'));
+    }
+
+    /**
+     * ── BARU ──────────────────────────────────────────────────────────────
+     * Rekap SEMUA mata pelajaran / semua guru yang mengajar di kelas
+     * yang diwalikan — HANYA untuk wali kelas. Query TIDAK difilter
+     * guru_id, sehingga wali kelas melihat data absensi dari SEMUA guru
+     * mata pelajaran yang mengajar di kelas tersebut.
+     * ────────────────────────────────────────────────────────────────────
+     */
+    public function rekapSemuaMapel(Request $request)
+    {
+        $user = Auth::user();
+        $guru = $user->guru;
+
+        /* ── Cari kelas yang diwalikan (logika sama seperti index()) ── */
+        $kelas = null;
+
+        try {
+            if (method_exists($user, 'homeroomGroups')) {
+                $kelas = $user->homeroomGroups()->first();
+            }
+        } catch (\Exception $e) {
+            $kelas = null;
+        }
+
+        if (!$kelas && $guru) {
+            try {
+                if ($guru->kelas_id) {
+                    $kelas = $guru->kelas;
+                }
+                if (!$kelas && method_exists($guru, 'waliKelas')) {
+                    $wk    = $guru->waliKelas;
+                    $kelas = $wk?->kelas ?? $wk ?? null;
+                }
+                if (!$kelas) {
+                    $kelas = \App\Models\Kelas::where('wali_guru_id', $guru->id)->first()
+                          ?? \App\Models\Kelas::where('wali_kelas_id', $guru->id)->first();
+                }
+            } catch (\Exception $e) {
+                $kelas = null;
+            }
+        }
+
+        if (!$kelas) {
+            abort(403, 'Anda bukan wali kelas untuk kelas manapun.');
+        }
+
+        $tanggal = $request->input('tanggal', now()->toDateString());
+        $bulan   = (int) $request->input('bulan', now()->month);
+        $tahun   = (int) $request->input('tahun', now()->year);
+        $mode    = $request->input('mode', 'harian'); // 'harian' | 'bulanan'
+
+        /* ── Ambil ID siswa di kelas ini ── */
+        $siswaIds = collect();
+        try {
+            if (method_exists($kelas, 'students')) {
+                $siswaIds = $kelas->students()->pluck('id');
+            } elseif (method_exists($kelas, 'siswas')) {
+                $siswaIds = $kelas->siswas()->pluck('id');
+            } elseif (method_exists($kelas, 'siswa')) {
+                $siswaIds = $kelas->siswa()->pluck('id');
+            } else {
+                $siswaIds = \App\Models\Siswa::where('kelas_id', $kelas->id)->pluck('id');
+            }
+        } catch (\Exception $e) {
+            $siswaIds = collect();
+        }
+
+        /*
+        |------------------------------------------------------------------
+        | HAK KHUSUS WALI KELAS: tidak difilter guru_id — ambil SEMUA
+        | absensi dari SEMUA guru mapel untuk siswa di kelas ini.
+        |------------------------------------------------------------------
+        */
+        $absensiHarian  = collect();
+        $absensiBulanan = collect();
+
+        if ($siswaIds->isNotEmpty()) {
+            if ($mode === 'bulanan') {
+                $absensiBulanan = AbsensiSiswa::whereIn('siswa_id', $siswaIds)
+                    ->whereMonth('tanggal', $bulan)
+                    ->whereYear('tanggal', $tahun)
+                    ->with(['siswa.user', 'guru'])
+                    ->orderBy('tanggal')
+                    ->orderBy('mata_pelajaran')
+                    ->get()
+                    ->groupBy(fn($a) => $a->mata_pelajaran ?: '(Tanpa Mapel)');
+            } else {
+                $absensiHarian = AbsensiSiswa::whereIn('siswa_id', $siswaIds)
+                    ->whereDate('tanggal', $tanggal)
+                    ->with(['siswa.user', 'guru'])
+                    ->orderBy('mata_pelajaran')
+                    ->get()
+                    ->groupBy(fn($a) => $a->mata_pelajaran ?: '(Tanpa Mapel)');
+            }
+        }
+
+        $bulanList = [
+            1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',
+            7=>'Juli',8=>'Agustus',9=>'September',10=>'Oktober',11=>'November',12=>'Desember',
+        ];
+
+        // ── BARU: Daftar SEMUA mata pelajaran (untuk dropdown filter) ──
+        $daftarMapel = $this->getDaftarMapel($siswaIds);
+
+        return view('guru.wali-kelas.rekap-mapel', compact(
+            'kelas', 'tanggal', 'bulan', 'tahun', 'bulanList', 'mode',
+            'absensiHarian', 'absensiBulanan', 'daftarMapel'
+        ));
+    }
+
+    /**
+     * ── BARU ──────────────────────────────────────────────────────────────
+     * Ambil daftar SEMUA mata pelajaran untuk dropdown filter di halaman
+     * rekap wali kelas.
+     *
+     * Prioritas sumber data:
+     * 1) Tabel master mata pelajaran, jika model tersedia:
+     *    - App\Models\MataPelajaran  (kolom nama: 'nama' atau 'nama_mapel')
+     *    - App\Models\Mapel          (fallback nama model alternatif)
+     *    - App\Models\Subject        (fallback nama model alternatif)
+     * 2) Fallback: mata_pelajaran unik dari absensi siswa DI KELAS INI saja
+     *    (supaya relevan dengan kelas yang sedang diwalikan).
+     * 3) Fallback terakhir: mata_pelajaran unik dari SEMUA data absensi
+     *    di seluruh sistem.
+     * ────────────────────────────────────────────────────────────────────
+     */
+    private function getDaftarMapel($siswaIds = null)
+    {
+        // ── 1) Coba dari tabel master mata pelajaran ──
+        $kandidatModel = [
+            \App\Models\MataPelajaran::class,
+            \App\Models\Mapel::class,
+            \App\Models\Subject::class,
+        ];
+
+        foreach ($kandidatModel as $modelClass) {
+            try {
+                if (!class_exists($modelClass)) {
+                    continue;
+                }
+
+                $model = new $modelClass();
+
+                $kolomKandidat = ['nama', 'nama_mapel', 'name', 'mata_pelajaran'];
+                $query = $modelClass::query();
+
+                foreach ($kolomKandidat as $kolom) {
+                    if (Schema::hasColumn($model->getTable(), $kolom)) {
+                        $hasil = $query->orderBy($kolom)->pluck($kolom);
+                        if ($hasil->isNotEmpty()) {
+                            return $hasil;
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                continue;
+            }
+        }
+
+        // ── 2) Fallback: mapel unik dari absensi di kelas ini saja ──
+        if ($siswaIds !== null && $siswaIds->isNotEmpty()) {
+            try {
+                $mapelKelas = AbsensiSiswa::whereIn('siswa_id', $siswaIds)
+                    ->whereNotNull('mata_pelajaran')
+                    ->where('mata_pelajaran', '!=', '')
+                    ->distinct()
+                    ->orderBy('mata_pelajaran')
+                    ->pluck('mata_pelajaran');
+
+                if ($mapelKelas->isNotEmpty()) {
+                    return $mapelKelas;
+                }
+            } catch (\Throwable $e) {
+                // lanjut ke fallback berikutnya
+            }
+        }
+
+        // ── 3) Fallback terakhir: mapel unik dari SEMUA data absensi ──
+        try {
+            return AbsensiSiswa::whereNotNull('mata_pelajaran')
+                ->where('mata_pelajaran', '!=', '')
+                ->distinct()
+                ->orderBy('mata_pelajaran')
+                ->pluck('mata_pelajaran');
+        } catch (\Throwable $e) {
+            return collect();
+        }
     }
 }

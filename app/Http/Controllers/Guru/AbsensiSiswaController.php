@@ -31,7 +31,16 @@ class AbsensiSiswaController extends Controller
 
         $guru = Auth::user()->guru; // guru yang sedang login
 
-        $kelasList = Kelas::orderBy('nama')->get();
+        /*
+        |------------------------------------------------------------------
+        | ── BARU / FIX UTAMA ──
+        | Daftar kelas untuk dropdown TIDAK lagi hanya dari tabel Kelas
+        | lama. Kita ambil dari sumber yang benar-benar dipakai sistem
+        | (StudyGroup) dengan fallback ke Kelas lama, supaya dropdown
+        | konsisten dengan data siswa yang sesungguhnya.
+        |------------------------------------------------------------------
+        */
+        $kelasList = $this->getKelasList();
 
         $siswaList     = collect();
         $absensiHari   = collect();
@@ -39,18 +48,17 @@ class AbsensiSiswaController extends Controller
         $ringkasan     = [];
 
         if ($kelasId) {
-            $siswaList = Siswa::where('kelas_id', $kelasId)
-                ->with(['user', 'kelas'])
-                ->orderBy('nama')
-                ->get();
-
-            if ($siswaList->isEmpty()) {
-                $siswaList = Siswa::whereHas('user', fn($q) => $q->where('role', 'siswa'))
-                    ->where('kelas_id', $kelasId)
-                    ->with(['user', 'kelas'])
-                    ->orderBy('nama')
-                    ->get();
-            }
+            /*
+            |------------------------------------------------------------------
+            | ── BARU / FIX UTAMA ──
+            | Ambil siswa untuk kelas terpilih dengan BEBERAPA jalur pencarian
+            | berurutan (sama seperti pola yang sudah terbukti berjalan di
+            | WaliKelasController), supaya siswa PASTI tampil begitu guru
+            | memilih kelas dari dropdown — apapun sumber data kelasnya
+            | (Kelas lama ATAU StudyGroup baru).
+            |------------------------------------------------------------------
+            */
+            $siswaList = $this->getSiswaByKelasId($kelasId);
 
             $siswaIds = $siswaList->pluck('id');
 
@@ -107,12 +115,9 @@ class AbsensiSiswaController extends Controller
 
         /*
         |------------------------------------------------------------------
-        | ── BARU / FIX UTAMA ──
         | Daftar mata pelajaran untuk DROPDOWN diambil dari JADWAL MENGAJAR
         | guru ini (menu "Jadwal Mengajar"), dicocokkan dengan KELAS dan
-        | HARI yang sedang dipilih. Ini sesuai permintaan: dropdown harus
-        | menampilkan mata pelajaran yang guru tersebut MASUK MENGAJAR pada
-        | hari tersebut, sesuai jadwal yang sudah ditentukan.
+        | HARI yang sedang dipilih.
         |------------------------------------------------------------------
         */
         $daftarMapel = $this->getMapelDariJadwal($guru, $kelasId, $tanggal);
@@ -142,17 +147,32 @@ class AbsensiSiswaController extends Controller
     public function store(Request $request)
     {
         $siswaTable = (new Siswa())->getTable();
-        $kelasTable = (new Kelas())->getTable();
 
+        /*
+        |------------------------------------------------------------------
+        | Validasi kelas_id: karena sumber kelas sekarang bisa dari Kelas
+        | lama ATAU StudyGroup, kita validasi manual (bukan exists:kelas,id)
+        | supaya tidak menolak kelas_id yang sah dari StudyGroup.
+        |------------------------------------------------------------------
+        */
         $request->validate([
             'tanggal'              => 'required|date',
-            'kelas_id'             => "required|exists:{$kelasTable},id",
+            'kelas_id'             => 'required',
             'mata_pelajaran'       => 'required|string|max:100',
             'absensi'              => 'required|array',
             'absensi.*.siswa_id'   => "required|exists:{$siswaTable},id",
             'absensi.*.status'     => 'required|in:hadir,sakit,izin,alpha',
             'absensi.*.keterangan' => 'nullable|string|max:500',
         ]);
+
+        // Pastikan kelas_id yang dikirim benar-benar valid di salah satu sumber
+        $kelasValid = $this->kelasIdValid($request->kelas_id);
+        if (!$kelasValid) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kelas tidak ditemukan atau tidak valid.',
+            ], 422);
+        }
 
         $guru = Auth::user()->guru;
 
@@ -219,7 +239,8 @@ class AbsensiSiswaController extends Controller
             9=>'September',10=>'Oktober', 11=>'November', 12=>'Desember',
         ];
 
-        $kelasList  = Kelas::orderBy('nama')->get();
+        // ── BARU: gunakan sumber kelas yang sama seperti index() ──
+        $kelasList  = $this->getKelasList();
         $siswaList  = collect();
         $rekapData  = [];
         $jumlahHari = Carbon::create($tahun, $bulan, 1)->daysInMonth;
@@ -234,7 +255,6 @@ class AbsensiSiswaController extends Controller
 
         /*
         |------------------------------------------------------------------
-        | ── BARU / FIX UTAMA ──
         | Untuk rekap (bulanan), dropdown mapel diambil dari SEMUA jadwal
         | mengajar guru ini di kelas terpilih (tanpa filter hari, karena
         | rekap mencakup satu bulan penuh, bisa lintas hari).
@@ -250,10 +270,8 @@ class AbsensiSiswaController extends Controller
         }
 
         if ($kelasId) {
-            $siswaList = Siswa::where('kelas_id', $kelasId)
-                ->with('user')
-                ->orderBy('nama')
-                ->get();
+            // ── BARU: gunakan pencarian siswa berlapis yang sama seperti index() ──
+            $siswaList = $this->getSiswaByKelasId($kelasId);
 
             if ($siswaList->isNotEmpty()) {
                 $query = AbsensiSiswa::whereIn('siswa_id', $siswaList->pluck('id'))
@@ -288,6 +306,156 @@ class AbsensiSiswaController extends Controller
 
     /**
      * ── BARU / FIX UTAMA ────────────────────────────────────────────────
+     * Ambil daftar KELAS untuk dropdown. Prioritas:
+     * 1) StudyGroup (sumber kebenaran yang sebenarnya dipakai sistem —
+     *    lihat admin/kelas dan WaliKelasController) — dinormalisasi
+     *    supaya punya atribut ->nama (alias dari ->name) agar kompatibel
+     *    dengan view yang sudah ada (yang memakai $kelas->nama).
+     * 2) Fallback ke tabel Kelas lama jika StudyGroup tidak tersedia.
+     *
+     * @return \Illuminate\Support\Collection
+     * ────────────────────────────────────────────────────────────────────
+     */
+    private function getKelasList()
+    {
+        // ── 1) Coba dari StudyGroup (sumber utama & terbaru) ──
+        try {
+            if (class_exists(\App\Models\StudyGroup::class)) {
+                $studyGroups = \App\Models\StudyGroup::orderBy('name')->get();
+
+                if ($studyGroups->isNotEmpty()) {
+                    // Normalisasi: tambahkan atribut 'nama' sebagai alias dari 'name'
+                    // supaya view lama ({{ $kelas->nama }}) tetap berfungsi tanpa diubah.
+                    return $studyGroups->map(function ($sg) {
+                        $sg->nama = $sg->name;
+                        return $sg;
+                    });
+                }
+            }
+        } catch (\Throwable $e) {
+            // StudyGroup tidak tersedia / error — lanjut ke fallback
+        }
+
+        // ── 2) Fallback ke tabel Kelas lama ──
+        try {
+            return Kelas::orderBy('nama')->get();
+        } catch (\Throwable $e) {
+            return collect();
+        }
+    }
+
+    /**
+     * ── BARU / FIX UTAMA ────────────────────────────────────────────────
+     * Ambil daftar SISWA untuk suatu $kelasId dengan beberapa jalur
+     * pencarian berurutan, supaya siswa PASTI tampil begitu guru memilih
+     * kelas dari dropdown, apapun sumber ID kelas tersebut (Kelas lama
+     * ATAU StudyGroup baru).
+     *
+     * Urutan pencarian:
+     * 1) Siswa::where('kelas_id', $kelasId)                — skema lama
+     * 2) Siswa::whereHas('user', role=siswa)->where(...)    — skema lama + filter role
+     * 3) StudyGroup::find($kelasId)->students()             — relasi StudyGroup
+     * 4) StudyGroup::find($kelasId)->siswas()                — relasi alternatif
+     * 5) StudyGroup::find($kelasId)->siswa()                 — relasi alternatif
+     *
+     * @param  int|string  $kelasId
+     * @return \Illuminate\Support\Collection
+     * ────────────────────────────────────────────────────────────────────
+     */
+    private function getSiswaByKelasId($kelasId)
+    {
+        // ── 1) Skema lama: Siswa.kelas_id langsung ──
+        try {
+            $siswaList = Siswa::where('kelas_id', $kelasId)
+                ->with(['user', 'kelas'])
+                ->orderBy('nama')
+                ->get();
+
+            if ($siswaList->isNotEmpty()) {
+                return $siswaList;
+            }
+        } catch (\Throwable $e) {
+            // lanjut ke jalur berikutnya
+        }
+
+        // ── 2) Skema lama + filter relasi user role siswa ──
+        try {
+            $siswaList = Siswa::whereHas('user', fn($q) => $q->where('role', 'siswa'))
+                ->where('kelas_id', $kelasId)
+                ->with(['user', 'kelas'])
+                ->orderBy('nama')
+                ->get();
+
+            if ($siswaList->isNotEmpty()) {
+                return $siswaList;
+            }
+        } catch (\Throwable $e) {
+            // lanjut ke jalur berikutnya
+        }
+
+        // ── 3), 4), 5) Skema baru: via StudyGroup ──
+        try {
+            if (class_exists(\App\Models\StudyGroup::class)) {
+                $studyGroup = \App\Models\StudyGroup::find($kelasId);
+
+                if ($studyGroup) {
+                    $siswaRaw = collect();
+
+                    if (method_exists($studyGroup, 'students')) {
+                        $siswaRaw = $studyGroup->students()->with('user')->get();
+                    } elseif (method_exists($studyGroup, 'siswas')) {
+                        $siswaRaw = $studyGroup->siswas()->with('user')->get();
+                    } elseif (method_exists($studyGroup, 'siswa')) {
+                        $siswaRaw = $studyGroup->siswa()->with('user')->get();
+                    }
+
+                    if ($siswaRaw->isNotEmpty()) {
+                        // Urutkan berdasarkan nama supaya konsisten dengan jalur lain
+                        return $siswaRaw->sortBy(function ($s) {
+                            return $s->nama ?? $s->user?->name ?? '';
+                        })->values();
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // tidak ada jalur lain — kembalikan collection kosong di bawah
+        }
+
+        return collect();
+    }
+
+    /**
+     * ── BARU ──────────────────────────────────────────────────────────────
+     * Cek apakah kelas_id yang dikirim dari form valid — baik sebagai
+     * Kelas lama maupun sebagai StudyGroup baru.
+     *
+     * @param  mixed  $kelasId
+     * @return bool
+     * ────────────────────────────────────────────────────────────────────
+     */
+    private function kelasIdValid($kelasId): bool
+    {
+        try {
+            if (Kelas::where('id', $kelasId)->exists()) {
+                return true;
+            }
+        } catch (\Throwable $e) {
+            // abaikan
+        }
+
+        try {
+            if (class_exists(\App\Models\StudyGroup::class)
+                && \App\Models\StudyGroup::where('id', $kelasId)->exists()) {
+                return true;
+            }
+        } catch (\Throwable $e) {
+            // abaikan
+        }
+
+        return false;
+    }
+
+    /**
      * Ambil daftar mata pelajaran dari JADWAL MENGAJAR guru (menu
      * "Jadwal Mengajar" → tabel Timetable / relasi studySubject).
      *
@@ -296,7 +464,6 @@ class AbsensiSiswaController extends Controller
      * @param  mixed  $tanggal  Tanggal yang sedang dipilih (dipakai untuk
      *                          menentukan HARI, bisa null = tidak filter hari)
      * @return \Illuminate\Support\Collection  Daftar nama mata pelajaran unik
-     * ────────────────────────────────────────────────────────────────────
      */
     private function getMapelDariJadwal($guru, $kelasId = null, $tanggal = null)
     {
@@ -348,7 +515,6 @@ class AbsensiSiswaController extends Controller
             */
             if ($tanggal && Schema::hasColumn($table, 'day_of_week')) {
                 $namaHari = Carbon::parse($tanggal)->locale('id')->isoFormat('dddd');
-                // Normalisasi "Minggu" tidak dipakai di jadwal (Senin–Sabtu saja)
                 $query->where('day_of_week', $namaHari);
             }
 

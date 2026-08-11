@@ -22,6 +22,13 @@ body { background: #f1f5fb; font-family: 'Plus Jakarta Sans', sans-serif; font-s
 }
 .rk-info-strip i { color:#3b82f6;flex-shrink:0; }
 
+.rk-warn-strip {
+    background:#fffbeb;border:1px solid #fde68a;border-radius:8px;
+    padding:8px 12px;margin-bottom:12px;font-size:11.5px;color:#92400e;
+    display:flex;align-items:center;gap:7px;
+}
+.rk-warn-strip i { color:#d97706;flex-shrink:0; }
+
 .rk-filter {
     background:#fff;border:1px solid #e2e8f0;border-radius:12px;
     padding:14px 16px;margin-bottom:14px;
@@ -84,6 +91,7 @@ body { background: #f1f5fb; font-family: 'Plus Jakarta Sans', sans-serif; font-s
     $rekapData     = $rekapData     ?? [];
     $mataPelajaran = $mataPelajaran ?? '';
     $mapelList     = $mapelList     ?? collect();
+    $daftarMapel   = $daftarMapel   ?? collect(); // ← BARU: semua mapel untuk dropdown
     $selKelas      = $kelasList->firstWhere('id', $kelasId);
 @endphp
 
@@ -100,10 +108,17 @@ body { background: #f1f5fb; font-family: 'Plus Jakarta Sans', sans-serif; font-s
     <i class="bi bi-info-circle-fill"></i>
     <span>
         Rekap ini hanya menampilkan absensi yang <strong>Anda input sendiri</strong>.
-        Gunakan filter Mata Pelajaran untuk melihat rekap per mapel yang Anda ajar.
+        Gunakan filter Mata Pelajaran (dropdown) untuk melihat rekap per mapel yang Anda ajar.
         Wali kelas dapat melihat rekap gabungan semua guru melalui menu <strong>Rekap Semua Mapel</strong> di halaman Wali Kelas.
     </span>
 </div>
+
+@if($daftarMapel->isEmpty())
+    <div class="rk-warn-strip">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>Belum ada data master Mata Pelajaran. Hubungi admin untuk melengkapi data mata pelajaran.</span>
+    </div>
+@endif
 
 <form method="GET" action="{{ route('guru.absensi-siswa.rekap') }}" class="rk-filter">
     <div class="rk-fg">
@@ -117,15 +132,15 @@ body { background: #f1f5fb; font-family: 'Plus Jakarta Sans', sans-serif; font-s
     </div>
     <div class="rk-fg">
         <label>Mata Pelajaran</label>
-        <input type="text" name="mata_pelajaran" list="rkMapelDatalist"
-               placeholder="Semua mapel Anda"
-               value="{{ $mataPelajaran }}"
-               autocomplete="off">
-        <datalist id="rkMapelDatalist">
-            @foreach($mapelList as $mp)
-                <option value="{{ $mp }}">
+        {{-- ── DROPDOWN mata pelajaran (BUKAN input teks manual lagi) ── --}}
+        <select name="mata_pelajaran">
+            <option value="">— Semua Mapel Anda —</option>
+            @foreach($daftarMapel as $mp)
+                <option value="{{ $mp }}" {{ $mataPelajaran === $mp ? 'selected' : '' }}>
+                    {{ $mp }}
+                </option>
             @endforeach
-        </datalist>
+        </select>
     </div>
     <div class="rk-fg">
         <label>Bulan</label>

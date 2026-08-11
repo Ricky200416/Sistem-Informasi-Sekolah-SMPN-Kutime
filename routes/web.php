@@ -226,6 +226,7 @@ Route::prefix('guru')->name('guru.')->middleware(['auth', 'role:guru'])->group(f
     Route::get('/absensi-siswa', [AbsensiSiswaController::class, 'index'])->name('absensi-siswa.index');
     Route::post('/absensi-siswa', [AbsensiSiswaController::class, 'store'])->name('absensi-siswa.store');
     Route::get('/absensi-siswa/rekap', [AbsensiSiswaController::class, 'rekap'])->name('absensi-siswa.rekap');
+    Route::get('/wali-kelas/rekap-mapel', [\App\Http\Controllers\Guru\WaliKelasController::class, 'rekapSemuaMapel'])->name('guru.wali-kelas.rekap-mapel');
 
     // ── Perizinan (Guru) ───────────────────────────────────────
     Route::get('/perizinan', [PerizinanController::class, 'index'])->name('perizinan.index');

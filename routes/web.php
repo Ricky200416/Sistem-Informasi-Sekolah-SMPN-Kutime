@@ -39,6 +39,8 @@ Route::get('/berita/{slug}', [PublicBeritaController::class, 'show'])->name('web
 Route::get('/galeri', [PublicGaleriController::class, 'index'])->name('website.galeri');
 Route::get('/galeri/{galeri}', [PublicGaleriController::class, 'show'])->name('website.galeri.show');
 
+Route::post('/komentar', [CommentController::class, 'store'])->name('comments.store');
+
 // =================================================================
 // AUTH
 // =================================================================
@@ -190,6 +192,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::get('/activity-log/data', [ActivityLogController::class, 'data'])->name('activity-log.data');
     Route::delete('/activity-log/purge', [ActivityLogController::class, 'purge'])->name('activity-log.purge');
     Route::delete('/activity-log/{log}', [ActivityLogController::class, 'destroy'])->name('activity-log.destroy');
+
+    // - Komentar --
+    Route::get('/comments', [CommentController::class, 'indexAdmin'])->name('comments.index');
+    Route::patch('/comments/{id}/toggle', [CommentController::class, 'toggleStatusAdmin'])->name('comments.toggle');
+    Route::delete('/comments/{id}', [CommentController::class, 'destroyAdmin'])->name('comments.destroy');
 
 });
 

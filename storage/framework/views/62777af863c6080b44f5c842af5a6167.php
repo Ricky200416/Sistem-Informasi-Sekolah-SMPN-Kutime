@@ -1,336 +1,605 @@
-<?php $__env->startSection('title', 'Absensi Foto'); ?>
+<?php $__env->startSection('title', 'Absensi Saya'); ?>
 
 <?php $__env->startSection('content'); ?>
-<div class="space-y-4">
+<meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
 
-    <div>
-        <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100">Absensi Kehadiran (Foto)</h2>
-        <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-            Unggah foto sebagai bukti kehadiran Anda. Absensi mengajar otomatis terhubung dengan Jadwal Mengajar Anda hari ini.
-            Data akan otomatis tersinkron ke Dashboard Admin.
-        </p>
-    </div>
-
-    <?php if(session('success')): ?>
-    <div class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800">
-        <i class="bi bi-check-circle-fill text-emerald-600"></i>
-        <p class="text-[11px] text-emerald-700 dark:text-emerald-300 font-medium"><?php echo e(session('success')); ?></p>
-    </div>
-    <?php endif; ?>
-
-    <?php if(session('error')): ?>
-    <div class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800">
-        <i class="bi bi-exclamation-triangle-fill text-rose-600"></i>
-        <p class="text-[11px] text-rose-700 dark:text-rose-300 font-medium"><?php echo e(session('error')); ?></p>
-    </div>
-    <?php endif; ?>
-
-    <?php if($errors->any()): ?>
-    <div class="flex items-start gap-2 px-3.5 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800">
-        <i class="bi bi-exclamation-triangle-fill text-rose-600 mt-0.5"></i>
-        <ul class="text-[11px] text-rose-700 dark:text-rose-300 font-medium list-disc list-inside">
-            <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <li><?php echo e($error); ?></li>
-            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-        </ul>
-    </div>
-    <?php endif; ?>
+<div id="absensiApp" class="space-y-4"
+     data-sudah-absen-masuk="<?php echo e($absensiHariIni ? 'true' : 'false'); ?>"
+     data-sudah-absen-pulang="<?php echo e(($absensiHariIni && $absensiHariIni->foto_pulang) ? 'true' : 'false'); ?>"
+     data-tipe-absen="<?php echo e($absensiHariIni->tipe_absensi ?? ''); ?>"
+     data-sekolah-lat="<?php echo e($lokasiSekolah['latitude']); ?>"
+     data-sekolah-lng="<?php echo e($lokasiSekolah['longitude']); ?>"
+     data-sekolah-radius="<?php echo e($lokasiSekolah['radius']); ?>"
+     data-url-masuk="<?php echo e(route('guru.absensi-foto.masuk')); ?>"
+     data-url-pulang="<?php echo e(route('guru.absensi-foto.pulang')); ?>">
 
     
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-4">
-        <div class="flex items-center justify-between mb-3">
-            <h3 class="text-xs font-bold text-slate-700 dark:text-slate-200">
-                Status Hari Ini — <?php echo e($hariIniNama); ?>, <?php echo e(now()->translatedFormat('d F Y')); ?>
-
-            </h3>
-            <?php if($absensiHariIni): ?>
-                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-                    Hadir
-                </span>
-            <?php else: ?>
-                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300">
-                    Belum Absen
-                </span>
-            <?php endif; ?>
-        </div>
-
-        <?php if(!$absensiHariIni): ?>
-            
-            <div class="mb-2.5 flex items-start gap-1.5 px-3 py-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800">
-                <i class="bi bi-info-circle-fill text-indigo-500 text-xs mt-0.5"></i>
-                <p class="text-[10px] text-indigo-700 dark:text-indigo-300">
-                    Pilih salah satu opsi di bawah. Absensi hanya dapat dilakukan <strong>satu kali</strong> per hari — pastikan Anda memilih yang sesuai sebelum mengunggah.
-                </p>
+    <div id="stepHome" class="wizard-step">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-4">
+            <div class="flex items-center justify-between mb-1">
+                <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100">Absensi Saya</h2>
+                <span class="text-[10px] text-slate-400" id="jamSekarang"></span>
             </div>
+            <p class="text-xs text-slate-400 dark:text-slate-500 mb-3">
+                <?php echo e($hariIniNama); ?>, <?php echo e(now()->translatedFormat('d F Y')); ?>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            </p>
 
-                
-                <form action="<?php echo e(route('guru.absensi-foto.masuk')); ?>" method="POST" enctype="multipart/form-data"
-                      class="border border-slate-200 dark:border-slate-700 rounded-xl p-3.5"
-                      onsubmit="return lockSubmit(this)">
-                    <?php echo csrf_field(); ?>
-                    <p class="text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">
-                        <i class="bi bi-easel2-fill text-indigo-500 me-1"></i> Saya Akan Mengajar
+            <?php if(session('success')): ?>
+            <div class="flex items-center gap-2 px-3.5 py-2.5 mb-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800">
+                <i class="bi bi-check-circle-fill text-emerald-600"></i>
+                <p class="text-[11px] text-emerald-700 dark:text-emerald-300 font-medium"><?php echo e(session('success')); ?></p>
+            </div>
+            <?php endif; ?>
+
+            
+            <?php if(!$absensiHariIni): ?>
+                <div class="rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center mb-4">
+                    <span class="inline-block w-3 h-3 rounded-full bg-slate-300 mb-2"></span>
+                    <p class="text-xs font-bold text-slate-500 mb-3">BELUM ABSEN</p>
+                    <button type="button" id="btnMulaiAbsenMasuk"
+                            class="px-5 py-2.5 bg-indigo-600 text-white text-xs font-bold rounded-xl hover:bg-indigo-700 transition">
+                        <i class="bi bi-geo-alt-fill me-1"></i> ABSEN MASUK
+                    </button>
+                </div>
+            <?php elseif($absensiHariIni->tipe_absensi === 'mengajar' && !$absensiHariIni->foto_pulang): ?>
+                <div class="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/10 p-4 mb-4">
+                    <p class="text-xs font-bold text-emerald-700 dark:text-emerald-300 mb-2">
+                        <i class="bi bi-check-circle-fill"></i> SUDAH ABSEN MASUK
                     </p>
+                    <p class="text-[11px] text-slate-600 dark:text-slate-300">Jam Masuk : <strong><?php echo e(substr($absensiHariIni->jam_masuk,0,5)); ?> WIB</strong></p>
+                    <p class="text-[11px] text-slate-600 dark:text-slate-300">Status : <strong><?php echo e($absensiHariIni->status === 'L' ? 'TERLAMBAT' : 'HADIR'); ?></strong></p>
+                    <p class="text-[11px] text-slate-600 dark:text-slate-300 mb-3">Lokasi : <strong class="text-emerald-600">Valid ✓ (<?php echo e($absensiHariIni->jarak_masuk); ?> m)</strong></p>
+                    <button type="button" id="btnMulaiAbsenPulang"
+                            class="w-full px-5 py-2.5 bg-amber-500 text-white text-xs font-bold rounded-xl hover:bg-amber-600 transition">
+                        <i class="bi bi-geo-alt-fill me-1"></i> ABSEN PULANG
+                    </button>
+                </div>
+            <?php else: ?>
+                <div class="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/10 p-4 mb-4">
+                    <p class="text-xs font-bold text-emerald-700 dark:text-emerald-300 mb-2">
+                        <i class="bi bi-check-circle-fill"></i> ABSENSI SELESAI
+                    </p>
+                    <p class="text-[11px] text-slate-600 dark:text-slate-300">Jam Masuk  : <strong><?php echo e(substr($absensiHariIni->jam_masuk,0,5)); ?> WIB</strong></p>
+                    <?php if($absensiHariIni->jam_pulang): ?>
+                    <p class="text-[11px] text-slate-600 dark:text-slate-300">Jam Pulang : <strong><?php echo e(substr($absensiHariIni->jam_pulang,0,5)); ?> WIB</strong></p>
+                    <?php endif; ?>
+                    <p class="text-[11px] text-slate-600 dark:text-slate-300">Status     : <strong><?php echo e($absensiHariIni->status === 'L' ? 'TERLAMBAT' : 'HADIR'); ?></strong></p>
+                </div>
+            <?php endif; ?>
 
-                    <?php if($jadwalHariIni->count()): ?>
-                        <p class="text-[10px] text-slate-400 mb-2.5">
-                            Pilih jadwal kelas Anda hari ini, lalu ambil foto sebelum mulai mengajar.
-                        </p>
+            
+            <?php if($jadwalHariIni->count()): ?>
+            <div>
+                <p class="text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-2">Jadwal Mengajar Hari Ini</p>
+                <div class="divide-y divide-slate-100 dark:divide-slate-700/40 border border-slate-100 dark:border-slate-700 rounded-xl overflow-hidden">
+                    <?php $__currentLoopData = $jadwalHariIni; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $jadwal): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <div class="flex items-center gap-2.5 px-3 py-2">
+                        <div class="w-1 h-8 rounded-full shrink-0" style="background: <?php echo e($jadwal->studySubject->color ?? '#6366f1'); ?>"></div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate"><?php echo e($jadwal->studySubject->name ?? '—'); ?></p>
+                            <p class="text-[10px] text-slate-400">
+                                <?php echo e(substr($jadwal->start_time,0,5)); ?>–<?php echo e(substr($jadwal->end_time,0,5)); ?> · <?php echo e($jadwal->studyGroup->name ?? '—'); ?>
 
-                        <div class="space-y-1.5 mb-2.5 max-h-32 overflow-y-auto pr-1">
-                            <?php $__currentLoopData = $jadwalHariIni; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $jadwal): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <label class="flex items-center gap-2 px-2.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/20 has-[:checked]:bg-indigo-50 has-[:checked]:border-indigo-400 dark:has-[:checked]:bg-indigo-900/30 transition">
-                                <input type="radio" name="timetable_id" value="<?php echo e($jadwal->id); ?>" required
-                                       class="w-3.5 h-3.5 text-indigo-600 focus:ring-indigo-500">
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-[11px] font-semibold text-slate-700 dark:text-slate-200 truncate">
-                                        <?php echo e($jadwal->studySubject->name ?? '—'); ?>
-
-                                        <span class="text-slate-400 font-normal">· <?php echo e($jadwal->studyGroup->name ?? '—'); ?></span>
-                                    </p>
-                                    <p class="text-[9.5px] text-slate-400">
-                                        <i class="bi bi-clock"></i>
-                                        <?php echo e(substr($jadwal->start_time, 0, 5)); ?>–<?php echo e(substr($jadwal->end_time, 0, 5)); ?>
-
-                                        <?php if($jadwal->room): ?> · <?php echo e($jadwal->room); ?> <?php endif; ?>
-                                    </p>
-                                </div>
-                            </label>
-                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                        </div>
-
-                        <input type="file" name="foto" accept="image/*" capture="environment" required
-                               class="w-full text-[10px] rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 mb-2.5">
-                        <button type="submit"
-                                class="w-full py-2 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition disabled:opacity-60">
-                            <i class="bi bi-camera me-1"></i> Upload Foto Masuk
-                        </button>
-                    <?php else: ?>
-                        <p class="text-[10px] text-slate-400 mb-2.5">
-                            Tidak ada jadwal mengajar untuk Anda hari ini (<?php echo e($hariIniNama); ?>).
-                        </p>
-                        <div class="flex items-start gap-1.5 px-2.5 py-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800">
-                            <i class="bi bi-exclamation-triangle-fill text-amber-500 text-[10px] mt-0.5"></i>
-                            <p class="text-[10px] text-amber-700 dark:text-amber-300">
-                                Belum ada jadwal untuk hari ini di menu
-                                <a href="<?php echo e(route('guru.jadwal-mengajar.index')); ?>" class="font-semibold underline">Jadwal Mengajar</a>.
-                                Jika Anda tetap hadir di sekolah, gunakan opsi <strong>Saya di Kantor</strong> di sebelah.
                             </p>
                         </div>
-                    <?php endif; ?>
-                </form>
-
-                
-                <form action="<?php echo e(route('guru.absensi-foto.kantor')); ?>" method="POST" enctype="multipart/form-data"
-                      class="border border-slate-200 dark:border-slate-700 rounded-xl p-3.5"
-                      onsubmit="return lockSubmit(this)">
-                    <?php echo csrf_field(); ?>
-                    <p class="text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">
-                        <i class="bi bi-building-fill text-slate-500 me-1"></i> Saya di Kantor (Tidak Mengajar)
-                    </p>
-                    <p class="text-[10px] text-slate-400 mb-2.5">
-                        Gunakan opsi ini jika Anda hadir di sekolah tetapi tidak sedang mengajar
-                        (piket, rapat, atau tidak ada jadwal hari ini). Cukup 1 foto sebagai bukti kehadiran di kantor.
-                    </p>
-                    <input type="file" name="foto" accept="image/*" capture="environment" required
-                           class="w-full text-[10px] rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 mb-2.5">
-                    <button type="submit"
-                            class="w-full py-2 bg-slate-700 text-white text-xs font-semibold rounded-lg hover:bg-slate-800 transition disabled:opacity-60">
-                        <i class="bi bi-camera me-1"></i> Upload Foto Kantor
-                    </button>
-                </form>
-
-            </div>
-
-        <?php elseif($absensiHariIni->foto_masuk && !$absensiHariIni->foto_pulang && $absensiHariIni->tipe_absensi === 'mengajar'): ?>
-            
-            <div class="mb-2.5 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800">
-                <i class="bi bi-hourglass-split text-amber-500 text-xs"></i>
-                <p class="text-[10px] text-amber-700 dark:text-amber-300">
-                    Anda sedang mengajar
-                    <?php if($absensiHariIni->timetable): ?>
-                        <strong><?php echo e($absensiHariIni->timetable->studySubject->name ?? ''); ?></strong>
-                        di kelas <strong><?php echo e($absensiHariIni->timetable->studyGroup->name ?? ''); ?></strong>.
-                    <?php endif; ?>
-                    Jangan lupa unggah foto pulang setelah selesai.
-                </p>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
-                <div>
-                    <p class="text-[10px] text-slate-400 mb-1">
-                        Foto Masuk (<?php echo e(substr($absensiHariIni->jam_masuk, 0, 5)); ?>)
-                        <?php if($absensiHariIni->timetable): ?>
-                            <span class="ml-1 px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 font-semibold">
-                                <?php echo e($absensiHariIni->timetable->studyGroup->name ?? '—'); ?>
-
-                            </span>
-                            <span class="ml-1 px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-semibold">
-                                <?php echo e($absensiHariIni->timetable->studySubject->name ?? '—'); ?>
-
-                            </span>
+                        <?php if($absensiHariIni && $absensiHariIni->timetable_id === $jadwal->id): ?>
+                            <span class="text-[9.5px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Sudah Absen</span>
                         <?php endif; ?>
-                    </p>
-                    <img src="<?php echo e(Storage::url($absensiHariIni->foto_masuk)); ?>"
-                         class="w-full h-40 object-cover rounded-xl border border-slate-200 dark:border-slate-700">
-                </div>
-
-                <form action="<?php echo e(route('guru.absensi-foto.pulang')); ?>" method="POST" enctype="multipart/form-data"
-                      class="border border-slate-200 dark:border-slate-700 rounded-xl p-3.5"
-                      onsubmit="return lockSubmit(this)">
-                    <?php echo csrf_field(); ?>
-                    <p class="text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">Selesai Mengajar</p>
-                    <p class="text-[10px] text-slate-400 mb-2.5">Ambil foto setelah selesai mengajar di kelas.</p>
-                    <input type="file" name="foto" accept="image/*" capture="environment" required
-                           class="w-full text-[10px] rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 mb-2.5">
-                    <button type="submit"
-                            class="w-full py-2 bg-amber-500 text-white text-xs font-semibold rounded-lg hover:bg-amber-600 transition disabled:opacity-60">
-                        <i class="bi bi-camera me-1"></i> Upload Foto Pulang
-                    </button>
-                </form>
-            </div>
-
-        <?php else: ?>
-            
-            <div class="mb-2.5 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800">
-                <i class="bi bi-check-circle-fill text-emerald-600 text-xs"></i>
-                <p class="text-[10px] text-emerald-700 dark:text-emerald-300">
-                    Absensi hari ini sudah lengkap. Terima kasih, sampai jumpa besok!
-                </p>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <p class="text-[10px] text-slate-400 mb-1">
-                        Foto <?php echo e($absensiHariIni->tipe_absensi === 'kantor' ? 'Kehadiran' : 'Masuk'); ?>
-
-                        <?php if($absensiHariIni->jam_masuk): ?> (<?php echo e(substr($absensiHariIni->jam_masuk, 0, 5)); ?>) <?php endif; ?>
-                        <?php if($absensiHariIni->timetable): ?>
-                            <span class="ml-1 px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 font-semibold">
-                                <?php echo e($absensiHariIni->timetable->studyGroup->name ?? '—'); ?>
-
-                            </span>
-                        <?php endif; ?>
-                    </p>
-                    <img src="<?php echo e(Storage::url($absensiHariIni->foto_masuk)); ?>"
-                         class="w-full h-40 object-cover rounded-xl border border-slate-200 dark:border-slate-700">
-                </div>
-
-                <?php if($absensiHariIni->foto_pulang): ?>
-                    <div>
-                        <p class="text-[10px] text-slate-400 mb-1">
-                            Foto Pulang (<?php echo e(substr($absensiHariIni->jam_pulang, 0, 5)); ?>)
-                        </p>
-                        <img src="<?php echo e(Storage::url($absensiHariIni->foto_pulang)); ?>"
-                             class="w-full h-40 object-cover rounded-xl border border-slate-200 dark:border-slate-700">
                     </div>
-                <?php else: ?>
-                    <div class="flex items-center justify-center h-40 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 text-[10px] text-slate-400">
-                        Absensi kantor — hanya 1 foto diperlukan
-                    </div>
-                <?php endif; ?>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </div>
             </div>
-        <?php endif; ?>
-    </div>
-
-    
-    <?php if($jadwalHariIni->count()): ?>
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-        <div class="px-3.5 py-3 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
-            <h3 class="text-xs font-bold text-slate-700 dark:text-slate-200">Jadwal Mengajar Hari Ini</h3>
-            <a href="<?php echo e(route('guru.jadwal-mengajar.index')); ?>" class="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">
-                Kelola Jadwal <i class="bi bi-arrow-right"></i>
-            </a>
-        </div>
-        <div class="divide-y divide-slate-50 dark:divide-slate-700/30">
-            <?php $__currentLoopData = $jadwalHariIni; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $jadwal): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-            <div class="flex items-center gap-2.5 px-3.5 py-2.5">
-                <div class="w-1 h-9 rounded-full shrink-0" style="background: <?php echo e($jadwal->studySubject->color ?? '#6366f1'); ?>"></div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">
-                        <?php echo e($jadwal->studySubject->name ?? '—'); ?>
-
-                    </p>
-                    <p class="text-[10px] text-slate-400">
-                        <i class="bi bi-clock"></i> <?php echo e(substr($jadwal->start_time, 0, 5)); ?>–<?php echo e(substr($jadwal->end_time, 0, 5)); ?>
-
-                        · Kelas <?php echo e($jadwal->studyGroup->name ?? '—'); ?>
-
-                        <?php if($jadwal->room): ?> · <?php echo e($jadwal->room); ?> <?php endif; ?>
-                    </p>
-                </div>
-                <?php if($absensiHariIni && $absensiHariIni->timetable_id === $jadwal->id): ?>
-                    <span class="text-[9.5px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
-                        <i class="bi bi-check2"></i> Sudah Absen
-                    </span>
-                <?php endif; ?>
-            </div>
-            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-        </div>
-    </div>
-    <?php endif; ?>
-
-    
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-        <div class="px-3.5 py-3 border-b border-slate-100 dark:border-slate-700">
-            <h3 class="text-xs font-bold text-slate-700 dark:text-slate-200">Riwayat Absensi Foto</h3>
-        </div>
-        <div class="divide-y divide-slate-50 dark:divide-slate-700/30">
-            <?php $__empty_1 = true; $__currentLoopData = $riwayat; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                <div class="flex items-center gap-3 px-3.5 py-2.5">
-                    <img src="<?php echo e(Storage::url($r->foto_masuk)); ?>"
-                         class="w-10 h-10 rounded-lg object-cover border border-slate-200 dark:border-slate-700">
-                    <div class="flex-1 min-w-0">
-                        <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                            <?php echo e(\Carbon\Carbon::parse($r->tanggal)->translatedFormat('d M Y')); ?>
-
-                        </p>
-                        <p class="text-[10px] text-slate-400">
-                            <?php if($r->tipe_absensi === 'kantor'): ?>
-                                Absensi Kantor
-                            <?php else: ?>
-                                Mengajar
-                                <?php if($r->timetable): ?>
-                                    · <?php echo e($r->timetable->studySubject->name ?? '—'); ?>
-
-                                    · <?php echo e($r->timetable->studyGroup->name ?? '—'); ?>
-
-                                <?php endif; ?>
-                            <?php endif; ?>
-                            · Masuk <?php echo e(substr($r->jam_masuk,0,5)); ?>
-
-                            <?php if($r->jam_pulang): ?> · Pulang <?php echo e(substr($r->jam_pulang,0,5)); ?> <?php endif; ?>
-                        </p>
-                    </div>
-                    <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-                        Hadir
-                    </span>
-                </div>
-            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                <div class="text-center py-8">
-                    <p class="text-slate-400 text-xs">Belum ada riwayat absensi.</p>
-                </div>
             <?php endif; ?>
+
+            <button type="button" id="btnLihatRiwayat" class="mt-3 w-full text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold py-1.5">
+                Riwayat Absensi <i class="bi bi-chevron-down"></i>
+            </button>
+        </div>
+
+        
+        <div id="blokRiwayat" class="hidden mt-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+            <div class="px-3.5 py-3 border-b border-slate-100 dark:border-slate-700">
+                <h3 class="text-xs font-bold text-slate-700 dark:text-slate-200">Riwayat Absensi</h3>
+            </div>
+            <div class="divide-y divide-slate-50 dark:divide-slate-700/30">
+                <?php $__empty_1 = true; $__currentLoopData = $riwayat; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                    <div class="flex items-center gap-3 px-3.5 py-2.5">
+                        <img src="<?php echo e(Storage::url($r->foto_masuk)); ?>" class="w-10 h-10 rounded-lg object-cover border border-slate-200 dark:border-slate-700">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-semibold text-slate-700 dark:text-slate-200"><?php echo e(\Carbon\Carbon::parse($r->tanggal)->translatedFormat('d M Y')); ?></p>
+                            <p class="text-[10px] text-slate-400">
+                                <?php echo e($r->tipe_absensi === 'kantor' ? 'Kantor' : 'Mengajar'); ?>
+
+                                · Masuk <?php echo e(substr($r->jam_masuk,0,5)); ?>
+
+                                <?php if($r->jam_pulang): ?> · Pulang <?php echo e(substr($r->jam_pulang,0,5)); ?> <?php endif; ?>
+                                <?php if($r->jarak_masuk !== null): ?> · <?php echo e($r->jarak_masuk); ?>m <?php endif; ?>
+                            </p>
+                        </div>
+                        <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full <?php echo e($r->status === 'L' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'); ?>">
+                            <?php echo e($r->status === 'L' ? 'Terlambat' : 'Hadir'); ?>
+
+                        </span>
+                    </div>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                    <div class="text-center py-8"><p class="text-slate-400 text-xs">Belum ada riwayat absensi.</p></div>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
+
+    
+    <div id="stepPilihMode" class="wizard-step hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-4">
+            <h3 class="text-xs font-bold text-slate-700 dark:text-slate-200 mb-3">Pilih Jenis Kehadiran</h3>
+
+            <?php if($jadwalHariIni->count()): ?>
+            <div class="mb-3">
+                <p class="text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
+                    <i class="bi bi-easel2-fill text-indigo-500"></i> Saya Akan Mengajar
+                </p>
+                <div class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                    <?php $__currentLoopData = $jadwalHariIni; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $jadwal): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <label class="flex items-center gap-2 px-2.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 cursor-pointer has-[:checked]:bg-indigo-50 has-[:checked]:border-indigo-400">
+                        <input type="radio" name="pilihJadwal" value="<?php echo e($jadwal->id); ?>" class="radioJadwal w-3.5 h-3.5 text-indigo-600">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-[11px] font-semibold text-slate-700 dark:text-slate-200 truncate"><?php echo e($jadwal->studySubject->name ?? '—'); ?> <span class="text-slate-400 font-normal">· <?php echo e($jadwal->studyGroup->name ?? '—'); ?></span></p>
+                            <p class="text-[9.5px] text-slate-400"><?php echo e(substr($jadwal->start_time,0,5)); ?>–<?php echo e(substr($jadwal->end_time,0,5)); ?></p>
+                        </div>
+                    </label>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <button type="button" id="btnLanjutMengajar" class="w-full mb-2 py-2.5 bg-indigo-600 text-white text-xs font-bold rounded-xl hover:bg-indigo-700 transition disabled:opacity-40" disabled>
+                Lanjut sebagai Mengajar
+            </button>
+
+            <div class="text-center text-[10px] text-slate-400 my-2">— atau —</div>
+
+            <button type="button" id="btnLanjutKantor" class="w-full py-2.5 bg-slate-700 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition">
+                <i class="bi bi-building-fill me-1"></i> Saya di Kantor (Tidak Mengajar)
+            </button>
+
+            <button type="button" class="btnBatalWizard w-full mt-3 py-2 text-[11px] text-slate-400 font-semibold">Batal</button>
+        </div>
+    </div>
+
+    
+    <div id="stepLokasi" class="wizard-step hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 text-center">
+            <div id="lokasiLoading">
+                <div class="text-4xl mb-3">📍</div>
+                <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">Mencari lokasi Anda...</p>
+                <p class="text-[10px] text-slate-400 mt-1">Mohon tunggu sebentar</p>
+            </div>
+
+            <div id="lokasiValid" class="hidden">
+                <div class="text-3xl text-emerald-500 mb-2"><i class="bi bi-check-circle-fill"></i></div>
+                <p class="text-xs font-bold text-emerald-600 mb-3">LOKASI TERDETEKSI</p>
+                <div class="text-left text-[11px] text-slate-600 dark:text-slate-300 space-y-1 mb-3 bg-slate-50 dark:bg-slate-900/30 rounded-lg p-3">
+                    <p>Jarak dari sekolah : <strong id="txtJarakValid">-</strong> meter</p>
+                    <p>Batas maksimal : <strong id="txtRadiusValid">-</strong> meter</p>
+                </div>
+                <p class="text-[11px] text-emerald-600 font-semibold mb-3"><i class="bi bi-check2"></i> Anda berada di area sekolah</p>
+                <button type="button" id="btnLanjutFoto" class="w-full py-2.5 bg-indigo-600 text-white text-xs font-bold rounded-xl hover:bg-indigo-700">LANJUTKAN</button>
+            </div>
+
+            <div id="lokasiInvalid" class="hidden">
+                <div class="text-3xl text-rose-500 mb-2"><i class="bi bi-x-circle-fill"></i></div>
+                <p class="text-xs font-bold text-rose-600 mb-3">LOKASI TIDAK VALID</p>
+                <div class="text-left text-[11px] text-slate-600 dark:text-slate-300 space-y-1 mb-3 bg-slate-50 dark:bg-slate-900/30 rounded-lg p-3">
+                    <p>Jarak dari sekolah : <strong id="txtJarakInvalid">-</strong> meter</p>
+                    <p>Batas maksimal : <strong id="txtRadiusInvalid">-</strong> meter</p>
+                </div>
+                <p class="text-[11px] text-rose-600 mb-3">Anda berada di luar area sekolah.</p>
+                <button type="button" class="btnUlangiLokasi w-full py-2.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl">COBA LAGI</button>
+                <button type="button" class="btnBatalWizard w-full mt-2 py-2 text-[11px] text-slate-400 font-semibold">Kembali</button>
+            </div>
+
+            <div id="lokasiError" class="hidden">
+                <div class="text-3xl text-amber-500 mb-2"><i class="bi bi-geo-alt-fill"></i></div>
+                <p class="text-xs font-bold text-amber-600 mb-2">LOKASI TIDAK TERSEDIA</p>
+                <p class="text-[11px] text-slate-500 mb-3">Sistem tidak dapat mendapatkan lokasi Anda. Silakan:</p>
+                <ul class="text-left text-[11px] text-slate-500 mb-3 space-y-1">
+                    <li>1. Aktifkan GPS / lokasi</li>
+                    <li>2. Izinkan browser mengakses lokasi</li>
+                    <li>3. Pastikan koneksi internet aktif</li>
+                </ul>
+                <button type="button" class="btnUlangiLokasi w-full py-2.5 bg-indigo-600 text-white text-xs font-bold rounded-xl">COBA LAGI</button>
+                <button type="button" class="btnBatalWizard w-full mt-2 py-2 text-[11px] text-slate-400 font-semibold">Batal</button>
+            </div>
+        </div>
+    </div>
+
+    
+    <div id="stepFoto" class="wizard-step hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 text-center">
+            <h3 class="text-xs font-bold text-slate-700 dark:text-slate-200 mb-3">Foto Absensi</h3>
+
+            <div id="cameraWrap" class="relative w-full max-w-xs mx-auto rounded-xl overflow-hidden bg-black mb-3" style="aspect-ratio: 3/4;">
+                <video id="videoCamera" autoplay playsinline muted class="w-full h-full object-cover"></video>
+                <div id="cameraError" class="hidden absolute inset-0 flex items-center justify-center bg-slate-800 text-white text-[11px] p-4 text-center"></div>
+            </div>
+            <canvas id="canvasFoto" class="hidden"></canvas>
+
+            <p class="text-[10px] text-slate-400 mb-3">Pastikan wajah terlihat jelas</p>
+
+            <button type="button" id="btnAmbilFoto" class="w-full py-2.5 bg-indigo-600 text-white text-xs font-bold rounded-xl hover:bg-indigo-700">
+                <i class="bi bi-camera-fill me-1"></i> AMBIL FOTO
+            </button>
+
+            <div class="mt-3">
+                <label class="block text-[10px] text-slate-400 mb-1">Kamera tidak berfungsi? Unggah foto manual:</label>
+                <input type="file" id="inputFotoManual" accept="image/*" capture="user" class="w-full text-[10px] rounded-lg border-slate-200 dark:border-slate-700">
+            </div>
+
+            <button type="button" class="btnBatalWizard w-full mt-3 py-2 text-[11px] text-slate-400 font-semibold">Batal</button>
+        </div>
+    </div>
+
+    
+    <div id="stepKonfirmasiFoto" class="wizard-step hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 text-center">
+            <h3 class="text-xs font-bold text-slate-700 dark:text-slate-200 mb-3">Konfirmasi Foto</h3>
+            <img id="previewFoto" src="" class="w-full max-w-xs mx-auto rounded-xl border border-slate-200 dark:border-slate-700 mb-3" style="aspect-ratio: 3/4; object-fit: cover;">
+            <p class="text-[11px] text-slate-500 mb-3">Apakah foto sudah jelas?</p>
+            <div class="flex gap-2">
+                <button type="button" id="btnUlangiFoto" class="flex-1 py-2.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl">ULANGI FOTO</button>
+                <button type="button" id="btnGunakanFoto" class="flex-1 py-2.5 bg-indigo-600 text-white text-xs font-bold rounded-xl">GUNAKAN FOTO</button>
+            </div>
+        </div>
+    </div>
+
+    
+    <div id="stepKonfirmasiAbsensi" class="wizard-step hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-4">
+            <h3 class="text-xs font-bold text-slate-700 dark:text-slate-200 mb-3">Konfirmasi Absensi</h3>
+            <div class="text-[11px] text-slate-600 dark:text-slate-300 space-y-1.5 mb-4 bg-slate-50 dark:bg-slate-900/30 rounded-lg p-3">
+                <p>Nama : <strong><?php echo e(Auth::user()->name); ?></strong></p>
+                <p>Tanggal : <strong><?php echo e(now()->translatedFormat('d F Y')); ?></strong></p>
+                <p>Jam : <strong id="ringkasJam">-</strong> WIB</p>
+                <p>Jenis : <strong id="ringkasJenis">-</strong></p>
+                <p>Lokasi : <strong class="text-emerald-600">✓ Dalam area sekolah (<span id="ringkasJarak">-</span> m)</strong></p>
+                <p>Foto : <strong class="text-emerald-600">✓ Tersedia</strong></p>
+            </div>
+            <div id="konfirmasiError" class="hidden text-[11px] text-rose-600 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800 rounded-lg p-2.5 mb-3"></div>
+            <div class="flex gap-2">
+                <button type="button" class="btnBatalWizard flex-1 py-2.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl">BATAL</button>
+                <button type="button" id="btnKirimAbsensi" class="flex-1 py-2.5 bg-indigo-600 text-white text-xs font-bold rounded-xl">
+                    <span id="btnKirimText">KIRIM ABSENSI</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    
+    <div id="stepBerhasil" class="wizard-step hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 text-center">
+            <div class="text-4xl text-emerald-500 mb-2"><i class="bi bi-check-circle-fill"></i></div>
+            <p class="text-sm font-bold text-emerald-600 mb-1">ABSENSI BERHASIL</p>
+            <p class="text-[11px] text-slate-500 mb-4" id="txtBerhasilPesan">Absensi Anda telah tersimpan.</p>
+            <button type="button" id="btnSelesai" class="w-full py-2.5 bg-indigo-600 text-white text-xs font-bold rounded-xl">SELESAI</button>
+        </div>
+    </div>
+
 </div>
 
 <script>
-// Cegah klik ganda / submit dobel yang bisa memicu percobaan absen dua kali
-// dari sisi UI (guard utama tetap di server / database).
-function lockSubmit(form) {
-    const btn = form.querySelector('button[type="submit"]');
-    if (!btn) return true;
-    if (btn.dataset.locked === '1') {
-        return false;
+(function () {
+    const app = document.getElementById('absensiApp');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+    const steps = {
+        home: document.getElementById('stepHome'),
+        pilihMode: document.getElementById('stepPilihMode'),
+        lokasi: document.getElementById('stepLokasi'),
+        foto: document.getElementById('stepFoto'),
+        konfirmasiFoto: document.getElementById('stepKonfirmasiFoto'),
+        konfirmasiAbsensi: document.getElementById('stepKonfirmasiAbsensi'),
+        berhasil: document.getElementById('stepBerhasil'),
+    };
+
+    const sekolahLat    = parseFloat(app.dataset.sekolahLat) || null;
+    const sekolahLng     = parseFloat(app.dataset.sekolahLng) || null;
+    const sekolahRadius  = parseInt(app.dataset.sekolahRadius) || 100;
+    const urlMasuk       = app.dataset.urlMasuk;
+    const urlPulang      = app.dataset.urlPulang;
+
+    // State absensi yang sedang berjalan
+    let state = {
+        aksi: null,        // 'masuk' | 'pulang'
+        tipe: null,        // 'mengajar' | 'kantor'
+        timetableId: null,
+        latitude: null,
+        longitude: null,
+        jarak: null,
+        fotoBlob: null,
+        stream: null,
+    };
+
+    function showStep(name) {
+        Object.values(steps).forEach(el => el.classList.add('hidden'));
+        steps[name].classList.remove('hidden');
     }
-    btn.dataset.locked = '1';
-    btn.disabled = true;
-    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Mengunggah…';
-    return true;
-}
+
+    function resetState() {
+        state = { aksi: null, tipe: null, timetableId: null, latitude: null, longitude: null, jarak: null, fotoBlob: null, stream: null };
+        stopCamera();
+    }
+
+    // ── Jam berjalan ──
+    function updateJam() {
+        const el = document.getElementById('jamSekarang');
+        if (el) el.textContent = 'Jam sekarang: ' + new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
+    }
+    updateJam();
+    setInterval(updateJam, 30000);
+
+    // ── Riwayat toggle ──
+    const btnRiwayat = document.getElementById('btnLihatRiwayat');
+    if (btnRiwayat) {
+        btnRiwayat.addEventListener('click', () => {
+            document.getElementById('blokRiwayat').classList.toggle('hidden');
+        });
+    }
+
+    // ── Mulai Absen Masuk ──
+    const btnMulaiMasuk = document.getElementById('btnMulaiAbsenMasuk');
+    if (btnMulaiMasuk) {
+        btnMulaiMasuk.addEventListener('click', () => {
+            resetState();
+            state.aksi = 'masuk';
+            const punyaJadwal = document.querySelectorAll('.radioJadwal').length > 0;
+            if (punyaJadwal) {
+                showStep('pilihMode');
+            } else {
+                state.tipe = 'kantor';
+                mulaiCekLokasi();
+            }
+        });
+    }
+
+    // ── Mulai Absen Pulang ──
+    const btnMulaiPulang = document.getElementById('btnMulaiAbsenPulang');
+    if (btnMulaiPulang) {
+        btnMulaiPulang.addEventListener('click', () => {
+            resetState();
+            state.aksi = 'pulang';
+            mulaiCekLokasi();
+        });
+    }
+
+    // ── Pilih mode: mengajar / kantor ──
+    document.querySelectorAll('.radioJadwal').forEach(r => {
+        r.addEventListener('change', () => {
+            document.getElementById('btnLanjutMengajar').disabled = false;
+        });
+    });
+
+    const btnLanjutMengajar = document.getElementById('btnLanjutMengajar');
+    if (btnLanjutMengajar) {
+        btnLanjutMengajar.addEventListener('click', () => {
+            const checked = document.querySelector('.radioJadwal:checked');
+            if (!checked) return;
+            state.tipe = 'mengajar';
+            state.timetableId = checked.value;
+            mulaiCekLokasi();
+        });
+    }
+
+    const btnLanjutKantor = document.getElementById('btnLanjutKantor');
+    if (btnLanjutKantor) {
+        btnLanjutKantor.addEventListener('click', () => {
+            state.tipe = 'kantor';
+            state.timetableId = null;
+            mulaiCekLokasi();
+        });
+    }
+
+    // ── Batal wizard (kembali ke home) ──
+    document.querySelectorAll('.btnBatalWizard').forEach(btn => {
+        btn.addEventListener('click', () => {
+            resetState();
+            showStep('home');
+        });
+    });
+
+    // ── STEP: Cek Lokasi ──
+    function mulaiCekLokasi() {
+        showStep('lokasi');
+        document.getElementById('lokasiLoading').classList.remove('hidden');
+        document.getElementById('lokasiValid').classList.add('hidden');
+        document.getElementById('lokasiInvalid').classList.add('hidden');
+        document.getElementById('lokasiError').classList.add('hidden');
+
+        if (!('geolocation' in navigator)) {
+            document.getElementById('lokasiLoading').classList.add('hidden');
+            document.getElementById('lokasiError').classList.remove('hidden');
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                state.latitude = lat;
+                state.longitude = lng;
+
+                let jarak = 0;
+                let valid = true;
+                if (sekolahLat !== null && sekolahLng !== null) {
+                    jarak = hitungJarak(sekolahLat, sekolahLng, lat, lng);
+                    valid = jarak <= sekolahRadius;
+                }
+                state.jarak = Math.round(jarak);
+
+                document.getElementById('lokasiLoading').classList.add('hidden');
+                if (valid) {
+                    document.getElementById('txtJarakValid').textContent = state.jarak;
+                    document.getElementById('txtRadiusValid').textContent = sekolahRadius;
+                    document.getElementById('lokasiValid').classList.remove('hidden');
+                } else {
+                    document.getElementById('txtJarakInvalid').textContent = state.jarak;
+                    document.getElementById('txtRadiusInvalid').textContent = sekolahRadius;
+                    document.getElementById('lokasiInvalid').classList.remove('hidden');
+                }
+            },
+            () => {
+                document.getElementById('lokasiLoading').classList.add('hidden');
+                document.getElementById('lokasiError').classList.remove('hidden');
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
+    }
+
+    document.querySelectorAll('.btnUlangiLokasi').forEach(btn => {
+        btn.addEventListener('click', mulaiCekLokasi);
+    });
+
+    document.getElementById('btnLanjutFoto').addEventListener('click', () => {
+        showStep('foto');
+        startCamera();
+    });
+
+    // Rumus Haversine (versi JS, sama dengan di server untuk estimasi cepat)
+    function hitungJarak(lat1, lng1, lat2, lng2) {
+        const R = 6371000;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLng = (lng2 - lng1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) ** 2 +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLng / 2) ** 2;
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
+    // ── STEP: Kamera ──
+    const video = document.getElementById('videoCamera');
+    const canvas = document.getElementById('canvasFoto');
+
+    function startCamera() {
+        document.getElementById('cameraError').classList.add('hidden');
+        video.classList.remove('hidden');
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
+            .then(stream => {
+                state.stream = stream;
+                video.srcObject = stream;
+            })
+            .catch(() => {
+                video.classList.add('hidden');
+                const err = document.getElementById('cameraError');
+                err.textContent = 'Kamera tidak dapat diakses. Gunakan opsi unggah foto manual di bawah.';
+                err.classList.remove('hidden');
+            });
+    }
+
+    function stopCamera() {
+        if (state.stream) {
+            state.stream.getTracks().forEach(t => t.stop());
+            state.stream = null;
+        }
+    }
+
+    document.getElementById('btnAmbilFoto').addEventListener('click', () => {
+        if (!state.stream) return;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        canvas.toBlob(blob => {
+            state.fotoBlob = blob;
+            document.getElementById('previewFoto').src = URL.createObjectURL(blob);
+            stopCamera();
+            showStep('konfirmasiFoto');
+        }, 'image/jpeg', 0.9);
+    });
+
+    document.getElementById('inputFotoManual').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        state.fotoBlob = file;
+        document.getElementById('previewFoto').src = URL.createObjectURL(file);
+        stopCamera();
+        showStep('konfirmasiFoto');
+    });
+
+    // ── STEP: Konfirmasi Foto ──
+    document.getElementById('btnUlangiFoto').addEventListener('click', () => {
+        state.fotoBlob = null;
+        showStep('foto');
+        startCamera();
+    });
+
+    document.getElementById('btnGunakanFoto').addEventListener('click', () => {
+        document.getElementById('ringkasJam').textContent = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('ringkasJenis').textContent = state.aksi === 'pulang'
+            ? 'Absen Pulang'
+            : (state.tipe === 'mengajar' ? 'Absen Masuk — Mengajar' : 'Absen Masuk — Kantor');
+        document.getElementById('ringkasJarak').textContent = state.jarak ?? 0;
+        document.getElementById('konfirmasiError').classList.add('hidden');
+        showStep('konfirmasiAbsensi');
+    });
+
+    // ── STEP: Kirim Absensi ──
+    document.getElementById('btnKirimAbsensi').addEventListener('click', kirimAbsensi);
+
+    function kirimAbsensi() {
+        const btn = document.getElementById('btnKirimAbsensi');
+        const errBox = document.getElementById('konfirmasiError');
+        errBox.classList.add('hidden');
+        btn.disabled = true;
+        document.getElementById('btnKirimText').textContent = 'MENGIRIM...';
+
+        const formData = new FormData();
+        formData.append('foto', state.fotoBlob, 'absensi.jpg');
+        formData.append('latitude', state.latitude);
+        formData.append('longitude', state.longitude);
+
+        let url = urlMasuk;
+        if (state.aksi === 'masuk') {
+            formData.append('tipe', state.tipe);
+            if (state.tipe === 'mengajar') {
+                formData.append('timetable_id', state.timetableId);
+            }
+        } else {
+            url = urlPulang;
+        }
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+            body: formData,
+        })
+        .then(async (res) => {
+            const data = await res.json();
+            btn.disabled = false;
+            document.getElementById('btnKirimText').textContent = 'KIRIM ABSENSI';
+
+            if (!res.ok || !data.ok) {
+                errBox.textContent = data.message || 'Terjadi kesalahan. Silakan coba lagi.';
+                errBox.classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('txtBerhasilPesan').textContent = data.message;
+            showStep('berhasil');
+        })
+        .catch(() => {
+            btn.disabled = false;
+            document.getElementById('btnKirimText').textContent = 'KIRIM ABSENSI';
+            errBox.textContent = 'Gagal terhubung ke server. Periksa koneksi internet Anda.';
+            errBox.classList.remove('hidden');
+        });
+    }
+
+    // ── Selesai → reload halaman agar status ter-update ──
+    document.getElementById('btnSelesai').addEventListener('click', () => {
+        window.location.reload();
+    });
+
+})();
 </script>
 <?php $__env->stopSection(); ?>
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\PROJECT\smpn-kutime\resources\views/guru/absensi-foto/index.blade.php ENDPATH**/ ?>

@@ -105,8 +105,28 @@ class AbsensiSiswaController extends Controller
             ->orderBy('mata_pelajaran')
             ->pluck('mata_pelajaran');
 
-        // ── BARU: Daftar SEMUA mata pelajaran (untuk dropdown pilihan) ──
-        $daftarMapel = $this->getDaftarMapel();
+        /*
+        |------------------------------------------------------------------
+        | ── BARU / FIX UTAMA ──
+        | Daftar mata pelajaran untuk DROPDOWN diambil dari JADWAL MENGAJAR
+        | guru ini (menu "Jadwal Mengajar"), dicocokkan dengan KELAS dan
+        | HARI yang sedang dipilih. Ini sesuai permintaan: dropdown harus
+        | menampilkan mata pelajaran yang guru tersebut MASUK MENGAJAR pada
+        | hari tersebut, sesuai jadwal yang sudah ditentukan.
+        |------------------------------------------------------------------
+        */
+        $daftarMapel = $this->getMapelDariJadwal($guru, $kelasId, $tanggal);
+
+        // Fallback berlapis jika jadwal belum diisi / kosong untuk kombinasi ini
+        if ($daftarMapel->isEmpty()) {
+            $daftarMapel = $this->getMapelDariJadwal($guru, $kelasId, null); // abaikan hari, semua jadwal di kelas ini
+        }
+        if ($daftarMapel->isEmpty()) {
+            $daftarMapel = $this->getMapelDariJadwal($guru, null, null); // semua jadwal guru ini, semua kelas & hari
+        }
+        if ($daftarMapel->isEmpty()) {
+            $daftarMapel = $this->getDaftarMapelFallback(); // fallback lama (master table / riwayat absensi)
+        }
 
         return view('guru.absensi-siswa.index', compact(
             'kelasList', 'kelasId', 'tanggal', 'hariIni',
@@ -212,8 +232,22 @@ class AbsensiSiswaController extends Controller
             ->orderBy('mata_pelajaran')
             ->pluck('mata_pelajaran');
 
-        // ── BARU: Daftar SEMUA mata pelajaran (untuk dropdown pilihan) ──
-        $daftarMapel = $this->getDaftarMapel();
+        /*
+        |------------------------------------------------------------------
+        | ── BARU / FIX UTAMA ──
+        | Untuk rekap (bulanan), dropdown mapel diambil dari SEMUA jadwal
+        | mengajar guru ini di kelas terpilih (tanpa filter hari, karena
+        | rekap mencakup satu bulan penuh, bisa lintas hari).
+        |------------------------------------------------------------------
+        */
+        $daftarMapel = $this->getMapelDariJadwal($guru, $kelasId, null);
+
+        if ($daftarMapel->isEmpty()) {
+            $daftarMapel = $this->getMapelDariJadwal($guru, null, null); // semua jadwal guru ini
+        }
+        if ($daftarMapel->isEmpty()) {
+            $daftarMapel = $this->getDaftarMapelFallback();
+        }
 
         if ($kelasId) {
             $siswaList = Siswa::where('kelas_id', $kelasId)
@@ -253,25 +287,98 @@ class AbsensiSiswaController extends Controller
     }
 
     /**
-     * ── BARU ──────────────────────────────────────────────────────────────
-     * Ambil daftar SEMUA mata pelajaran untuk dropdown, supaya guru tidak
-     * perlu mengetik manual dan tidak ada variasi penulisan berbeda
-     * (misal "Matematika" vs "matematika" vs "MTK").
+     * ── BARU / FIX UTAMA ────────────────────────────────────────────────
+     * Ambil daftar mata pelajaran dari JADWAL MENGAJAR guru (menu
+     * "Jadwal Mengajar" → tabel Timetable / relasi studySubject).
      *
-     * Prioritas sumber data:
-     * 1) Tabel master mata pelajaran, jika model tersedia:
-     *    - App\Models\MataPelajaran  (kolom nama: 'nama' atau 'nama_mapel')
-     *    - App\Models\Mapel          (fallback nama model alternatif)
-     *    - App\Models\Subject        (fallback nama model alternatif)
-     * 2) Fallback: semua mata_pelajaran unik yang PERNAH diinput oleh
-     *    guru manapun di tabel absensi_siswas (supaya tetap berfungsi
-     *    walau belum ada tabel master).
+     * @param  mixed  $guru     Model Guru guru yang sedang login (bisa null)
+     * @param  mixed  $kelasId  ID kelas yang sedang dipilih di form absensi (bisa null)
+     * @param  mixed  $tanggal  Tanggal yang sedang dipilih (dipakai untuk
+     *                          menentukan HARI, bisa null = tidak filter hari)
+     * @return \Illuminate\Support\Collection  Daftar nama mata pelajaran unik
      * ────────────────────────────────────────────────────────────────────
      */
-    private function getDaftarMapel()
+    private function getMapelDariJadwal($guru, $kelasId = null, $tanggal = null)
     {
-        // ── 1) Coba dari tabel master mata pelajaran ──
+        // Model Timetable harus ada (dipakai di menu Jadwal Mengajar guru)
+        if (!class_exists(\App\Models\Timetable::class)) {
+            return collect();
+        }
+
+        try {
+            $modelInstance = new \App\Models\Timetable();
+            $table         = $modelInstance->getTable();
+
+            $query = \App\Models\Timetable::query();
+
+            // Eager-load relasi mapel jika ada
+            if (method_exists($modelInstance, 'studySubject')) {
+                $query->with('studySubject');
+            }
+
+            /*
+            |------------------------------------------------------------------
+            | Filter berdasarkan GURU yang login.
+            | Nama kolom foreign key ke guru bisa berbeda-beda tergantung
+            | migration asli. Kita coba beberapa kemungkinan kolom secara
+            | berurutan supaya tetap kompatibel tanpa perlu ubah skema.
+            |------------------------------------------------------------------
+            */
+            if ($guru) {
+                if (Schema::hasColumn($table, 'teacher_id')) {
+                    $query->where('teacher_id', $guru->id);
+                } elseif (Schema::hasColumn($table, 'guru_id')) {
+                    $query->where('guru_id', $guru->id);
+                } elseif (Schema::hasColumn($table, 'user_id') && $guru->user_id) {
+                    $query->where('user_id', $guru->user_id);
+                }
+            }
+
+            // Filter berdasarkan KELAS (study_group_id) yang sedang dipilih
+            if ($kelasId && Schema::hasColumn($table, 'study_group_id')) {
+                $query->where('study_group_id', $kelasId);
+            }
+
+            /*
+            |------------------------------------------------------------------
+            | Filter berdasarkan HARI — dicocokkan dengan tanggal yang dipilih
+            | di form absensi. Format hari mengikuti yang dipakai di menu
+            | Jadwal Mengajar: 'Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'.
+            |------------------------------------------------------------------
+            */
+            if ($tanggal && Schema::hasColumn($table, 'day_of_week')) {
+                $namaHari = Carbon::parse($tanggal)->locale('id')->isoFormat('dddd');
+                // Normalisasi "Minggu" tidak dipakai di jadwal (Senin–Sabtu saja)
+                $query->where('day_of_week', $namaHari);
+            }
+
+            $hasil = $query->orderBy('start_time')->get();
+
+            // Ambil nama mata pelajaran via relasi studySubject->name
+            return $hasil->map(function ($item) {
+                    return $item->studySubject->name ?? null;
+                })
+                ->filter()      // buang null
+                ->unique()
+                ->values();
+
+        } catch (\Throwable $e) {
+            return collect();
+        }
+    }
+
+    /**
+     * Fallback lama — dipertahankan sebagai jaring pengaman terakhir jika
+     * data Jadwal Mengajar belum diisi sama sekali oleh guru manapun.
+     *
+     * Prioritas:
+     * 1) Tabel master mata pelajaran (StudySubject / MataPelajaran / Mapel / Subject)
+     * 2) Mata pelajaran unik dari riwayat absensi yang pernah diinput
+     */
+    private function getDaftarMapelFallback()
+    {
         $kandidatModel = [
+            \App\Models\StudySubject::class,
             \App\Models\MataPelajaran::class,
             \App\Models\Mapel::class,
             \App\Models\Subject::class,
@@ -285,8 +392,7 @@ class AbsensiSiswaController extends Controller
 
                 $model = new $modelClass();
 
-                // Coba beberapa kemungkinan nama kolom
-                $kolomKandidat = ['nama', 'nama_mapel', 'name', 'mata_pelajaran'];
+                $kolomKandidat = ['name', 'nama', 'nama_mapel', 'mata_pelajaran'];
                 $query = $modelClass::query();
 
                 foreach ($kolomKandidat as $kolom) {
@@ -298,12 +404,10 @@ class AbsensiSiswaController extends Controller
                     }
                 }
             } catch (\Throwable $e) {
-                // model/tabel tidak ada atau kolom tidak cocok — lanjut ke kandidat berikutnya
                 continue;
             }
         }
 
-        // ── 2) Fallback: mapel unik dari SEMUA data absensi yang sudah pernah ada ──
         try {
             return AbsensiSiswa::whereNotNull('mata_pelajaran')
                 ->where('mata_pelajaran', '!=', '')

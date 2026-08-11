@@ -258,7 +258,7 @@
         .dark .nav-link-item .nav-badge-wali { background: rgba(245,158,11,.15); color: #fbbf24; border-color: rgba(245,158,11,.3); }
         .nav-link-item.active .nav-badge-wali { background: #e0e7ff; color: #4338ca; border-color: #c7d2fe; }
 
-        /* UPDATE: badge notifikasi (angka) di ujung kanan menu sidebar — Perizinan, Pengumuman, Jadwal Mengajar */
+        /* UPDATE: badge notifikasi (angka) di ujung kanan menu sidebar — Perizinan, Pengumuman, Jadwal Mengajar, Jadwal Pelajaran */
         .nav-link-item .nav-badge-notif {
             margin-left: auto; display: inline-flex; align-items: center; justify-content: center;
             min-width: 1.15rem; height: 1.15rem; padding: 0 0.32rem; border-radius: 99px;
@@ -649,27 +649,29 @@
 
         /*
          |--------------------------------------------------------------------
-         | UPDATE: Notifikasi badge sidebar (Perizinan, Pengumuman, Jadwal Mengajar)
+         | LOGIKA PERHITUNGAN NOTIFIKASI BADGE SIDEBAR
          |--------------------------------------------------------------------
-         | CATATAN: sesuaikan nama model & kolom di bawah ini dengan struktur
-         | database project (Perizinan, Pengumuman, JadwalMengajar) jika berbeda.
-         | Dibungkus try/catch supaya layout tidak error total kalau model/kolom
-         | belum sesuai — silakan hapus try/catch setelah dipastikan cocok.
          */
 
-        // 1) Jumlah permohonan izin guru yang masih pending — untuk Admin
+        // 1) Permohonan Izin yang masih pending (Admin & Guru/Siswa jika relevant)
         $izinPendingCount = 0;
-        if (auth()->user()->isAdmin()) {
-            try {
+        try {
+            if (auth()->user()->isAdmin()) {
                 $izinPendingCount = \App\Models\Perizinan::where('status', 'pending')->count();
-            } catch (\Throwable $e) {
-                $izinPendingCount = 0;
+            } elseif (auth()->user()->isGuru()) {
+                // Untuk guru, dapat menampilkan izin siswa di kelasnya yang pending (jika wali kelas) atau izin miliknya sendiri
+                $izinPendingCount = \App\Models\Perizinan::where('status', 'pending')->where('user_id', auth()->id())->count();
             }
+        } catch (\Throwable $e) {
+            $izinPendingCount = 0;
         }
 
-        // 2) Jumlah pengumuman baru (dibuat setelah terakhir kali user membuka menu Pengumuman)
-        //    Ditandai lewat session 'last_seen_pengumuman_at'. Jika belum pernah membuka,
-        //    dianggap semua pengumuman 7 hari terakhir sebagai "baru".
+        // 2) Pengumuman Baru (Hanya tampil jika ada yang baru & hilang setelah halaman pengumuman dibuka)
+        // Auto hilangkan jika user berada di route pengumuman
+        if (request()->routeIs('*pengumuman*')) {
+            session(['last_seen_pengumuman_at' => now()]);
+        }
+
         $pengumumanBaruCount = 0;
         try {
             $lastSeenPengumuman = session('last_seen_pengumuman_at');
@@ -684,19 +686,39 @@
             $pengumumanBaruCount = 0;
         }
 
-        // 3) Jumlah jadwal mengajar guru yang bersangkutan untuk hari ini — untuk Guru
+        // 3) Jadwal Mengajar Hari Ini (Guru) — Otomatis berkurang/hilang jika jam mengajar sudah lewat
         $jadwalMengajarHariIniCount = 0;
         if (auth()->user()->isGuru()) {
             try {
                 $namaHariIni = ['Minggu','Senin','Selasa','Rabu','Kamis',"Jum'at",'Sabtu'][now()->dayOfWeek];
+                $currentTime = now()->format('H:i:s');
                 $guruId = auth()->user()->guru->id ?? null;
                 if ($guruId) {
                     $jadwalMengajarHariIniCount = \App\Models\JadwalMengajar::where('guru_id', $guruId)
                         ->where('hari', $namaHariIni)
+                        ->where('jam_selesai', '>=', $currentTime) // Hilang otomatis bila jam pembelajaran sudah lewat
                         ->count();
                 }
             } catch (\Throwable $e) {
                 $jadwalMengajarHariIniCount = 0;
+            }
+        }
+
+        // 4) Jadwal Pelajaran Hari Ini (Siswa) — Otomatis berkurang/hilang jika jam pelajaran sudah lewat
+        $jadwalPelajaranHariIniCount = 0;
+        if (auth()->user()->isSiswa()) {
+            try {
+                $namaHariIni = ['Minggu','Senin','Selasa','Rabu','Kamis',"Jum'at",'Sabtu'][now()->dayOfWeek];
+                $currentTime = now()->format('H:i:s');
+                $kelasId = auth()->user()->siswa->kelas_id ?? null;
+                if ($kelasId) {
+                    $jadwalPelajaranHariIniCount = \App\Models\JadwalPelajaran::where('kelas_id', $kelasId)
+                        ->where('hari', $namaHariIni)
+                        ->where('jam_selesai', '>=', $currentTime) // Hilang otomatis bila jam pembelajaran sudah lewat
+                        ->count();
+                }
+            } catch (\Throwable $e) {
+                $jadwalPelajaranHariIniCount = 0;
             }
         }
     ?>
@@ -754,9 +776,6 @@
                           letter-spacing:.06em;color:#94a3b8">Admin Panel</p>
 
                 <?php
-                    // UPDATE: menu "Alumni" ditambahkan setelah "Kelola Kelas"
-                    // UPDATE: menu "Perizinan" tetap ada setelah "Absensi Guru"
-                    // UPDATE: 'badge' pada item Perizinan & Pengumuman untuk notifikasi jumlah
                     $adminNav = [
                         ['route'=>'admin.dashboard',            'label'=>'Dashboard',       'match'=>'admin.dashboard',
                          'icon'=>'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1v-5m10-10l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-5'],
@@ -766,7 +785,6 @@
                          'icon'=>'M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2v-2a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2'],
                         ['route'=>'admin.kelas.index',          'label'=>'Kelola Kelas',     'match'=>'admin.kelas*',
                          'icon'=>'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'],
-                        // UPDATE: menu Alumni (admin) — kelola kelulusan siswa & data alumni
                         ['route'=>'admin.alumni.index',         'label'=>'Alumni',           'match'=>'admin.alumni*',
                          'icon'=>'M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222'],
                         ['route'=>'admin.pengumuman',           'label'=>'Pengumuman',       'match'=>'admin.pengumuman*',
@@ -806,7 +824,6 @@
                                    ?? auth()->user()->guru?->waliKelas()->exists()
                                    ?? false;
 
-                    // UPDATE: 'badge' pada item Jadwal Mengajar & Pengumuman untuk notifikasi jumlah
                     $guruNav = [
                         ['route'=>'guru.dashboard',               'label'=>'Dashboard',        'match'=>'guru.dashboard',
                          'icon'=>'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1v-5m10-10l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-5'],
@@ -820,7 +837,8 @@
                         ['route'=>'guru.absensi-siswa.index',     'label'=>'Absensi Siswa',     'match'=>'guru.absensi-siswa*',
                          'icon'=>'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4'],
                         ['route'=>'guru.perizinan.index',         'label'=>'Perizinan',         'match'=>'guru.perizinan*',
-                         'icon'=>'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
+                         'icon'=>'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+                         'badge'=>$izinPendingCount],
                         ['route'=>'guru.pengumuman',               'label'=>'Pengumuman',        'match'=>'guru.pengumuman*',
                          'icon'=>'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9',
                          'badge'=>$pengumumanBaruCount],
@@ -867,12 +885,12 @@
                           letter-spacing:.06em;color:#94a3b8">Siswa Panel</p>
 
                 <?php
-                    // UPDATE: 'badge' pada item Pengumuman untuk notifikasi jumlah pengumuman baru
                     $siswaNav = [
                         ['route'=>'siswa.dashboard',        'label'=>'Dashboard',        'match'=>'siswa.dashboard',
                          'icon'=>'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1v-5m10-10l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-5'],
                         ['route'=>'siswa.jadwal-pelajaran', 'label'=>'Jadwal Pelajaran', 'match'=>'siswa.jadwal-pelajaran*',
-                         'icon'=>'M8 7V3m8 4V3M5 11h14M5 19h14M5 5h2m10 0h2'],
+                         'icon'=>'M8 7V3m8 4V3M5 11h14M5 19h14M5 5h2m10 0h2',
+                         'badge'=>$jadwalPelajaranHariIniCount],
                         ['route'=>'siswa.pengumuman',       'label'=>'Pengumuman',        'match'=>'siswa.pengumuman*',
                          'icon'=>'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.165 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9',
                          'badge'=>$pengumumanBaruCount],

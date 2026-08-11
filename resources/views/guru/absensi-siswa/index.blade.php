@@ -77,7 +77,8 @@
     margin: 0;
 }
 .as-filter-group select,
-.as-filter-group input[type="date"] {
+.as-filter-group input[type="date"],
+.as-filter-group input[type="text"] {
     border: 1px solid #e2e8f0;
     border-radius: 0.462rem;
     padding: 0.308rem 0.538rem;
@@ -163,6 +164,7 @@
     display: flex;
     align-items: center;
     gap: 0.385rem;
+    flex-wrap: wrap;
 }
 .as-card-title i { color: #6366f1; }
 .kelas-chip {
@@ -172,6 +174,17 @@
     padding: 0.1rem 0.462rem;
     font-size: 0.615rem;
     font-weight: 700;
+}
+.mapel-chip {
+    background: #dcfce7;
+    color: #15803d;
+    border-radius: 0.385rem;
+    padding: 0.1rem 0.462rem;
+    font-size: 0.615rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
 }
 .as-saved-badge {
     background: #dcfce7;
@@ -308,7 +321,6 @@
     font-weight: 700;
     color: #0f172a;
     line-height: 1.3;
-    /* Izinkan wrap agar nama panjang tampil penuh */
     white-space: normal;
     word-break: break-word;
 }
@@ -478,6 +490,20 @@
     gap: 0.385rem;
 }
 
+.as-alert-info {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 0.538rem;
+    padding: 0.538rem 0.692rem;
+    margin-bottom: 0.692rem;
+    font-size: 0.677rem;
+    color: #1e40af;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.462rem;
+}
+.as-alert-info i { flex-shrink: 0; margin-top: 1px; color: #3b82f6; }
+
 /* ── Empty state ── */
 .as-empty {
     padding: 2.5rem 1rem;
@@ -559,8 +585,8 @@
     $absensiHari   = $absensiHari   ?? collect();
     $sudahDisimpan = $sudahDisimpan ?? false;
     $ringkasan     = $ringkasan     ?? [];
-    $mataPelajaran = $mataPelajaran ?? '';       {{-- BARU --}}
-    $mapelList     = $mapelList     ?? collect(); {{-- BARU --}}
+    $mataPelajaran = $mataPelajaran ?? '';
+    $mapelList     = $mapelList     ?? collect();
 
     $selectedKelas = $kelasList->firstWhere('id', $kelasId);
 @endphp
@@ -579,6 +605,16 @@
         <a href="{{ route('guru.absensi-siswa.rekap') }}" class="as-btn as-btn-outline">
             <i class="bi bi-bar-chart-line-fill"></i> Rekap
         </a>
+    </div>
+</div>
+
+{{-- ── Info sesi per guru ── --}}
+<div class="as-alert-info">
+    <i class="bi bi-info-circle-fill"></i>
+    <div>
+        Absensi yang Anda simpan di sini adalah <strong>sesi milik Anda sendiri</strong> (berdasarkan kelas, tanggal, dan mata pelajaran).
+        Jika guru lain mengajar di kelas &amp; tanggal yang sama dengan mata pelajaran berbeda, data absensinya
+        <strong>tidak akan tertimpa</strong> — masing-masing tersimpan terpisah.
     </div>
 </div>
 
@@ -614,13 +650,25 @@
             @endforeach
         </select>
     </div>
+    <div class="as-filter-group">
+        <label><i class="bi bi-book"></i> Mata Pelajaran</label>
+        <input type="text" name="mata_pelajaran" list="mapelDatalist"
+               placeholder="cth: Matematika"
+               value="{{ $mataPelajaran }}"
+               autocomplete="off">
+        <datalist id="mapelDatalist">
+            @foreach($mapelList as $mp)
+                <option value="{{ $mp }}">
+            @endforeach
+        </datalist>
+    </div>
     <button type="submit" class="as-btn as-btn-primary">
         <i class="bi bi-arrow-clockwise"></i> Muat
     </button>
 </form>
 
 {{-- ── Stat strip ── --}}
-@if($kelasId && $siswaList->count())
+@if($kelasId && $mataPelajaran && $siswaList->count())
     <div class="as-stats">
         <div class="as-stat">
             <div class="as-stat-icon" style="background:#ede9fe;">
@@ -668,6 +716,9 @@
             </div>
         </div>
     </div>
+    <div style="font-size:0.577rem;color:#94a3b8;margin-top:-0.5rem;margin-bottom:0.692rem;">
+        <i class="bi bi-info-circle"></i> Ringkasan bulan ini hanya menghitung absensi yang <strong>Anda</strong> input sendiri.
+    </div>
 @endif
 
 {{-- ── Main card ── --}}
@@ -681,14 +732,19 @@
             @if($selectedKelas)
                 <span class="kelas-chip">{{ $selectedKelas->nama }}</span>
             @endif
+            @if($mataPelajaran)
+                <span class="mapel-chip">
+                    <i class="bi bi-book"></i> {{ $mataPelajaran }}
+                </span>
+            @endif
             @if($sudahDisimpan)
                 <span class="as-saved-badge">
-                    <i class="bi bi-check-circle-fill"></i> Tersimpan
+                    <i class="bi bi-check-circle-fill"></i> Tersimpan (sesi Anda)
                 </span>
             @endif
         </div>
 
-        @if($siswaList->count() > 0)
+        @if($kelasId && $mataPelajaran && $siswaList->count() > 0)
             <div class="as-bulk-actions">
                 <span>Tandai:</span>
                 <button type="button" class="as-bulk-btn as-bulk-hadir" onclick="tandaiSemua('hadir')">
@@ -702,7 +758,7 @@
     </div>
 
     {{-- Progress --}}
-    @if($siswaList->count() > 0)
+    @if($kelasId && $mataPelajaran && $siswaList->count() > 0)
         @php $pct = round($absensiHari->count() / $siswaList->count() * 100); @endphp
         <div class="as-progress-wrap">
             <div class="as-progress-bar">
@@ -720,6 +776,16 @@
             <i class="bi bi-mortarboard"></i>
             <h3>Pilih Kelas Terlebih Dahulu</h3>
             <p>Pilih kelas dan tanggal di atas untuk mulai mengisi absensi.</p>
+        </div>
+
+    @elseif(!$mataPelajaran)
+        <div class="as-empty">
+            <i class="bi bi-book"></i>
+            <h3>Isi Mata Pelajaran Terlebih Dahulu</h3>
+            <p>
+                Ketik nama mata pelajaran (contoh: Matematika), lalu klik "Muat".<br>
+                Ini membuat sesi absensi Anda <strong>terpisah</strong> dari guru lain yang mengajar di kelas yang sama.
+            </p>
         </div>
 
     @elseif($siswaList->count() === 0)
@@ -828,11 +894,12 @@
 const AS_STATUS = {};
 const KELAS_ID  = {{ $kelasId ? (int)$kelasId : 'null' }};
 const TANGGAL   = "{{ $tanggal }}";
+const MAPEL     = @json($mataPelajaran);
 const TOTAL     = {{ $siswaList->count() }};
 const STORE_URL = "{{ route('guru.absensi-siswa.store') }}";
 const CSRF      = () => document.querySelector('meta[name="csrf-token"]').content;
 
-// Pre-fill status dari data tersimpan
+// Pre-fill status dari data tersimpan (khusus sesi guru & mapel yang aktif)
 @foreach($absensiHari as $sid => $abs)
     AS_STATUS[{{ (int)$sid }}] = "{{ $abs->status }}";
 @endforeach
@@ -884,6 +951,11 @@ async function simpanAbsensi() {
     const errBox = document.getElementById('errorContainer');
     if (errBox) errBox.style.display = 'none';
 
+    if (!MAPEL) {
+        asToast('Isi mata pelajaran terlebih dahulu', 'error');
+        return;
+    }
+
     const filled = Object.keys(AS_STATUS).length;
     if (filled === 0) { asToast('Belum ada status dipilih', 'error'); return; }
     if (filled < TOTAL) {
@@ -903,7 +975,12 @@ async function simpanAbsensi() {
         absensiArr.push({ siswa_id: sid, status, keterangan: ket });
     });
 
-    const payload = { kelas_id: KELAS_ID, tanggal: TANGGAL, absensi: absensiArr };
+    const payload = {
+        kelas_id: KELAS_ID,
+        tanggal: TANGGAL,
+        mata_pelajaran: MAPEL,
+        absensi: absensiArr,
+    };
 
     try {
         const res  = await fetch(STORE_URL, {

@@ -73,6 +73,7 @@
 }
 .wk-alert-risiko { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
 .wk-alert-hadir  { background: #fefce8; color: #a16207; border-color: #fde68a; }
+.wk-alert-wali   { background: #f5f3ff; color: #6d28d9; border-color: #ddd6fe; }
 
 /* ── Toolbar: search + filter ── */
 .wk-toolbar {
@@ -384,6 +385,22 @@
 }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.65} }
 
+/* ── Tombol aksi kartu ── */
+.wk-action-btn {
+    font-size: .6rem;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: 6px;
+    padding: 4px 9px;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.wk-action-btn-rekap  { color: #7c3aed; background: #fdf4ff; border: 1px solid #e9d5ff; }
+.wk-action-btn-catat  { color: #fff; background: #4f46e5; border: 1px solid #4f46e5; }
+.wk-action-btn-mapel  { color: #fff; background: #7c3aed; border: 1px solid #7c3aed; }
+
 /* ── Footer ── */
 .wk-footer {
     padding: 8px 12px;
@@ -501,6 +518,15 @@
 </div>
 
 @else
+
+{{-- ── Info khusus wali kelas ──────────────────────────────── --}}
+<div class="wk-alert-strip wk-alert-wali">
+    <span>🎓</span>
+    <span>
+        Sebagai wali kelas, Anda dapat melihat <strong>rekap absensi dari semua guru mata pelajaran</strong>
+        yang mengajar di kelas ini melalui tombol <strong>"Rekap Semua Mapel"</strong> di bawah.
+    </span>
+</div>
 
 {{-- ── Absensi Hari Ini Strip ──────────────────────────────── --}}
 <div class="wk-absensi-today">
@@ -641,19 +667,22 @@
             @endif
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-            @if(Route::has('guru.absensi-siswa.rekap'))
-                <a href="{{ route('guru.absensi-siswa.rekap', ['kelas_id' => $kelas->id]) }}"
-                   style="font-size:.6rem;font-weight:700;color:#7c3aed;text-decoration:none;
-                          background:#fdf4ff;border:1px solid #e9d5ff;border-radius:6px;
-                          padding:4px 9px;white-space:nowrap;">
-                    📊 Rekap Absensi
+            {{-- Rekap Semua Mapel (khusus wali kelas — melihat data dari SEMUA guru) --}}
+            @if(Route::has('guru.wali-kelas.rekap-mapel'))
+                <a href="{{ route('guru.wali-kelas.rekap-mapel') }}" class="wk-action-btn wk-action-btn-mapel">
+                    📚 Rekap Semua Mapel
                 </a>
             @endif
+
+            {{-- Rekap absensi milik guru ybs sendiri --}}
+            @if(Route::has('guru.absensi-siswa.rekap'))
+                <a href="{{ route('guru.absensi-siswa.rekap', ['kelas_id' => $kelas->id]) }}" class="wk-action-btn wk-action-btn-rekap">
+                    📊 Rekap Absensi Saya
+                </a>
+            @endif
+
             @if(Route::has('guru.absensi-siswa.index'))
-                <a href="{{ route('guru.absensi-siswa.index', ['kelas_id' => $kelas->id]) }}"
-                   style="font-size:.6rem;font-weight:700;color:#fff;text-decoration:none;
-                          background:#4f46e5;border:1px solid #4f46e5;border-radius:6px;
-                          padding:4px 9px;white-space:nowrap;">
+                <a href="{{ route('guru.absensi-siswa.index', ['kelas_id' => $kelas->id]) }}" class="wk-action-btn wk-action-btn-catat">
                     ✅ Catat Absensi
                 </a>
             @endif

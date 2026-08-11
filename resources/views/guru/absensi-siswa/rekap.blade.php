@@ -15,6 +15,13 @@ body { background: #f1f5fb; font-family: 'Plus Jakarta Sans', sans-serif; font-s
 .rk-back { display:inline-flex;align-items:center;gap:5px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:7px;padding:5px 12px;font-size:11px;font-weight:700;color:#4338ca;text-decoration:none; }
 .rk-back:hover { background:#e0e7ff; }
 
+.rk-info-strip {
+    background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;
+    padding:8px 12px;margin-bottom:12px;font-size:11.5px;color:#1e40af;
+    display:flex;align-items:center;gap:7px;
+}
+.rk-info-strip i { color:#3b82f6;flex-shrink:0; }
+
 .rk-filter {
     background:#fff;border:1px solid #e2e8f0;border-radius:12px;
     padding:14px 16px;margin-bottom:14px;
@@ -22,11 +29,13 @@ body { background: #f1f5fb; font-family: 'Plus Jakarta Sans', sans-serif; font-s
 }
 .rk-fg { display:flex;flex-direction:column;gap:4px; }
 .rk-fg label { font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em; }
-.rk-fg select {
+.rk-fg select,
+.rk-fg input[type="text"] {
     border:1.5px solid #e2e8f0;border-radius:8px;padding:7px 10px;font-size:12px;
     font-family:inherit;color:#1e293b;background:#f8fafc;outline:none;min-width:140px;
 }
-.rk-fg select:focus { border-color:#6366f1;background:#fff; }
+.rk-fg select:focus,
+.rk-fg input:focus { border-color:#6366f1;background:#fff; }
 .rk-btn { background:#6366f1;color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px; }
 .rk-btn:hover { background:#4f46e5; }
 
@@ -65,15 +74,17 @@ body { background: #f1f5fb; font-family: 'Plus Jakarta Sans', sans-serif; font-s
 
 @section('content')
 @php
-    $kelasList  = $kelasList  ?? collect();
-    $kelasId    = $kelasId    ?? null;
-    $bulan      = $bulan      ?? date('n');
-    $tahun      = $tahun      ?? date('Y');
-    $bulanList  = $bulanList  ?? [1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',7=>'Juli',8=>'Agustus',9=>'September',10=>'Oktober',11=>'November',12=>'Desember'];
-    $tahunList  = range(date('Y'), date('Y')-3);
-    $siswaList  = $siswaList  ?? collect();
-    $rekapData  = $rekapData  ?? [];
-    $selKelas   = $kelasList->firstWhere('id', $kelasId);
+    $kelasList     = $kelasList     ?? collect();
+    $kelasId       = $kelasId       ?? null;
+    $bulan         = $bulan         ?? date('n');
+    $tahun         = $tahun         ?? date('Y');
+    $bulanList     = $bulanList     ?? [1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',7=>'Juli',8=>'Agustus',9=>'September',10=>'Oktober',11=>'November',12=>'Desember'];
+    $tahunList     = range(date('Y'), date('Y')-3);
+    $siswaList     = $siswaList     ?? collect();
+    $rekapData     = $rekapData     ?? [];
+    $mataPelajaran = $mataPelajaran ?? '';
+    $mapelList     = $mapelList     ?? collect();
+    $selKelas      = $kelasList->firstWhere('id', $kelasId);
 @endphp
 
 <div class="container-fluid px-0">
@@ -85,6 +96,15 @@ body { background: #f1f5fb; font-family: 'Plus Jakarta Sans', sans-serif; font-s
     </a>
 </div>
 
+<div class="rk-info-strip">
+    <i class="bi bi-info-circle-fill"></i>
+    <span>
+        Rekap ini hanya menampilkan absensi yang <strong>Anda input sendiri</strong>.
+        Gunakan filter Mata Pelajaran untuk melihat rekap per mapel yang Anda ajar.
+        Wali kelas dapat melihat rekap gabungan semua guru melalui menu <strong>Rekap Semua Mapel</strong> di halaman Wali Kelas.
+    </span>
+</div>
+
 <form method="GET" action="{{ route('guru.absensi-siswa.rekap') }}" class="rk-filter">
     <div class="rk-fg">
         <label>Kelas</label>
@@ -94,6 +114,18 @@ body { background: #f1f5fb; font-family: 'Plus Jakarta Sans', sans-serif; font-s
                 <option value="{{ $k->id }}" {{ $kelasId == $k->id ? 'selected':'' }}>{{ $k->nama }}</option>
             @endforeach
         </select>
+    </div>
+    <div class="rk-fg">
+        <label>Mata Pelajaran</label>
+        <input type="text" name="mata_pelajaran" list="rkMapelDatalist"
+               placeholder="Semua mapel Anda"
+               value="{{ $mataPelajaran }}"
+               autocomplete="off">
+        <datalist id="rkMapelDatalist">
+            @foreach($mapelList as $mp)
+                <option value="{{ $mp }}">
+            @endforeach
+        </datalist>
     </div>
     <div class="rk-fg">
         <label>Bulan</label>
@@ -121,6 +153,12 @@ body { background: #f1f5fb; font-family: 'Plus Jakarta Sans', sans-serif; font-s
             <strong>{{ $selKelas->nama }}</strong> &nbsp;·&nbsp;
             {{ $bulanList[$bulan] }} {{ $tahun }} &nbsp;·&nbsp;
             {{ $siswaList->count() }} siswa
+            @if($mataPelajaran)
+                &nbsp;·&nbsp; Mapel: <strong>{{ $mataPelajaran }}</strong>
+            @else
+                &nbsp;·&nbsp; <span style="color:#94a3b8;">Semua mapel yang Anda ajar</span>
+            @endif
+            <span style="margin-left:8px;color:#94a3b8;">(hanya absensi yang Anda input)</span>
         </div>
     @endif
 

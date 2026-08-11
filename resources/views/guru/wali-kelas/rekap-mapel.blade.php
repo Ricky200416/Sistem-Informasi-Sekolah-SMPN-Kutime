@@ -11,8 +11,10 @@
 .rm-filter{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;}
 .rm-fg{display:flex;flex-direction:column;gap:4px;}
 .rm-fg label{font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;}
-.rm-fg select,.rm-fg input{border:1.5px solid #e2e8f0;border-radius:8px;padding:7px 10px;font-size:12px;font-family:inherit;background:#f8fafc;}
+.rm-fg select,.rm-fg input{border:1.5px solid #e2e8f0;border-radius:8px;padding:7px 10px;font-size:12px;font-family:inherit;background:#f8fafc;min-width:150px;}
+.rm-fg select:focus,.rm-fg input:focus{border-color:#7c3aed;background:#fff;outline:none;}
 .rm-btn{background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer;}
+.rm-btn:hover{background:#6d28d9;}
 .rm-mode-tab{display:flex;gap:4px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:3px;}
 .rm-mode-btn{padding:6px 14px;border-radius:6px;font-size:11.5px;font-weight:700;color:#64748b;text-decoration:none;}
 .rm-mode-btn.active{background:#7c3aed;color:#fff;}
@@ -29,13 +31,21 @@
 .rm-chip-alpha{background:#fee2e2;color:#b91c1c;}
 .rm-guru-tag{font-size:10.5px;color:#7c3aed;font-weight:700;}
 .rm-empty{padding:40px;text-align:center;color:#94a3b8;}
+.rm-warn-strip{
+    background:#fffbeb;border:1px solid #fde68a;border-radius:8px;
+    padding:8px 12px;margin-bottom:12px;font-size:11.5px;color:#92400e;
+    display:flex;align-items:center;gap:7px;
+}
 </style>
 @endpush
 
 @section('content')
 @php
-    $bulanList = $bulanList ?? [];
-    $mode      = $mode ?? 'harian';
+    $bulanList   = $bulanList   ?? [];
+    $mode        = $mode        ?? 'harian';
+    $daftarMapel = $daftarMapel ?? collect(); // ← BARU: semua mapel untuk dropdown
+    $mapelFilter = request('mata_pelajaran', '');
+
     $statusChip = fn($s) => match($s){
         'hadir' => 'rm-chip-hadir', 'sakit' => 'rm-chip-sakit',
         'izin'  => 'rm-chip-izin',  'alpha' => 'rm-chip-alpha', default => '',
@@ -43,6 +53,15 @@
     $statusLabel = fn($s) => match($s){
         'hadir'=>'Hadir','sakit'=>'Sakit','izin'=>'Izin','alpha'=>'Alpha', default=>'-',
     };
+
+    // Filter tampilan berdasarkan mapel yang dipilih (filter di sisi view,
+    // supaya controller tidak perlu diubah drastis — data tetap dari semua guru).
+    $absensiHarianTampil  = $absensiHarian  ?? collect();
+    $absensiBulananTampil = $absensiBulanan ?? collect();
+    if ($mapelFilter !== '') {
+        $absensiHarianTampil  = $absensiHarianTampil->filter(fn($items, $mapel) => $mapel === $mapelFilter);
+        $absensiBulananTampil = $absensiBulananTampil->filter(fn($items, $mapel) => $mapel === $mapelFilter);
+    }
 @endphp
 
 <div class="rm-wrap">
@@ -62,6 +81,13 @@
         yang mengajar di kelas ini — bukan hanya milik Anda sendiri.
     </div>
 
+    @if($daftarMapel->isEmpty())
+        <div class="rm-warn-strip">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span>Belum ada data master Mata Pelajaran. Hubungi admin untuk melengkapi data mata pelajaran.</span>
+        </div>
+    @endif
+
     <div class="rm-mode-tab" style="width:fit-content;margin-bottom:12px;">
         <a href="{{ route('guru.wali-kelas.rekap-mapel', ['mode'=>'harian','tanggal'=>$tanggal]) }}"
            class="rm-mode-btn {{ $mode==='harian'?'active':'' }}">Per Hari</a>
@@ -76,10 +102,22 @@
                 <label>Tanggal</label>
                 <input type="date" name="tanggal" value="{{ $tanggal }}" max="{{ date('Y-m-d') }}">
             </div>
+            <div class="rm-fg">
+                <label>Mata Pelajaran</label>
+                {{-- ── DROPDOWN mata pelajaran (BUKAN input teks manual lagi) ── --}}
+                <select name="mata_pelajaran">
+                    <option value="">— Semua Mata Pelajaran —</option>
+                    @foreach($daftarMapel as $mp)
+                        <option value="{{ $mp }}" {{ $mapelFilter === $mp ? 'selected' : '' }}>
+                            {{ $mp }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
             <button type="submit" class="rm-btn"><i class="bi bi-funnel-fill"></i> Tampilkan</button>
         </form>
 
-        @forelse($absensiHarian as $mapel => $items)
+        @forelse($absensiHarianTampil as $mapel => $items)
             <div class="rm-mapel-group">
                 <div class="rm-mapel-head">
                     <i class="bi bi-book-half"></i> {{ $mapel }}
@@ -104,7 +142,7 @@
         @empty
             <div class="rm-mapel-group"><div class="rm-empty">
                 <i class="bi bi-inbox" style="font-size:2rem;display:block;margin-bottom:8px;"></i>
-                Belum ada absensi dari guru manapun untuk tanggal ini.
+                Belum ada absensi dari guru manapun untuk tanggal ini{{ $mapelFilter ? ' pada mapel '.$mapelFilter : '' }}.
             </div></div>
         @endforelse
 
@@ -127,10 +165,22 @@
                     @endforeach
                 </select>
             </div>
+            <div class="rm-fg">
+                <label>Mata Pelajaran</label>
+                {{-- ── DROPDOWN mata pelajaran (BUKAN input teks manual lagi) ── --}}
+                <select name="mata_pelajaran">
+                    <option value="">— Semua Mata Pelajaran —</option>
+                    @foreach($daftarMapel as $mp)
+                        <option value="{{ $mp }}" {{ $mapelFilter === $mp ? 'selected' : '' }}>
+                            {{ $mp }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
             <button type="submit" class="rm-btn"><i class="bi bi-funnel-fill"></i> Tampilkan</button>
         </form>
 
-        @forelse($absensiBulanan as $mapel => $items)
+        @forelse($absensiBulananTampil as $mapel => $items)
             @php
                 $byGuru = $items->groupBy(fn($i) => $i->guru->nama ?? $i->guru->user?->name ?? '-');
             @endphp
@@ -166,7 +216,7 @@
         @empty
             <div class="rm-mapel-group"><div class="rm-empty">
                 <i class="bi bi-inbox" style="font-size:2rem;display:block;margin-bottom:8px;"></i>
-                Belum ada absensi bulan ini.
+                Belum ada absensi bulan ini{{ $mapelFilter ? ' pada mapel '.$mapelFilter : '' }}.
             </div></div>
         @endforelse
     @endif

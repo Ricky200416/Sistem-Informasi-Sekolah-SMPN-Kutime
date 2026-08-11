@@ -258,6 +258,16 @@
         .dark .nav-link-item .nav-badge-wali { background: rgba(245,158,11,.15); color: #fbbf24; border-color: rgba(245,158,11,.3); }
         .nav-link-item.active .nav-badge-wali { background: #e0e7ff; color: #4338ca; border-color: #c7d2fe; }
 
+        /* UPDATE: badge notifikasi (angka) di ujung kanan menu sidebar — Perizinan, Pengumuman, Jadwal Mengajar */
+        .nav-link-item .nav-badge-notif {
+            margin-left: auto; display: inline-flex; align-items: center; justify-content: center;
+            min-width: 1.15rem; height: 1.15rem; padding: 0 0.32rem; border-radius: 99px;
+            font-size: 0.6rem; font-weight: 700; line-height: 1; background: #dc2626; color: #ffffff;
+            flex-shrink: 0; box-shadow: 0 0 0 2px rgba(220,38,38,.15);
+        }
+        .dark .nav-link-item .nav-badge-notif { background: #ef4444; box-shadow: 0 0 0 2px rgba(239,68,68,.2); }
+        .nav-link-item.active .nav-badge-notif { background: #dc2626; color: #ffffff; }
+
         .sidebar-logo-area {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 1rem 1rem 0.923rem; border-bottom: 1px solid #e2e8f0; gap: 0.538rem; position: relative;
@@ -636,6 +646,59 @@
         $logoUrl     = \App\Models\SchoolSetting::logoUrl();
         $singkatan   = \App\Models\SchoolSetting::get('singkatan', 'SMPN Kutime');
         $namaSekolah = \App\Models\SchoolSetting::get('nama_sekolah', 'SMP Negeri Kutime');
+
+        /*
+         |--------------------------------------------------------------------
+         | UPDATE: Notifikasi badge sidebar (Perizinan, Pengumuman, Jadwal Mengajar)
+         |--------------------------------------------------------------------
+         | CATATAN: sesuaikan nama model & kolom di bawah ini dengan struktur
+         | database project (Perizinan, Pengumuman, JadwalMengajar) jika berbeda.
+         | Dibungkus try/catch supaya layout tidak error total kalau model/kolom
+         | belum sesuai — silakan hapus try/catch setelah dipastikan cocok.
+         */
+
+        // 1) Jumlah permohonan izin guru yang masih pending — untuk Admin
+        $izinPendingCount = 0;
+        if (auth()->user()->isAdmin()) {
+            try {
+                $izinPendingCount = \App\Models\Perizinan::where('status', 'pending')->count();
+            } catch (\Throwable $e) {
+                $izinPendingCount = 0;
+            }
+        }
+
+        // 2) Jumlah pengumuman baru (dibuat setelah terakhir kali user membuka menu Pengumuman)
+        //    Ditandai lewat session 'last_seen_pengumuman_at'. Jika belum pernah membuka,
+        //    dianggap semua pengumuman 7 hari terakhir sebagai "baru".
+        $pengumumanBaruCount = 0;
+        try {
+            $lastSeenPengumuman = session('last_seen_pengumuman_at');
+            $pengumumanQuery = \App\Models\Pengumuman::query();
+            if ($lastSeenPengumuman) {
+                $pengumumanQuery->where('created_at', '>', $lastSeenPengumuman);
+            } else {
+                $pengumumanQuery->where('created_at', '>=', now()->subDays(7));
+            }
+            $pengumumanBaruCount = $pengumumanQuery->count();
+        } catch (\Throwable $e) {
+            $pengumumanBaruCount = 0;
+        }
+
+        // 3) Jumlah jadwal mengajar guru yang bersangkutan untuk hari ini — untuk Guru
+        $jadwalMengajarHariIniCount = 0;
+        if (auth()->user()->isGuru()) {
+            try {
+                $namaHariIni = ['Minggu','Senin','Selasa','Rabu','Kamis',"Jum'at",'Sabtu'][now()->dayOfWeek];
+                $guruId = auth()->user()->guru->id ?? null;
+                if ($guruId) {
+                    $jadwalMengajarHariIniCount = \App\Models\JadwalMengajar::where('guru_id', $guruId)
+                        ->where('hari', $namaHariIni)
+                        ->count();
+                }
+            } catch (\Throwable $e) {
+                $jadwalMengajarHariIniCount = 0;
+            }
+        }
     ?>
 
     <aside
@@ -693,6 +756,7 @@
                 <?php
                     // UPDATE: menu "Alumni" ditambahkan setelah "Kelola Kelas"
                     // UPDATE: menu "Perizinan" tetap ada setelah "Absensi Guru"
+                    // UPDATE: 'badge' pada item Perizinan & Pengumuman untuk notifikasi jumlah
                     $adminNav = [
                         ['route'=>'admin.dashboard',            'label'=>'Dashboard',       'match'=>'admin.dashboard',
                          'icon'=>'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1v-5m10-10l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-5'],
@@ -706,11 +770,13 @@
                         ['route'=>'admin.alumni.index',         'label'=>'Alumni',           'match'=>'admin.alumni*',
                          'icon'=>'M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222'],
                         ['route'=>'admin.pengumuman',           'label'=>'Pengumuman',       'match'=>'admin.pengumuman*',
-                         'icon'=>'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9'],
+                         'icon'=>'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9',
+                         'badge'=>$pengumumanBaruCount],
                         ['route'=>'admin.absensi-guru.index',   'label'=>'Absensi Guru & Siswa',     'match'=>'admin.absensi-guru*',
                          'icon'=>'M8 7V3m8 4V3M5 11h14M5 19h14M5 5h2m10 0h2'],
                         ['route'=>'admin.perizinan.index',      'label'=>'Perizinan',        'match'=>'admin.perizinan*',
-                         'icon'=>'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
+                         'icon'=>'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+                         'badge'=>$izinPendingCount],
                         ['route'=>'admin.academic-planner.index',  'label'=>'Data Akademik',    'match'=>'admin.academic-planner*',
                          'icon'=>'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
                         ['route'=>'admin.kelola-website',       'label'=>'Kelola Website',   'match'=>'admin.kelola-website*',
@@ -727,6 +793,9 @@
                         </svg>
                         <?php echo e($item['label']); ?>
 
+                        <?php if(!empty($item['badge']) && $item['badge'] > 0): ?>
+                            <span class="nav-badge-notif"><?php echo e($item['badge'] > 99 ? '99+' : $item['badge']); ?></span>
+                        <?php endif; ?>
                     </a>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
@@ -737,13 +806,15 @@
                                    ?? auth()->user()->guru?->waliKelas()->exists()
                                    ?? false;
 
+                    // UPDATE: 'badge' pada item Jadwal Mengajar & Pengumuman untuk notifikasi jumlah
                     $guruNav = [
                         ['route'=>'guru.dashboard',               'label'=>'Dashboard',        'match'=>'guru.dashboard',
                          'icon'=>'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1v-5m10-10l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-5'],
                         ['route'=>'guru.profil',                  'label'=>'Data Diri',         'match'=>'guru.profil*',
                          'icon'=>'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'],
                         ['route'=>'guru.jadwal-mengajar.index',   'label'=>'Jadwal Mengajar',   'match'=>'guru.jadwal-mengajar*',
-                         'icon'=>'M8 7V3m8 4V3M5 11h14M5 19h14M5 5h2m10 0h2'],
+                         'icon'=>'M8 7V3m8 4V3M5 11h14M5 19h14M5 5h2m10 0h2',
+                         'badge'=>$jadwalMengajarHariIniCount],
                         ['route'=>'guru.absensi-foto.index',      'label'=>'Absensi Saya',      'match'=>'guru.absensi-foto*',
                          'icon'=>'M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9zM15 13a3 3 0 11-6 0 3 3 0 016 0z'],
                         ['route'=>'guru.absensi-siswa.index',     'label'=>'Absensi Siswa',     'match'=>'guru.absensi-siswa*',
@@ -751,7 +822,8 @@
                         ['route'=>'guru.perizinan.index',         'label'=>'Perizinan',         'match'=>'guru.perizinan*',
                          'icon'=>'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
                         ['route'=>'guru.pengumuman',               'label'=>'Pengumuman',        'match'=>'guru.pengumuman*',
-                         'icon'=>'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9'],
+                         'icon'=>'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9',
+                         'badge'=>$pengumumanBaruCount],
                     ];
                 ?>
 
@@ -768,6 +840,9 @@
                         </svg>
                         <?php echo e($item['label']); ?>
 
+                        <?php if(!empty($item['badge']) && $item['badge'] > 0): ?>
+                            <span class="nav-badge-notif"><?php echo e($item['badge'] > 99 ? '99+' : $item['badge']); ?></span>
+                        <?php endif; ?>
                     </a>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
@@ -792,13 +867,15 @@
                           letter-spacing:.06em;color:#94a3b8">Siswa Panel</p>
 
                 <?php
+                    // UPDATE: 'badge' pada item Pengumuman untuk notifikasi jumlah pengumuman baru
                     $siswaNav = [
                         ['route'=>'siswa.dashboard',        'label'=>'Dashboard',        'match'=>'siswa.dashboard',
                          'icon'=>'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1v-5m10-10l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-5'],
                         ['route'=>'siswa.jadwal-pelajaran', 'label'=>'Jadwal Pelajaran', 'match'=>'siswa.jadwal-pelajaran*',
                          'icon'=>'M8 7V3m8 4V3M5 11h14M5 19h14M5 5h2m10 0h2'],
                         ['route'=>'siswa.pengumuman',       'label'=>'Pengumuman',        'match'=>'siswa.pengumuman*',
-                         'icon'=>'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.165 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9'],
+                         'icon'=>'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.165 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9',
+                         'badge'=>$pengumumanBaruCount],
                         ['route'=>'siswa.profil',           'label'=>'Data Diri',         'match'=>'siswa.profil*',
                          'icon'=>'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'],
                     ];
@@ -813,6 +890,9 @@
                         </svg>
                         <?php echo e($item['label']); ?>
 
+                        <?php if(!empty($item['badge']) && $item['badge'] > 0): ?>
+                            <span class="nav-badge-notif"><?php echo e($item['badge'] > 99 ? '99+' : $item['badge']); ?></span>
+                        <?php endif; ?>
                     </a>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             <?php endif; ?>

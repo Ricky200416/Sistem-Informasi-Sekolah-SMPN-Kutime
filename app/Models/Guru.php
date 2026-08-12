@@ -24,6 +24,11 @@ class Guru extends Model
         'pendidikan_terakhir',
         'study_group_id',
         'kelas_id',
+        'jabatan',
+        'mata_pelajaran',
+        'no_hp',
+        'tampil_website',
+        'urutan_tampil',
     ];
 
     protected $casts = [

@@ -33,6 +33,7 @@ class Guru extends Model
 
     protected $casts = [
         'tanggal_lahir' => 'date',
+        'tampil_website' => 'boolean',
     ];
 
     public function user(): BelongsTo
@@ -59,4 +60,11 @@ class Guru extends Model
     {
         return $this->hasMany(StudyGroup::class, 'homeroom_teacher_id', 'user_id');
     }
+
+    public function scopeTampilWebsite($query)
+{
+    return $query->where('tampil_website', true)
+                 ->orderBy('urutan_tampil')
+                 ->orderBy('nama');
+}
 }

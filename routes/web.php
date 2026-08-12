@@ -199,6 +199,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::patch('/comments/{id}/toggle', [CommentController::class, 'toggleStatusAdmin'])->name('comments.toggle');
     Route::delete('/comments/{id}', [CommentController::class, 'destroyAdmin'])->name('comments.destroy');
 
+    // Tenaga Pendidik
+    Route::get('tenaga-pendidik', [\App\Http\Controllers\Admin\TenagaPendidikController::class, 'index'])->name('tenaga-pendidik.index');
+    Route::put('tenaga-pendidik/{guru}', [\App\Http\Controllers\Admin\TenagaPendidikController::class, 'update'])->name('tenaga-pendidik.update');
+    Route::post('tenaga-pendidik/{guru}/toggle', [\App\Http\Controllers\Admin\TenagaPendidikController::class, 'toggle'])->name('tenaga-pendidik.toggle');
+    Route::post('tenaga-pendidik/reorder', [\App\Http\Controllers\Admin\TenagaPendidikController::class, 'reorder'])->name('tenaga-pendidik.reorder');
+
 });
 
 

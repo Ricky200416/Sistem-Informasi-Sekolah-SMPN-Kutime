@@ -135,6 +135,74 @@ body { font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--text); 
     .sambutan-text { font-size:.755rem; }
     .info-text { font-size:.755rem; }
 }
+
+/* ══════════════════════════════════════════════
+   TENAGA PENDIDIK
+══════════════════════════════════════════════ */
+.guru-card {
+    background:#fff; border-radius:12px; overflow:hidden;
+    border:1px solid var(--border); box-shadow:var(--sh);
+    transition:transform .22s ease, box-shadow .22s ease;
+    display:flex; flex-direction:column;
+}
+.guru-card:hover { transform:translateY(-3px); box-shadow:var(--sh2); }
+.guru-photo { aspect-ratio:1/1; overflow:hidden; background:#eef1f6; position:relative; }
+.guru-photo img { width:100%; height:100%; object-fit:cover; transition:transform .35s ease; display:block; }
+.guru-card:hover .guru-photo img { transform:scale(1.05); }
+.guru-photo .guru-fallback {
+    width:100%; height:100%; display:flex; align-items:center; justify-content:center;
+    font-family:'Lora',serif; font-weight:700; font-size:2rem; color:#fff;
+    background:linear-gradient(135deg,var(--navy),var(--navy2));
+}
+.guru-band {
+    background:linear-gradient(120deg,var(--gold) 0%,var(--gold2) 100%);
+    padding:8px 10px 9px;
+    text-align:center;
+}
+.guru-band .guru-nama { font-weight:800; font-size:.72rem; color:#1a1204; line-height:1.25; }
+.guru-band .guru-jabatan { font-size:.62rem; color:#3d2f0d; font-weight:600; margin-top:1px; }
+.guru-band button {
+    margin-top:6px; font-size:.63rem; font-weight:700; color:#1a1204;
+    text-decoration:underline; text-underline-offset:2px; background:none; border:none; cursor:pointer;
+    padding:0;
+}
+.guru-band button:hover { color:#000; }
+
+/* ── Modal overlay detail guru ── */
+.guru-modal-overlay {
+    position:fixed; inset:0; z-index:80; background:rgba(9,18,48,.55);
+    display:flex; align-items:center; justify-content:center; padding:16px;
+    backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px);
+}
+.guru-modal-box {
+    background:#fff; border-radius:16px; width:100%; max-width:360px;
+    overflow:hidden; box-shadow:0 24px 60px rgba(0,0,0,.25);
+}
+.guru-modal-head {
+    background:linear-gradient(135deg,var(--navy),var(--navy2));
+    padding:22px 18px 46px; text-align:center; position:relative;
+}
+.guru-modal-photo {
+    width:80px; height:80px; border-radius:50%; overflow:hidden; margin:0 auto;
+    border:3px solid var(--gold); box-shadow:0 6px 16px rgba(0,0,0,.25); background:#eef1f6;
+}
+.guru-modal-photo img { width:100%; height:100%; object-fit:cover; display:block; }
+.guru-modal-photo .guru-fallback { font-size:1.6rem; }
+.guru-modal-close {
+    position:absolute; top:10px; right:10px; width:26px; height:26px; border-radius:8px;
+    background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2); color:#fff;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.guru-modal-close:hover { background:rgba(255,255,255,.2); }
+.guru-modal-body { padding:16px 18px 20px; }
+.guru-info-row { display:flex; gap:10px; align-items:flex-start; padding:7px 0; border-bottom:1px dashed #e5e0d3; }
+.guru-info-row:last-child { border-bottom:none; }
+.guru-info-icon {
+    width:26px; height:26px; border-radius:8px; background:rgba(14,35,86,.06);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--navy2);
+}
+.guru-info-label { font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#94a3b8; }
+.guru-info-value { font-size:.78rem; font-weight:600; color:#1e293b; margin-top:1px; word-break:break-word; }
 </style>
 <?php $__env->stopPush(); ?>
 
@@ -201,6 +269,45 @@ body { font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--text); 
     $publicComments = collect();
     if (class_exists('App\Models\Comment')) {
         $publicComments = \App\Models\Comment::where('is_active', true)->latest()->get();
+    }
+
+    /*
+    =====================================================
+    LOAD DATA TENAGA PENDIDIK (untuk tampilan publik)
+    Hanya menampilkan informasi umum: nama, jabatan,
+    mata pelajaran, wali kelas, email, no hp.
+    Data privasi (NIP, tanggal lahir, SK, gaji, dll)
+    TIDAK diikutsertakan.
+    =====================================================
+    */
+    $tenagaPendidik = collect();
+    if (class_exists('App\Models\Guru')) {
+        try {
+            $guruRaw = \App\Models\Guru::with(['user.homeroomGroups'])
+                ->where('tampil_website', true)
+                ->orderBy('urutan_tampil')
+                ->orderBy('nama')
+                ->get();
+
+            $tenagaPendidik = $guruRaw->map(function ($g) {
+                $waliKelas = $g->user?->homeroomGroups?->first()
+                    ?? ((($g->kelas_id ?? null)) && class_exists('App\Models\StudyGroup')
+                        ? \App\Models\StudyGroup::find($g->kelas_id)
+                        : null);
+
+                return [
+                    'nama'    => $g->nama ?? ($g->user->name ?? '-'),
+                    'jabatan' => $g->jabatan ?: 'Guru',
+                    'mapel'   => $g->mata_pelajaran ?: null,
+                    'wali'    => $waliKelas->name ?? null,
+                    'email'   => $g->user->email ?? null,
+                    'telepon' => $g->no_hp ?: null,
+                    'foto'    => (!empty($g->user->photo)) ? asset('storage/'.$g->user->photo) : null,
+                ];
+            })->values();
+        } catch (\Throwable $e) {
+            $tenagaPendidik = collect();
+        }
     }
 ?>
 
@@ -418,6 +525,145 @@ body { font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--text); 
 
         </div>
         <?php endif; ?>
+    </div>
+</section>
+<?php endif; ?>
+
+
+<?php if($tenagaPendidik->count()): ?>
+<section style="background:var(--cream)" class="py-4 sm:py-7 lg:py-8" id="tenaga-pendidik"
+          x-data='{
+              showModal:false,
+              selected:null,
+              guruList: <?php echo json_encode($tenagaPendidik, 15, 512) ?>,
+              open(i){ this.selected = this.guruList[i]; this.showModal = true; },
+              close(){ this.showModal = false; }
+          }'>
+    <div class="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8">
+
+        <div class="sec-head mb-3 sm:mb-5">
+            <div class="chip text-[9px] sm:text-xs">Sumber Daya Manusia</div>
+            <h2 class="text-sm sm:text-xl mt-1">Tenaga Pendidik</h2>
+            <div class="gold-bar mt-1"><span></span><span></span></div>
+            <p>Guru-guru terbaik yang membimbing dan mendampingi siswa/i kami</p>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 max-w-4xl mx-auto">
+            <?php $__currentLoopData = $tenagaPendidik; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $g): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+            <div class="guru-card">
+                <div class="guru-photo">
+                    <?php if($g['foto']): ?>
+                        <img src="<?php echo e($g['foto']); ?>" alt="<?php echo e($g['nama']); ?>" loading="lazy">
+                    <?php else: ?>
+                        <div class="guru-fallback"><?php echo e(strtoupper(substr($g['nama'],0,1))); ?></div>
+                    <?php endif; ?>
+                </div>
+                <div class="guru-band">
+                    <p class="guru-nama lc2"><?php echo e($g['nama']); ?></p>
+                    <p class="guru-jabatan lc2"><?php echo e($g['jabatan']); ?></p>
+                    <button type="button" @click="open(<?php echo e($i); ?>)">Lihat Profil</button>
+                </div>
+            </div>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+        </div>
+
+        
+        <div x-show="showModal" x-cloak
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="guru-modal-overlay" @click.self="close()" @keydown.escape.window="close()">
+
+            <div x-show="showModal"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 class="guru-modal-box" @click.stop>
+
+                <div class="guru-modal-head">
+                    <button type="button" class="guru-modal-close" @click="close()" aria-label="Tutup">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                    <div class="guru-modal-photo">
+                        <template x-if="selected && selected.foto">
+                            <img :src="selected.foto" alt="">
+                        </template>
+                        <template x-if="selected && !selected.foto">
+                            <div class="guru-fallback" x-text="selected ? selected.nama.charAt(0).toUpperCase() : ''"></div>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="guru-modal-body" style="margin-top:-30px">
+                    <div class="bg-white rounded-xl shadow-sm px-3 py-2.5 mb-2 text-center" style="border:1px solid #f1f5f9">
+                        <p class="font-lora font-bold text-sm" style="color:#000" x-text="selected?.nama"></p>
+                        <p class="text-[11px] font-semibold" style="color:var(--navy2)" x-text="selected?.jabatan"></p>
+                    </div>
+
+                    <template x-if="selected?.mapel">
+                        <div class="guru-info-row">
+                            <div class="guru-info-icon">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="guru-info-label">Mata Pelajaran</p>
+                                <p class="guru-info-value" x-text="selected?.mapel"></p>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-if="selected?.wali">
+                        <div class="guru-info-row">
+                            <div class="guru-info-icon">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="guru-info-label">Wali Kelas</p>
+                                <p class="guru-info-value" x-text="'Kelas ' + selected?.wali"></p>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-if="selected?.email">
+                        <div class="guru-info-row">
+                            <div class="guru-info-icon">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="guru-info-label">Email</p>
+                                <p class="guru-info-value" x-text="selected?.email"></p>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-if="selected?.telepon">
+                        <div class="guru-info-row">
+                            <div class="guru-info-icon">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="guru-info-label">Telepon / WhatsApp</p>
+                                <p class="guru-info-value" x-text="selected?.telepon"></p>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
     </div>
 </section>
 <?php endif; ?>

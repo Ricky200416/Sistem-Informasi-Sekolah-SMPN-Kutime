@@ -48,9 +48,20 @@ class KelasController extends Controller
                 'required',
                 'string',
                 'max:50',
-                // Cegah nama kelas ganda di kedua tabel (study_groups & kelas)
-                Rule::unique('study_groups', 'name'),
-                Rule::unique('kelas', 'nama'),
+                // Nama BOLEH sama (mis. "SMP 1"), asalkan kombinasi dengan
+                // section, tahun ajaran, dan semester berbeda.
+                // Contoh yang DIPERBOLEHKAN: SMP 1 + A, SMP 1 + B (section beda).
+                // Contoh yang DITOLAK: SMP 1 + A + 2026/2027 + semester 1 dua kali.
+                Rule::unique('study_groups', 'name')->where(function ($query) use ($request) {
+                    return $query->where('section', $request->input('section'))
+                        ->where('academic_year', $request->input('academic_year'))
+                        ->where('semester', $request->input('semester'));
+                }),
+                Rule::unique('kelas', 'nama')->where(function ($query) use ($request) {
+                    return $query->where('rombel', $request->input('section'))
+                        ->where('tahun_ajaran', $request->input('academic_year'))
+                        ->where('semester', $request->input('semester'));
+                }),
             ],
             'grade'               => 'required|integer|in:7,8,9',
             'section'             => 'nullable|string|max:10',
@@ -62,7 +73,7 @@ class KelasController extends Controller
             'is_active'           => 'nullable|in:0,1',
         ], [
             'name.required'              => 'Nama kelas wajib diisi.',
-            'name.unique'                => 'Nama kelas ":input" sudah digunakan. Silakan gunakan nama lain.',
+            'name.unique'                => 'Kelas ":input" dengan rombel, tahun ajaran, dan semester yang sama sudah ada. Gunakan rombel/section yang berbeda (mis. A/B) jika ini kelas paralel.',
             'grade.required'             => 'Tingkat kelas wajib diisi.',
             'grade.in'                   => 'Tingkat hanya boleh 7, 8, atau 9.',
             'academic_year.required'     => 'Tahun ajaran wajib diisi.',
@@ -126,9 +137,18 @@ class KelasController extends Controller
                 'string',
                 'max:50',
                 // Abaikan (ignore) baris dengan id ini sendiri, supaya menyimpan
-                // ulang nama yang sama tidak dianggap duplikat.
-                Rule::unique('study_groups', 'name')->ignore($id),
-                Rule::unique('kelas', 'nama')->ignore($id),
+                // ulang data yang sama (nama+section+tahun+semester) tidak
+                // dianggap duplikat dengan dirinya sendiri.
+                Rule::unique('study_groups', 'name')->where(function ($query) use ($request) {
+                    return $query->where('section', $request->input('section'))
+                        ->where('academic_year', $request->input('academic_year'))
+                        ->where('semester', $request->input('semester'));
+                })->ignore($id),
+                Rule::unique('kelas', 'nama')->where(function ($query) use ($request) {
+                    return $query->where('rombel', $request->input('section'))
+                        ->where('tahun_ajaran', $request->input('academic_year'))
+                        ->where('semester', $request->input('semester'));
+                })->ignore($id),
             ],
             'grade'               => 'required|integer|in:7,8,9',
             'section'             => 'nullable|string|max:10',
@@ -140,7 +160,7 @@ class KelasController extends Controller
             'is_active'           => 'nullable|in:0,1',
         ], [
             'name.required'              => 'Nama kelas wajib diisi.',
-            'name.unique'                => 'Nama kelas ":input" sudah digunakan oleh kelas lain. Silakan gunakan nama yang berbeda.',
+            'name.unique'                => 'Kelas ":input" dengan rombel, tahun ajaran, dan semester yang sama sudah dipakai kelas lain. Gunakan rombel/section yang berbeda (mis. A/B) jika ini kelas paralel.',
             'grade.required'             => 'Tingkat kelas wajib diisi.',
             'grade.in'                   => 'Tingkat hanya boleh 7, 8, atau 9.',
             'academic_year.required'     => 'Tahun ajaran wajib diisi.',
@@ -287,8 +307,9 @@ class KelasController extends Controller
             // condition dua request bersamaan) tapi tetap bentrok di DB level,
             // ubah jadi pesan yang ramah, bukan SQL mentah.
             if ((int) $e->getCode() === 23000) {
+                $rombelInfo = $group->section ? " rombel {$group->section}" : '';
                 throw new \Exception(
-                    "Nama kelas \"{$kelasName}\" sudah digunakan oleh kelas lain. Silakan gunakan nama yang berbeda."
+                    "Kelas \"{$kelasName}\"{$rombelInfo} untuk tahun ajaran {$tahunAjaran} semester {$group->semester} sudah ada. Silakan gunakan rombel/section yang berbeda."
                 );
             }
 

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
-use App\Models\Kelas;
+use App\Models\StudyGroup;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,67 +16,23 @@ use Illuminate\View\View;
 class ProfilController extends Controller
 {
     /* ═══════════════════════════════════════════════════════════
-       HELPER — Deteksi kelas wali dari guru menggunakan
-       multi-strategi (sama persis dengan DashboardController
-       agar hasilnya konsisten di seluruh aplikasi).
+       HELPER — Ambil kelas wali dari StudyGroup.
+       INI SATU-SATUNYA SUMBER KEBENARAN, sama persis dengan yang
+       dipakai admin saat assign wali kelas lewat "Kelola Kelas"
+       (StudyGroup::homeroom_teacher_id -> FK ke users.id).
+       Tidak ada lagi tebak-tebak kolom di tabel 'kelas' yang lama.
     ═══════════════════════════════════════════════════════════ */
-    private function resolveKelasWali($guru, $user): ?Kelas
+    private function resolveKelasWali($user): ?StudyGroup
     {
-        if (!$guru) return null;
-
-        $kelasWali = null;
+        if (!$user) return null;
 
         try {
-            $kelasColumns = Schema::getColumnListing('kelas');
-
-            // Strategi A: wali_guru_id di tabel kelas
-            if (!$kelasWali && in_array('wali_guru_id', $kelasColumns)) {
-                $kelasWali = Kelas::where('wali_guru_id', $guru->id)->first();
-            }
-
-            // Strategi B: wali_kelas_id di tabel kelas
-            if (!$kelasWali && in_array('wali_kelas_id', $kelasColumns)) {
-                $kelasWali = Kelas::where('wali_kelas_id', $guru->id)->first();
-            }
-
-            // Strategi C: guru_id + flag is_wali
-            if (!$kelasWali && in_array('guru_id', $kelasColumns) && in_array('is_wali', $kelasColumns)) {
-                $kelasWali = Kelas::where('guru_id', $guru->id)->where('is_wali', true)->first();
-            }
-
-            // Strategi D: wali_id
-            if (!$kelasWali && in_array('wali_id', $kelasColumns)) {
-                $kelasWali = Kelas::where('wali_id', $guru->id)->first();
-            }
-
-            // Strategi E: kolom kelas_id di tabel guru (guru menyimpan FK-nya sendiri)
-            if (!$kelasWali) {
-                $guruColumns = Schema::getColumnListing('guru');
-                if (in_array('kelas_id', $guruColumns) && !empty($guru->kelas_id)) {
-                    $kelasWali = Kelas::find($guru->kelas_id);
-                }
-            }
-
-            // Strategi F: relasi waliKelas() di model Guru
-            if (!$kelasWali && method_exists($guru, 'waliKelas')) {
-                try {
-                    $wk = $guru->waliKelas()->first();
-                    $kelasWali = $wk?->kelas ?? $wk ?? null;
-                } catch (\Exception $e) {}
-            }
-
-            // Strategi G: relasi kelas() langsung di model Guru
-            if (!$kelasWali && method_exists($guru, 'kelas')) {
-                try {
-                    $kelasWali = $guru->kelas ?? $guru->kelas()->first() ?? null;
-                } catch (\Exception $e) {}
-            }
-
+            return StudyGroup::where('homeroom_teacher_id', $user->id)
+                ->orderBy('academic_year', 'desc')
+                ->first();
         } catch (\Exception $e) {
-            $kelasWali = null;
+            return null;
         }
-
-        return ($kelasWali instanceof Kelas) ? $kelasWali : null;
     }
 
     /* ═══════════════════════════════════════════════════════════
@@ -86,21 +42,12 @@ class ProfilController extends Controller
     {
         $user = $request->user();
 
-        // Eager-load semua relasi yang mungkin dipakai di view
-        $user->loadMissing(['guru', 'guru.kelas']);
+        // Eager-load relasi guru saja; kelas wali di-resolve terpisah
+        // dari StudyGroup (bukan dari relasi guru->kelas yang lama).
+        $user->loadMissing(['guru']);
 
-        $guru = $user->guru;
-
-        /* ── Resolve kelas wali dengan multi-strategi ── */
-        $kelasWali = $this->resolveKelasWali($guru, $user);
-
-        // Inject ke object $guru agar view bisa akses $g->kelas_wali_resolved
-        // tanpa mengubah struktur view yang sudah ada
-        if ($guru && $kelasWali) {
-            $guru->kelas           = $kelasWali; // overwrite / set relasi agar $g->kelas ada
-            $guru->kelas_id        = $kelasWali->id;
-            $guru->kelas_wali_id   = $kelasWali->id; // alias cadangan
-        }
+        /* ── Resolve kelas wali dari StudyGroup (sumber kebenaran) ── */
+        $kelasWali = $this->resolveKelasWali($user);
 
         /* ── Daftar kelas untuk dropdown modal ── */
         $kelasList = $this->getKelasList();
@@ -108,7 +55,7 @@ class ProfilController extends Controller
         return view('guru.profil', [
             'user'      => $user,
             'kelasList' => $kelasList,
-            'kelasWali' => $kelasWali,   // variabel eksplisit tambahan
+            'kelasWali' => $kelasWali,   // dipakai Blade sebagai Prioritas 2
         ]);
     }
 
@@ -118,10 +65,9 @@ class ProfilController extends Controller
     public function edit(): View
     {
         $user = Auth::user();
-        $user->loadMissing(['guru', 'guru.kelas']);
+        $user->loadMissing(['guru']);
 
-        $guru      = $user->guru;
-        $kelasWali = $this->resolveKelasWali($guru, $user);
+        $kelasWali = $this->resolveKelasWali($user);
         $kelasList = $this->getKelasList();
 
         return view('guru.profil-edit', compact('user', 'kelasList', 'kelasWali'));
@@ -146,7 +92,7 @@ class ProfilController extends Controller
             // Identitas & tugas
             'nip'        => ['nullable', 'string', 'max:30',
                              'unique:guru,nip,' . $guru->id],  // tabel bisa 'guru' atau 'gurus'
-            'wali_kelas' => ['nullable', 'exists:kelas,id'],
+            'wali_kelas' => ['nullable', 'exists:study_groups,id'],
 
             // Data diri
             'nama'                => ['nullable', 'string', 'max:255'],
@@ -209,25 +155,15 @@ class ProfilController extends Controller
             'no_sk_terakhir'      => $data['no_sk_terakhir']      ?? $guru->no_sk_terakhir,
         ];
 
-        /* ── Simpan wali kelas ──
-         *  Strategi: coba simpan di kolom kelas_id tabel guru (paling umum).
-         *  Jika struktur DB berbeda (kolom di tabel kelas), tangani di sini.
+        $guru->update($guruData);
+
+        /* ── Simpan wali kelas ke StudyGroup (sumber kebenaran) ──
+         *  homeroom_teacher_id adalah FK ke users.id (BUKAN guru.id),
+         *  jadi disimpan pakai $user->id, sama seperti yang dipakai
+         *  admin saat assign wali kelas di "Kelola Kelas".
          */
         $newKelasId = $data['wali_kelas'] ?? null; // null = bukan wali kelas
-
-        $guruColumns = Schema::getColumnListing(
-            Schema::hasTable('guru') ? 'guru' : 'gurus'
-        );
-
-        if (in_array('kelas_id', $guruColumns)) {
-            // FK ada di tabel guru — simpan langsung
-            $guruData['kelas_id'] = $newKelasId;
-        } else {
-            // FK ada di tabel kelas (kolom wali_guru_id / wali_kelas_id / wali_id)
-            $this->updateWaliOnKelasTable($guru->id, $newKelasId);
-        }
-
-        $guru->update($guruData);
+        $this->updateWaliOnStudyGroups($user->id, $newKelasId);
 
         /* ── Flash section agar modal bisa re-open jika error ── */
         return redirect()
@@ -240,15 +176,15 @@ class ProfilController extends Controller
        PRIVATE HELPERS
     ═══════════════════════════════════════════════════════════ */
 
-    /** Daftar kelas untuk dropdown, diurutkan & dengan label lengkap */
+    /** Daftar kelas untuk dropdown, diambil dari StudyGroup */
     private function getKelasList()
     {
         try {
-            return Kelas::query()
-                ->select('id', 'nama', 'tingkat', 'tahun_ajaran')
-                ->orderBy('tahun_ajaran', 'desc')
-                ->orderBy('tingkat')
-                ->orderBy('nama')
+            return StudyGroup::query()
+                ->select('id', 'name', 'grade', 'academic_year')
+                ->orderBy('academic_year', 'desc')
+                ->orderBy('grade')
+                ->orderBy('name')
                 ->get();
         } catch (\Exception $e) {
             return collect();
@@ -256,27 +192,21 @@ class ProfilController extends Controller
     }
 
     /**
-     * Jika FK wali kelas ada di tabel kelas (bukan di tabel guru),
-     * update baris lama (kosongkan) lalu set baris baru.
+     * Lepas guru ini dari kelas wali lamanya (jika ada), lalu
+     * pasang sebagai wali di kelas baru (jika dipilih).
+     * Satu guru = satu kelas wali, ditegakkan di sini.
      */
-    private function updateWaliOnKelasTable(int $guruId, ?int $newKelasId): void
+    private function updateWaliOnStudyGroups(int $userId, ?int $newGroupId): void
     {
         try {
-            $kelasColumns = Schema::getColumnListing('kelas');
-
-            $waliCol = null;
-            foreach (['wali_guru_id', 'wali_kelas_id', 'wali_id', 'guru_id'] as $col) {
-                if (in_array($col, $kelasColumns)) { $waliCol = $col; break; }
-            }
-
-            if (!$waliCol) return;
-
             // Kosongkan kelas lama yang punya guru ini sebagai wali
-            Kelas::where($waliCol, $guruId)->update([$waliCol => null]);
+            StudyGroup::where('homeroom_teacher_id', $userId)
+                ->update(['homeroom_teacher_id' => null]);
 
-            // Set kelas baru
-            if ($newKelasId) {
-                Kelas::where('id', $newKelasId)->update([$waliCol => $guruId]);
+            // Pasang di kelas baru (jika dipilih)
+            if ($newGroupId) {
+                StudyGroup::where('id', $newGroupId)
+                    ->update(['homeroom_teacher_id' => $userId]);
             }
         } catch (\Exception $e) {
             // Diam — jangan crash halaman profil

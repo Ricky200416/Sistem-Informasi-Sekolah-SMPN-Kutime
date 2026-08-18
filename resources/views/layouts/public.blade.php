@@ -44,7 +44,13 @@
 
     <style>
         *, *::before, *::after { box-sizing: border-box; }
-        body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+        html { font-size: 16px; }
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
 
         /* ── Navbar ── */
         .navbar {
@@ -60,8 +66,8 @@
             background: rgba(255,255,255,0.97);
         }
         .nav-link {
-            position: relative; padding: 6px 14px; border-radius: 10px;
-            font-size: .8125rem; font-weight: 600; color: #475569;
+            position: relative; padding: 8px 16px; border-radius: 10px;
+            font-size: .875rem; font-weight: 600; color: #475569;
             transition: color .18s, background .18s;
             text-decoration: none;
         }
@@ -76,12 +82,19 @@
         .mobile-nav.closed { max-height: 0; opacity: 0; pointer-events: none; }
         .mobile-nav.open   { max-height: 480px; opacity: 1; }
 
-        .footer-link { color: #94a3b8; font-size: .8125rem; text-decoration: none; transition: color .18s; display: inline-block; }
+        .footer-link {
+            color: #94a3b8;
+            font-size: .875rem;
+            line-height: 1.5;
+            text-decoration: none;
+            transition: color .18s;
+            display: inline-block;
+        }
         .footer-link:hover { color: #c8a84b; }
 
         #scrollTop {
             position: fixed; bottom: 24px; right: 24px; z-index: 40;
-            width: 42px; height: 42px; border-radius: 12px;
+            width: 44px; height: 44px; border-radius: 12px;
             background: #0e2356; color: #fff; border: none; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             box-shadow: 0 8px 24px rgba(14,35,86,.3);
@@ -96,6 +109,50 @@
 
         @keyframes pageFadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
         main { animation: pageFadeIn .45s ease both; }
+
+        /* ── Footer sizing helpers (konsisten, tidak lagi memakai px mikro) ── */
+        .footer-heading {
+            font-size: .95rem;
+            font-weight: 700;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            margin-bottom: 1rem;
+        }
+        .footer-icon-bullet {
+            width: .875rem;
+            height: .875rem;
+            flex-shrink: 0;
+        }
+        .footer-brand-name {
+            font-family: 'Lora', Georgia, serif;
+            font-weight: 700;
+            color: #ffffff;
+            font-size: 1rem;
+            line-height: 1.3;
+        }
+        .footer-brand-sub {
+            font-size: .8rem;
+            color: #94a3b8;
+            line-height: 1.4;
+            margin-top: .125rem;
+        }
+        .footer-social-btn {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: .625rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,.07);
+            transition: background .18s;
+        }
+        .footer-social-btn:hover { background: rgba(255,255,255,.14); }
+        .footer-social-icon { width: 1.125rem; height: 1.125rem; }
+        .footer-hours-label { color: #ffffff; font-size: .85rem; font-weight: 600; line-height: 1.4; }
+        .footer-hours-value { font-size: .8rem; color: #6b7fa8; line-height: 1.4; margin-top: .125rem; }
+        .footer-bottom-text { font-size: .8rem; color: #4b5e82; line-height: 1.5; }
     </style>
 
     @stack('styles')
@@ -117,11 +174,11 @@
 
 <header class="navbar" id="navbar" x-data="{ open: false }">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16 lg:h-18">
+        <div class="flex items-center justify-between h-16 lg:h-20">
 
             {{-- Logo --}}
             <a href="{{ route('website.home') }}" class="flex items-center gap-3 group min-w-0">
-                <div class="w-10 h-10 rounded-xl overflow-hidden shrink-0 flex items-center justify-center shadow-sm border"
+                <div class="w-11 h-11 lg:w-12 lg:h-12 rounded-xl overflow-hidden shrink-0 flex items-center justify-center shadow-sm border"
                      style="background:#fff;border-color:rgba(14,35,86,.12)">
                     @if($logoUrl)
                     <img src="{{ $logoUrl }}" alt="Logo {{ $singkatan }}" class="w-full h-full object-contain p-1.5">
@@ -130,8 +187,8 @@
                     @endif
                 </div>
                 <div class="min-w-0">
-                    <div class="font-lora font-bold text-base leading-tight truncate" style="color:#0e2356">{{ $singkatan }}</div>
-                    <div class="text-xs truncate" style="color:#94a3b8;font-size:.68rem">{{ $namaSekolah }}</div>
+                    <div class="font-lora font-bold text-base lg:text-lg leading-tight truncate" style="color:#0e2356">{{ $singkatan }}</div>
+                    <div class="text-xs leading-tight truncate" style="color:#94a3b8">{{ $namaSekolah }}</div>
                 </div>
             </a>
 
@@ -159,10 +216,10 @@
                         };
                     @endphp
                     <a href="{{ route($dashRoute) }}"
-                       class="ml-3 px-4 py-2 rounded-xl text-white text-xs font-bold shadow-sm
-                              hover:shadow-md transition-all inline-flex items-center gap-1.5"
-                       style="background:#0e2356;font-size:.8rem">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       class="ml-4 px-5 py-2.5 rounded-xl text-white text-sm font-bold shadow-sm
+                              hover:shadow-md transition-all inline-flex items-center gap-2"
+                       style="background:#0e2356">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1v-5m10-10l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-5"/>
                         </svg>
@@ -171,10 +228,10 @@
                 @else
                     {{-- Belum login — ke halaman login --}}
                     <a href="{{ route('login') }}"
-                       class="ml-3 px-4 py-2 rounded-xl text-white text-xs font-bold shadow-sm
-                              hover:shadow-md hover:opacity-90 transition-all inline-flex items-center gap-1.5"
-                       style="background:#0e2356;font-size:.8rem">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       class="ml-4 px-5 py-2.5 rounded-xl text-white text-sm font-bold shadow-sm
+                              hover:shadow-md hover:opacity-90 transition-all inline-flex items-center gap-2"
+                       style="background:#0e2356">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
                         </svg>
@@ -184,7 +241,7 @@
             </nav>
 
             {{-- Mobile hamburger --}}
-            <button class="md:hidden flex flex-col justify-center items-center w-9 h-9 rounded-lg
+            <button class="md:hidden flex flex-col justify-center items-center w-10 h-10 rounded-lg
                            gap-1.5 hover:bg-slate-100 transition-colors"
                     @click="open = !open" :aria-expanded="open" aria-label="Toggle menu">
                 <span class="block h-0.5 w-5 rounded-full transition-all duration-300"
@@ -198,11 +255,11 @@
     </div>
 
     {{-- Mobile Nav --}}
-    <div class="md:hidden mobile-nav px-4 pb-3" :class="open ? 'open' : 'closed'">
-        <div class="pt-2 space-y-0.5 border-t" style="border-color:rgba(226,232,240,.7)">
+    <div class="md:hidden mobile-nav px-4 pb-4" :class="open ? 'open' : 'closed'">
+        <div class="pt-3 space-y-1 border-t" style="border-color:rgba(226,232,240,.7)">
             @foreach($navItems as $item)
             <a href="{{ route($item['route']) }}"
-               class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors
+               class="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold transition-colors
                       {{ request()->routeIs($item['route']) ? 'text-navy bg-blue-50' : 'text-slate-700 hover:bg-slate-50' }}"
                style="{{ request()->routeIs($item['route']) ? 'color:#0e2356;background:rgba(14,35,86,.06)' : '' }}"
                @click="open = false">
@@ -211,13 +268,13 @@
             @endforeach
 
             @if(request()->routeIs('website.home'))
-            <a href="#tentang" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold
+            <a href="#tentang" class="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold
                                       text-slate-700 hover:bg-slate-50" @click="open=false">Tentang</a>
-            <a href="#kontak"  class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold
+            <a href="#kontak"  class="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold
                                       text-slate-700 hover:bg-slate-50" @click="open=false">Kontak</a>
             @endif
 
-            <div class="pt-2 pb-1">
+            <div class="pt-3 pb-1">
                 @auth
                     @php
                         $dashRoute = match(auth()->user()->role) {
@@ -228,7 +285,7 @@
                         };
                     @endphp
                     <a href="{{ route($dashRoute) }}"
-                       class="flex items-center justify-center w-full py-2.5 rounded-xl
+                       class="flex items-center justify-center w-full py-3 rounded-xl
                               text-white text-sm font-bold gap-2"
                        style="background:#0e2356">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -239,7 +296,7 @@
                     </a>
                 @else
                     <a href="{{ route('login') }}"
-                       class="flex items-center justify-center w-full py-2.5 rounded-xl
+                       class="flex items-center justify-center w-full py-3 rounded-xl
                               text-white text-sm font-bold gap-2"
                        style="background:#0e2356">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -270,65 +327,57 @@
         </svg>
     </div>
 
-    <div class="max-w-6xl mx-auto px-2 sm:px-6 lg:px-8 pt-5 sm:pt-12 pb-4 sm:pb-8">
-        <div class="grid grid-cols-4 gap-2 sm:gap-6 lg:gap-10 mb-5 sm:mb-10">
+    <div class="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 pt-10 sm:pt-14 pb-6 sm:pb-8">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-10 sm:gap-8 lg:gap-10 mb-10">
 
             {{-- Kolom 1: Logo + Tagline + Sosmed --}}
-            <div class="col-span-1">
-                <div class="flex flex-col items-start gap-1.5 sm:gap-3 mb-2 sm:mb-4">
-                    <div class="w-8 h-8 sm:w-12 sm:h-12 lg:w-16 lg:h-16 rounded-lg sm:rounded-xl overflow-hidden flex items-center justify-center shrink-0 border"
+            <div class="col-span-2 sm:col-span-1">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden flex items-center justify-center shrink-0 border"
                         style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1)">
                         @if($logoUrl)
-                        <img src="{{ $logoUrl }}" alt="Logo {{ $singkatan }}" class="w-full h-full object-contain p-1 sm:p-1.5 lg:p-2">
+                        <img src="{{ $logoUrl }}" alt="Logo {{ $singkatan }}" class="w-full h-full object-contain p-2">
                         @else
-                        <span class="text-base sm:text-2xl lg:text-3xl">🏫</span>
+                        <span class="text-2xl">🏫</span>
                         @endif
                     </div>
                     <div>
-                        <div class="font-lora font-bold text-white leading-tight text-[9px] sm:text-sm lg:text-base">
-                            {{ $singkatan }}
-                        </div>
-                        <div class="leading-tight mt-0.5 text-[7px] sm:text-[10px] lg:text-xs" style="color:#94a3b8">
-                            {{ $namaSekolah }}
-                        </div>
+                        <div class="footer-brand-name">{{ $singkatan }}</div>
+                        <div class="footer-brand-sub">{{ $namaSekolah }}</div>
                     </div>
                 </div>
-                <p class="text-[7px] sm:text-sm leading-relaxed hidden sm:block" style="color:#6b7fa8;max-width:220px">{{ $taglineFooter }}</p>
+                <p class="text-sm leading-relaxed" style="color:#6b7fa8;max-width:280px">{{ $taglineFooter }}</p>
 
                 @if($kontakFooter)
-                <div class="flex flex-wrap gap-1 mt-2 sm:mt-5">
+                <div class="flex flex-wrap gap-2 mt-5">
                     @if($kontakFooter->sosmed_instagram)
                     <a href="{{ $kontakFooter->sosmed_instagram }}" target="_blank" rel="noopener" title="Instagram"
-                       class="w-5 h-5 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center transition-colors hover:bg-white/10"
-                       style="background:rgba(255,255,255,.07)">
-                        <svg class="w-2.5 h-2.5 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 24 24" style="color:#e1306c">
+                       class="footer-social-btn">
+                        <svg class="footer-social-icon" fill="currentColor" viewBox="0 0 24 24" style="color:#e1306c">
                             <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
                         </svg>
                     </a>
                     @endif
                     @if($kontakFooter->sosmed_facebook)
                     <a href="{{ $kontakFooter->sosmed_facebook }}" target="_blank" rel="noopener" title="Facebook"
-                       class="w-5 h-5 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center transition-colors hover:bg-white/10"
-                       style="background:rgba(255,255,255,.07)">
-                        <svg class="w-2.5 h-2.5 sm:w-4 sm:h-4" fill="#1877f2" viewBox="0 0 24 24">
+                       class="footer-social-btn">
+                        <svg class="footer-social-icon" fill="#1877f2" viewBox="0 0 24 24">
                             <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                         </svg>
                     </a>
                     @endif
                     @if($kontakFooter->sosmed_youtube)
                     <a href="{{ $kontakFooter->sosmed_youtube }}" target="_blank" rel="noopener" title="YouTube"
-                       class="w-5 h-5 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center transition-colors hover:bg-white/10"
-                       style="background:rgba(255,255,255,.07)">
-                        <svg class="w-2.5 h-2.5 sm:w-4 sm:h-4" fill="#ff0000" viewBox="0 0 24 24">
+                       class="footer-social-btn">
+                        <svg class="footer-social-icon" fill="#ff0000" viewBox="0 0 24 24">
                             <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                         </svg>
                     </a>
                     @endif
                     @if($kontakFooter->sosmed_twitter)
                     <a href="{{ $kontakFooter->sosmed_twitter }}" target="_blank" rel="noopener" title="X / Twitter"
-                       class="w-5 h-5 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center transition-colors hover:bg-white/10"
-                       style="background:rgba(255,255,255,.07)">
-                        <svg class="w-2.5 h-2.5 sm:w-4 sm:h-4" fill="#1da1f2" viewBox="0 0 24 24">
+                       class="footer-social-btn">
+                        <svg class="footer-social-icon" fill="#1da1f2" viewBox="0 0 24 24">
                             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                         </svg>
                     </a>
@@ -339,11 +388,11 @@
 
             {{-- Kolom 2: Tautan Cepat --}}
             <div class="col-span-1">
-                <h4 class="text-[8px] sm:text-sm font-bold text-white mb-2 sm:mb-4 flex items-center gap-1 sm:gap-2">
-                    <span class="w-0.5 sm:w-1 h-3 sm:h-4 rounded-full inline-block shrink-0" style="background:#c8a84b"></span>
-                    <span class="leading-tight">Tautan Cepat</span>
+                <h4 class="footer-heading">
+                    <span class="w-1 h-4 rounded-full inline-block shrink-0" style="background:#c8a84b"></span>
+                    <span>Tautan Cepat</span>
                 </h4>
-                <ul class="space-y-1.5 sm:space-y-2.5">
+                <ul class="space-y-3">
                     @foreach([
                         ['route'=>'website.home',   'label'=>'Beranda'],
                         ['route'=>'website.berita', 'label'=>'Berita'],
@@ -351,8 +400,8 @@
                         ['route'=>'login',          'label'=>'Login'],
                     ] as $fl)
                     <li>
-                        <a href="{{ route($fl['route']) }}" class="footer-link flex items-center gap-1 sm:gap-2 text-[7px] sm:text-sm leading-tight">
-                            <svg class="w-2 h-2 sm:w-3 sm:h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <a href="{{ route($fl['route']) }}" class="footer-link flex items-center gap-2">
+                            <svg class="footer-icon-bullet" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                             </svg>
                             {{ $fl['label'] }}
@@ -360,16 +409,16 @@
                     </li>
                     @endforeach
                     <li>
-                        <a href="{{ route('website.home') }}#tentang" class="footer-link flex items-center gap-1 sm:gap-2 text-[7px] sm:text-sm leading-tight">
-                            <svg class="w-2 h-2 sm:w-3 sm:h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <a href="{{ route('website.home') }}#tentang" class="footer-link flex items-center gap-2">
+                            <svg class="footer-icon-bullet" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                             </svg>
                             Tentang
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('website.home') }}#kontak" class="footer-link flex items-center gap-1 sm:gap-2 text-[7px] sm:text-sm leading-tight">
-                            <svg class="w-2 h-2 sm:w-3 sm:h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <a href="{{ route('website.home') }}#kontak" class="footer-link flex items-center gap-2">
+                            <svg class="footer-icon-bullet" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                             </svg>
                             Kontak
@@ -380,14 +429,14 @@
 
             {{-- Kolom 3: Kontak --}}
             <div class="col-span-1">
-                <h4 class="text-[8px] sm:text-sm font-bold text-white mb-2 sm:mb-4 flex items-center gap-1 sm:gap-2">
-                    <span class="w-0.5 sm:w-1 h-3 sm:h-4 rounded-full inline-block shrink-0" style="background:#c8a84b"></span>
-                    <span class="leading-tight">Kontak</span>
+                <h4 class="footer-heading">
+                    <span class="w-1 h-4 rounded-full inline-block shrink-0" style="background:#c8a84b"></span>
+                    <span>Kontak</span>
                 </h4>
-                <ul class="space-y-2 sm:space-y-3 text-[7px] sm:text-sm" style="color:#6b7fa8">
+                <ul class="space-y-3.5 text-sm" style="color:#6b7fa8">
                     @if($kontakFooter?->kontak_alamat)
-                    <li class="flex items-start gap-1 sm:gap-3">
-                        <svg class="w-2.5 h-2.5 sm:w-4 sm:h-4 mt-0.5 shrink-0" style="color:#c8a84b" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <li class="flex items-start gap-3">
+                        <svg class="w-4 h-4 mt-0.5 shrink-0" style="color:#c8a84b" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                         </svg>
@@ -395,23 +444,23 @@
                     </li>
                     @endif
                     @if($kontakFooter?->kontak_telepon)
-                    <li class="flex items-start gap-1 sm:gap-3">
-                        <svg class="w-2.5 h-2.5 sm:w-4 sm:h-4 mt-0.5 shrink-0" style="color:#c8a84b" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <li class="flex items-start gap-3">
+                        <svg class="w-4 h-4 mt-0.5 shrink-0" style="color:#c8a84b" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                         </svg>
                         <a href="https://wa.me/{{ preg_replace('/[^0-9]/','',$kontakFooter->kontak_telepon) }}" class="footer-link break-all">{{ $kontakFooter->kontak_telepon }}</a>
                     </li>
                     @else
-                    <li class="flex items-start gap-1 sm:gap-3">
-                        <svg class="w-2.5 h-2.5 sm:w-4 sm:h-4 mt-0.5 shrink-0" style="color:#c8a84b" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <li class="flex items-start gap-3">
+                        <svg class="w-4 h-4 mt-0.5 shrink-0" style="color:#c8a84b" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                         </svg>
                         <span>Belum diatur</span>
                     </li>
                     @endif
                     @if($kontakFooter?->kontak_email)
-                    <li class="flex items-start gap-1 sm:gap-3">
-                        <svg class="w-2.5 h-2.5 sm:w-4 sm:h-4 mt-0.5 shrink-0" style="color:#c8a84b" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <li class="flex items-start gap-3">
+                        <svg class="w-4 h-4 mt-0.5 shrink-0" style="color:#c8a84b" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                         </svg>
                         <a href="mailto:{{ $kontakFooter->kontak_email }}" class="footer-link break-all" style="word-break:break-all">{{ $kontakFooter->kontak_email }}</a>
@@ -422,36 +471,36 @@
 
             {{-- Kolom 4: Jam Operasional --}}
             <div class="col-span-1">
-                <h4 class="text-[8px] sm:text-sm font-bold text-white mb-2 sm:mb-4 flex items-center gap-1 sm:gap-2">
-                    <span class="w-0.5 sm:w-1 h-3 sm:h-4 rounded-full inline-block shrink-0" style="background:#c8a84b"></span>
-                    <span class="leading-tight">Jam Ops</span>
+                <h4 class="footer-heading">
+                    <span class="w-1 h-4 rounded-full inline-block shrink-0" style="background:#c8a84b"></span>
+                    <span>Jam Ops</span>
                 </h4>
-                <ul class="space-y-1.5 sm:space-y-2.5 text-[7px] sm:text-sm" style="color:#6b7fa8">
-                    <li class="flex items-start gap-1 sm:gap-2">
-                        <svg class="w-2.5 h-2.5 sm:w-4 sm:h-4 mt-0.5 shrink-0" style="color:#c8a84b" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <ul class="space-y-3">
+                    <li class="flex items-start gap-2.5">
+                        <svg class="w-4 h-4 mt-0.5 shrink-0" style="color:#c8a84b" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         <div>
-                            <p class="text-white text-[7px] sm:text-xs font-semibold leading-tight">Senin – Jumat</p>
-                            <p class="text-[7px] sm:text-xs leading-tight mt-0.5">07.00 – 15.30</p>
+                            <p class="footer-hours-label">Senin – Jumat</p>
+                            <p class="footer-hours-value">07.00 – 15.30</p>
                         </div>
                     </li>
-                    <li class="flex items-start gap-1 sm:gap-2">
-                        <svg class="w-2.5 h-2.5 sm:w-4 sm:h-4 mt-0.5 shrink-0" style="color:#6b7fa8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <li class="flex items-start gap-2.5">
+                        <svg class="w-4 h-4 mt-0.5 shrink-0" style="color:#6b7fa8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         <div>
-                            <p class="text-white text-[7px] sm:text-xs font-semibold leading-tight">Sabtu</p>
-                            <p class="text-[7px] sm:text-xs leading-tight mt-0.5">07.00 – 12.00</p>
+                            <p class="footer-hours-label">Sabtu</p>
+                            <p class="footer-hours-value">07.00 – 12.00</p>
                         </div>
                     </li>
-                    <li class="flex items-start gap-1 sm:gap-2">
-                        <svg class="w-2.5 h-2.5 sm:w-4 sm:h-4 mt-0.5 shrink-0" style="color:#6b7fa8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <li class="flex items-start gap-2.5">
+                        <svg class="w-4 h-4 mt-0.5 shrink-0" style="color:#6b7fa8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         <div>
-                            <p class="text-[7px] sm:text-xs font-semibold leading-tight" style="color:#6b7fa8">Minggu & Libur</p>
-                            <p class="text-[7px] sm:text-xs leading-tight mt-0.5">Tutup</p>
+                            <p class="footer-hours-label" style="color:#6b7fa8">Minggu & Libur</p>
+                            <p class="footer-hours-value">Tutup</p>
                         </div>
                     </li>
                 </ul>
@@ -459,12 +508,12 @@
 
         </div>
 
-        <div class="pt-3 sm:pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-3"
+        <div class="pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-3"
              style="border-color:rgba(255,255,255,.07)">
-            <p class="text-[8px] sm:text-xs text-center sm:text-left" style="color:#4b5e82">
+            <p class="footer-bottom-text text-center sm:text-left">
                 &copy; {{ date('Y') }} {{ $namaSekolah }}. Hak cipta dilindungi undang-undang.
             </p>
-            <p class="text-[8px] sm:text-xs text-center sm:text-right" style="color:#4b5e82">
+            <p class="footer-bottom-text text-center sm:text-right">
                 Dikembangkan Oleh Mahasiswa Institut Teknologi Del (Teknologi Rekayasa Perangkat Lunak)
             </p>
         </div>

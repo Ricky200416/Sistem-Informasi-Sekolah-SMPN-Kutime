@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
@@ -41,6 +42,10 @@ class ProfilController extends Controller
     {
         $user = $request->user();
 
+        // PENTING: fresh() memaksa ambil ulang dari DB, bukan dari
+        // instance $user yang mungkin sudah di-cache Auth guard
+        // sejak awal request (misal oleh middleware lain).
+        $user = $user->fresh();
         $user->loadMissing(['guru']);
 
         $kelasWali = $this->resolveKelasWali($user);
@@ -58,7 +63,7 @@ class ProfilController extends Controller
     ═══════════════════════════════════════════════════════════ */
     public function edit(): View
     {
-        $user = Auth::user();
+        $user = Auth::user()->fresh();
         $user->loadMissing(['guru']);
 
         $kelasWali = $this->resolveKelasWali($user);
@@ -69,32 +74,26 @@ class ProfilController extends Controller
 
     /* ═══════════════════════════════════════════════════════════
        UPDATE — Proses simpan, DIPECAH PER-SECTION.
-       ────────────────────────────────────────────────────────
-       PENTING: setiap modal di Blade hanya mengirim field
-       miliknya sendiri (lihat <input type="hidden" name="_section">
-       di tiap <form>). Validasi versi lama mewajibkan 'name' &
-       'email' di SEMUA section — padahal cuma form "Profil Akun"
-       yang punya field itu. Akibatnya submit modal Identitas /
-       Pribadi / Kepegawaian selalu gagal validasi ("name field
-       is required"). Sekarang validasi & penyimpanan mengikuti
-       $_section yang benar-benar dikirim.
-
-       SINKRONISASI NAMA (fix utama laporan bug):
-       - Section 'akun'    -> update users.name, DAN ikut
-                              menyinkronkan guru.nama supaya
-                              tabel admin (yang membaca $g->nama
-                              dengan prioritas utama) langsung
-                              ikut berubah.
-       - Section 'pribadi' -> update guru.nama (Nama Lengkap),
-                              DAN ikut menyinkronkan users.name
-                              supaya akun & identitas guru tetap
-                              konsisten di kedua arah.
+       Tiap modal di Blade hanya mengirim field miliknya sendiri
+       (lihat <input type="hidden" name="_section"> di tiap <form>),
+       jadi validasi & penyimpanan mengikuti $_section yang benar-
+       benar dikirim, bukan divalidasi sekaligus semua field.
     ═══════════════════════════════════════════════════════════ */
     public function update(Request $request): RedirectResponse
     {
         $user    = $request->user();
         $guru    = $user->guru ?? $user->guru()->firstOrCreate([]);
         $section = $request->input('_section', 'akun');
+
+        // DEBUG SEMENTARA — hapus setelah masalah nama terkonfirmasi
+        // beres. Cek isi baris ini di storage/logs/laravel.log.
+        Log::info('[ProfilController@update] mulai', [
+            'user_id'      => $user->id,
+            'guru_id'      => $guru->id,
+            'guru_user_id' => $guru->user_id,
+            'section'      => $section,
+            'payload'      => $request->except(['password', 'password_confirmation', 'photo']),
+        ]);
 
         match ($section) {
             'akun'         => $this->updateAkun($request, $user, $guru),
@@ -103,6 +102,13 @@ class ProfilController extends Controller
             'kepegawaian'  => $this->updateKepegawaian($request, $guru),
             default        => $this->updateAkun($request, $user, $guru),
         };
+
+        // DEBUG SEMENTARA — konfirmasi nilai akhir yang benar-benar
+        // tersimpan di database setelah save().
+        Log::info('[ProfilController@update] selesai', [
+            'user_name_final' => $user->fresh()->name,
+            'guru_nama_final' => $guru->fresh()->nama,
+        ]);
 
         return redirect()
             ->route('guru.profil')
@@ -144,9 +150,7 @@ class ProfilController extends Controller
         /* ── FIX UTAMA: sinkronkan ke tabel guru ──
          * Tabel admin (_table_guru.blade.php) menampilkan
          * $g->nama dengan prioritas di atas $user->name, jadi
-         * kolom ini WAJIB ikut ter-update supaya perubahan nama
-         * dari halaman profil guru langsung terlihat di dashboard
-         * admin, tanpa guru harus buka modal "Data Pribadi" lagi.
+         * kolom ini WAJIB ikut ter-update.
          */
         $guru->nama = $data['name'];
         $guru->save();
@@ -200,8 +204,8 @@ class ProfilController extends Controller
         $guru->save();
 
         /* ── Sinkron balik ke users.name ──
-         * Supaya "Nama Akun" di kartu Profil Akun & login tetap
-         * konsisten dengan Nama Lengkap yang baru diubah di sini.
+         * Supaya "Nama Akun" tetap konsisten dengan Nama Lengkap
+         * yang baru diubah di sini.
          */
         if (!empty($data['nama'])) {
             $user->name = $data['nama'];

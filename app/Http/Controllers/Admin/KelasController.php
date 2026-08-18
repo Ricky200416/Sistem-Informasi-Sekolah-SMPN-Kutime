@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Kelas;
 use App\Models\StudyGroup;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class KelasController extends Controller
@@ -42,7 +44,14 @@ class KelasController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name'                => 'required|string|max:50',
+            'name' => [
+                'required',
+                'string',
+                'max:50',
+                // Cegah nama kelas ganda di kedua tabel (study_groups & kelas)
+                Rule::unique('study_groups', 'name'),
+                Rule::unique('kelas', 'nama'),
+            ],
             'grade'               => 'required|integer|in:7,8,9',
             'section'             => 'nullable|string|max:10',
             'homeroom_teacher_id' => 'nullable|exists:users,id',
@@ -53,6 +62,7 @@ class KelasController extends Controller
             'is_active'           => 'nullable|in:0,1',
         ], [
             'name.required'              => 'Nama kelas wajib diisi.',
+            'name.unique'                => 'Nama kelas ":input" sudah digunakan. Silakan gunakan nama lain.',
             'grade.required'             => 'Tingkat kelas wajib diisi.',
             'grade.in'                   => 'Tingkat hanya boleh 7, 8, atau 9.',
             'academic_year.required'     => 'Tahun ajaran wajib diisi.',
@@ -111,7 +121,15 @@ class KelasController extends Controller
     public function update(Request $request, int $id): RedirectResponse
     {
         $validated = $request->validate([
-            'name'                => 'required|string|max:50',
+            'name' => [
+                'required',
+                'string',
+                'max:50',
+                // Abaikan (ignore) baris dengan id ini sendiri, supaya menyimpan
+                // ulang nama yang sama tidak dianggap duplikat.
+                Rule::unique('study_groups', 'name')->ignore($id),
+                Rule::unique('kelas', 'nama')->ignore($id),
+            ],
             'grade'               => 'required|integer|in:7,8,9',
             'section'             => 'nullable|string|max:10',
             'homeroom_teacher_id' => 'nullable|exists:users,id',
@@ -122,6 +140,7 @@ class KelasController extends Controller
             'is_active'           => 'nullable|in:0,1',
         ], [
             'name.required'              => 'Nama kelas wajib diisi.',
+            'name.unique'                => 'Nama kelas ":input" sudah digunakan oleh kelas lain. Silakan gunakan nama yang berbeda.',
             'grade.required'             => 'Tingkat kelas wajib diisi.',
             'grade.in'                   => 'Tingkat hanya boleh 7, 8, atau 9.',
             'academic_year.required'     => 'Tahun ajaran wajib diisi.',
@@ -238,29 +257,42 @@ class KelasController extends Controller
         // Gunakan forceFill agar ID bisa di-set meski tidak fillable
         $kelas = Kelas::find($group->id);
 
-        if ($kelas) {
-            $kelas->forceFill([
-                'nama'         => $kelasName,
-                'tingkat'      => (string) $group->grade,
-                'rombel'       => $group->section ?? null,
-                'tahun_ajaran' => $tahunAjaran,
-                'semester'     => $group->semester ?? null,
-                'guru_id'      => $guruId,
-                'ruang'        => $group->room ?? null,
-            ])->save();
-        } else {
-            $kelas = new Kelas();
-            $kelas->forceFill([
-                'id'           => $group->id,          // paksa ID sama
-                'nama'         => $kelasName,
-                'tingkat'      => (string) $group->grade,
-                'rombel'       => $group->section ?? null,
-                'tahun_ajaran' => $tahunAjaran,
-                'semester'     => $group->semester ?? null,
-                'guru_id'      => $guruId,
-                'ruang'        => $group->room ?? null,
-            ]);
-            $kelas->save();
+        try {
+            if ($kelas) {
+                $kelas->forceFill([
+                    'nama'         => $kelasName,
+                    'tingkat'      => (string) $group->grade,
+                    'rombel'       => $group->section ?? null,
+                    'tahun_ajaran' => $tahunAjaran,
+                    'semester'     => $group->semester ?? null,
+                    'guru_id'      => $guruId,
+                    'ruang'        => $group->room ?? null,
+                ])->save();
+            } else {
+                $kelas = new Kelas();
+                $kelas->forceFill([
+                    'id'           => $group->id,          // paksa ID sama
+                    'nama'         => $kelasName,
+                    'tingkat'      => (string) $group->grade,
+                    'rombel'       => $group->section ?? null,
+                    'tahun_ajaran' => $tahunAjaran,
+                    'semester'     => $group->semester ?? null,
+                    'guru_id'      => $guruId,
+                    'ruang'        => $group->room ?? null,
+                ]);
+                $kelas->save();
+            }
+        } catch (QueryException $e) {
+            // Jaring pengaman terakhir: jika masih lolos validasi (mis. race
+            // condition dua request bersamaan) tapi tetap bentrok di DB level,
+            // ubah jadi pesan yang ramah, bukan SQL mentah.
+            if ((int) $e->getCode() === 23000) {
+                throw new \Exception(
+                    "Nama kelas \"{$kelasName}\" sudah digunakan oleh kelas lain. Silakan gunakan nama yang berbeda."
+                );
+            }
+
+            throw $e;
         }
 
         Log::info("syncToKelasTable sukses", [

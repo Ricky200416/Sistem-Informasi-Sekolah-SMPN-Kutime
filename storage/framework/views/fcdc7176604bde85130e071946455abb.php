@@ -108,6 +108,7 @@ body { font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--text); 
 
 /* ── Line clamp ── */
 .lc2 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.lc4 { display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; }
 
 /* ── Ticker ── */
 @keyframes ticker { from{transform:translateX(100vw)} to{transform:translateX(-100%)} }
@@ -707,7 +708,8 @@ body { font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--text); 
             
             <?php if($sambutan): ?>
             <div class="card p-3 sm:p-5 text-white relative overflow-hidden flex flex-col h-full"
-                 style="background:linear-gradient(145deg,var(--navy) 0%,var(--navy2) 100%)">
+                 style="background:linear-gradient(145deg,var(--navy) 0%,var(--navy2) 100%)"
+                 x-data="{ expandedSambutan: false }">
                 <div class="absolute top-2 right-3 font-lora pointer-events-none select-none"
                      style="font-size:2.5rem;line-height:1;color:rgba(200,168,75,.08)">❝</div>
 
@@ -728,14 +730,27 @@ body { font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--text); 
                     </div>
                 </div>
 
-                <div class="relative z-10">
+                <div class="relative z-10 flex-1 flex flex-col">
                     <p class="text-[7px] sm:text-[9px] font-bold uppercase tracking-widest mb-1" style="color:var(--gold2)">
                         Kata Sambutan
                     </p>
                     <div class="sambutan-text text-justify text-white/90" style="font-size:.68rem">
-                        <?php echo nl2br(e($sambutan)); ?>
+                        <div :class="expandedSambutan ? '' : 'lc4'">
+                            <?php echo nl2br(e($sambutan)); ?>
 
+                        </div>
                     </div>
+                    <button type="button" 
+                            @click="expandedSambutan = !expandedSambutan"
+                            class="inline-flex items-center gap-1 mt-2 text-[9px] sm:text-[10px] font-bold transition-all hover:underline self-start"
+                            style="color:var(--gold2)">
+                        <span x-text="expandedSambutan ? 'Sembunyikan' : 'Selanjutnya'"></span>
+                        <svg class="w-2.5 h-2.5 sm:w-3 sm:h-3 transition-transform duration-200" 
+                             :class="expandedSambutan ? 'rotate-180' : ''"
+                             fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
                 </div>
             </div>
             <?php endif; ?>
@@ -745,7 +760,7 @@ body { font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--text); 
             <div class="flex flex-col gap-2 h-full justify-start">
 
                 <?php if($infoPpdb): ?>
-                <div class="card p-2.5 sm:p-3.5" style="border-color:#fecaca;background:#fff5f5">
+                <div class="card p-2.5 sm:p-3.5" style="border-color:#fecaca;background:#fff5f5" x-data="{ expandedPpdb: false }">
                     <div class="flex items-center gap-1.5 mb-1 sm:mb-1.5">
                         <span class="w-1.5 h-1.5 rounded-full pulse shrink-0" style="background:#ef4444"></span>
                         <span class="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider" style="color:#dc2626">
@@ -753,22 +768,34 @@ body { font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--text); 
                         </span>
                     </div>
                     <div class="info-text text-justify" style="color:#374151;font-size:.68rem">
-                        <?php echo nl2br(e($infoPpdb)); ?>
+                        <div :class="expandedPpdb ? '' : 'lc2'">
+                            <?php echo nl2br(e($infoPpdb)); ?>
 
+                        </div>
                     </div>
-                    <a href="<?php echo e(route('website.berita')); ?>"
-                       class="inline-flex items-center gap-0.5 mt-1.5 sm:mt-2 text-[9px] sm:text-[10px] font-bold transition-all hover:gap-1.5"
-                       style="color:#dc2626">
-                        Selengkapnya di halaman berita
-                        <svg class="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-                        </svg>
-                    </a>
+                    <div class="flex items-center justify-between mt-1.5 sm:mt-2">
+                        <button type="button" 
+                                @click="expandedPpdb = !expandedPpdb"
+                                class="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold transition-all hover:underline"
+                                style="color:#dc2626">
+                            <span x-text="expandedPpdb ? 'Sembunyikan' : 'Selanjutnya'"></span>
+                            <svg class="w-2.5 h-2.5 sm:w-3 sm:h-3 transition-transform duration-200" 
+                                 :class="expandedPpdb ? 'rotate-180' : ''"
+                                 fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+
+                        <a href="<?php echo e(route('website.berita')); ?>"
+                           class="inline-flex items-center gap-0.5 text-[8px] sm:text-[9px] font-medium transition-all hover:underline text-slate-500">
+                            Ke halaman berita →
+                        </a>
+                    </div>
                 </div>
                 <?php endif; ?>
 
                 <?php if($infoKal): ?>
-                <div class="card p-2.5 sm:p-3.5" style="border-color:#bfdbfe;background:#eff6ff">
+                <div class="card p-2.5 sm:p-3.5" style="border-color:#bfdbfe;background:#eff6ff" x-data="{ expandedKal: false }">
                     <div class="flex items-center gap-1.5 mb-1 sm:mb-1.5">
                         <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" style="color:#2563eb" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -778,9 +805,22 @@ body { font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--text); 
                         </span>
                     </div>
                     <div class="info-text text-justify" style="color:#374151;font-size:.68rem">
-                        <?php echo nl2br(e($infoKal)); ?>
+                        <div :class="expandedKal ? '' : 'lc2'">
+                            <?php echo nl2br(e($infoKal)); ?>
 
+                        </div>
                     </div>
+                    <button type="button" 
+                            @click="expandedKal = !expandedKal"
+                            class="inline-flex items-center gap-1 mt-1.5 sm:mt-2 text-[9px] sm:text-[10px] font-bold transition-all hover:underline"
+                            style="color:#2563eb">
+                        <span x-text="expandedKal ? 'Sembunyikan' : 'Selanjutnya'"></span>
+                        <svg class="w-2.5 h-2.5 sm:w-3 sm:h-3 transition-transform duration-200" 
+                             :class="expandedKal ? 'rotate-180' : ''"
+                             fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
                 </div>
                 <?php endif; ?>
 

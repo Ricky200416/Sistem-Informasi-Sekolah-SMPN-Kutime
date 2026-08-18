@@ -66,8 +66,8 @@
             background: rgba(255,255,255,0.97);
         }
         .nav-link {
-            position: relative; padding: 8px 16px; border-radius: 10px;
-            font-size: .875rem; font-weight: 600; color: #475569;
+            position: relative; padding: 6px 12px; border-radius: 9px;
+            font-size: .8125rem; font-weight: 600; color: #475569;
             transition: color .18s, background .18s;
             text-decoration: none;
         }
@@ -84,8 +84,8 @@
 
         .footer-link {
             color: #94a3b8;
-            font-size: .875rem;
-            line-height: 1.5;
+            font-size: .8rem;
+            line-height: 1.45;
             text-decoration: none;
             transition: color .18s;
             display: inline-block;
@@ -110,38 +110,38 @@
         @keyframes pageFadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
         main { animation: pageFadeIn .45s ease both; }
 
-        /* ── Footer sizing helpers (konsisten, tidak lagi memakai px mikro) ── */
+        /* ── Footer sizing helpers (diperkecil agar footer tidak makan banyak tempat) ── */
         .footer-heading {
-            font-size: .95rem;
+            font-size: .8rem;
             font-weight: 700;
             color: #ffffff;
             display: flex;
             align-items: center;
-            gap: .5rem;
-            margin-bottom: 1rem;
+            gap: .4rem;
+            margin-bottom: .65rem;
         }
         .footer-icon-bullet {
-            width: .875rem;
-            height: .875rem;
+            width: .7rem;
+            height: .7rem;
             flex-shrink: 0;
         }
         .footer-brand-name {
             font-family: 'Lora', Georgia, serif;
             font-weight: 700;
             color: #ffffff;
-            font-size: 1rem;
-            line-height: 1.3;
+            font-size: .875rem;
+            line-height: 1.25;
         }
         .footer-brand-sub {
-            font-size: .8rem;
+            font-size: .7rem;
             color: #94a3b8;
-            line-height: 1.4;
-            margin-top: .125rem;
+            line-height: 1.35;
+            margin-top: .1rem;
         }
         .footer-social-btn {
-            width: 2.5rem;
-            height: 2.5rem;
-            border-radius: .625rem;
+            width: 2rem;
+            height: 2rem;
+            border-radius: .5rem;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -149,10 +149,10 @@
             transition: background .18s;
         }
         .footer-social-btn:hover { background: rgba(255,255,255,.14); }
-        .footer-social-icon { width: 1.125rem; height: 1.125rem; }
-        .footer-hours-label { color: #ffffff; font-size: .85rem; font-weight: 600; line-height: 1.4; }
-        .footer-hours-value { font-size: .8rem; color: #6b7fa8; line-height: 1.4; margin-top: .125rem; }
-        .footer-bottom-text { font-size: .8rem; color: #4b5e82; line-height: 1.5; }
+        .footer-social-icon { width: .9rem; height: .9rem; }
+        .footer-hours-label { color: #ffffff; font-size: .75rem; font-weight: 600; line-height: 1.35; }
+        .footer-hours-value { font-size: .7rem; color: #6b7fa8; line-height: 1.35; margin-top: .1rem; }
+        .footer-bottom-text { font-size: .7rem; color: #4b5e82; line-height: 1.4; }
     </style>
 
     <?php echo $__env->yieldPushContent('styles'); ?>
@@ -174,21 +174,21 @@
 
 <header class="navbar" id="navbar" x-data="{ open: false }">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16 lg:h-20">
+        <div class="flex items-center justify-between h-14 lg:h-16">
 
             
-            <a href="<?php echo e(route('website.home')); ?>" class="flex items-center gap-3 group min-w-0">
-                <div class="w-11 h-11 lg:w-12 lg:h-12 rounded-xl overflow-hidden shrink-0 flex items-center justify-center shadow-sm border"
+            <a href="<?php echo e(route('website.home')); ?>" class="flex items-center gap-2.5 group min-w-0">
+                <div class="w-9 h-9 lg:w-10 lg:h-10 rounded-lg overflow-hidden shrink-0 flex items-center justify-center shadow-sm border"
                      style="background:#fff;border-color:rgba(14,35,86,.12)">
                     <?php if($logoUrl): ?>
-                    <img src="<?php echo e($logoUrl); ?>" alt="Logo <?php echo e($singkatan); ?>" class="w-full h-full object-contain p-1.5">
+                    <img src="<?php echo e($logoUrl); ?>" alt="Logo <?php echo e($singkatan); ?>" class="w-full h-full object-contain p-1">
                     <?php else: ?>
-                    <span class="text-xl">🏫</span>
+                    <span class="text-base">🏫</span>
                     <?php endif; ?>
                 </div>
                 <div class="min-w-0">
-                    <div class="font-lora font-bold text-base lg:text-lg leading-tight truncate" style="color:#0e2356"><?php echo e($singkatan); ?></div>
-                    <div class="text-xs leading-tight truncate" style="color:#94a3b8"><?php echo e($namaSekolah); ?></div>
+                    <div class="font-lora font-bold text-sm lg:text-base leading-tight truncate" style="color:#0e2356"><?php echo e($singkatan); ?></div>
+                    <div class="text-[.68rem] leading-tight truncate" style="color:#94a3b8"><?php echo e($namaSekolah); ?></div>
                 </div>
             </a>
 
@@ -217,10 +217,10 @@
                         };
                     ?>
                     <a href="<?php echo e(route($dashRoute)); ?>"
-                       class="ml-4 px-5 py-2.5 rounded-xl text-white text-sm font-bold shadow-sm
-                              hover:shadow-md transition-all inline-flex items-center gap-2"
+                       class="ml-3 px-4 py-2 rounded-lg text-white text-xs font-bold shadow-sm
+                              hover:shadow-md transition-all inline-flex items-center gap-1.5"
                        style="background:#0e2356">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1v-5m10-10l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-5"/>
                         </svg>
@@ -229,10 +229,10 @@
                 <?php else: ?>
                     
                     <a href="<?php echo e(route('login')); ?>"
-                       class="ml-4 px-5 py-2.5 rounded-xl text-white text-sm font-bold shadow-sm
-                              hover:shadow-md hover:opacity-90 transition-all inline-flex items-center gap-2"
+                       class="ml-3 px-4 py-2 rounded-lg text-white text-xs font-bold shadow-sm
+                              hover:shadow-md hover:opacity-90 transition-all inline-flex items-center gap-1.5"
                        style="background:#0e2356">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
                         </svg>
@@ -329,18 +329,18 @@
         </svg>
     </div>
 
-    <div class="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 pt-10 sm:pt-14 pb-6 sm:pb-8">
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-10 sm:gap-8 lg:gap-10 mb-10">
+    <div class="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 pt-7 sm:pt-9 pb-4 sm:pb-6">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-5 gap-y-6 sm:gap-6 lg:gap-8 mb-6">
 
             
             <div class="col-span-2 sm:col-span-1">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden flex items-center justify-center shrink-0 border"
+                <div class="flex items-center gap-2.5 mb-3">
+                    <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg overflow-hidden flex items-center justify-center shrink-0 border"
                         style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1)">
                         <?php if($logoUrl): ?>
-                        <img src="<?php echo e($logoUrl); ?>" alt="Logo <?php echo e($singkatan); ?>" class="w-full h-full object-contain p-2">
+                        <img src="<?php echo e($logoUrl); ?>" alt="Logo <?php echo e($singkatan); ?>" class="w-full h-full object-contain p-1.5">
                         <?php else: ?>
-                        <span class="text-2xl">🏫</span>
+                        <span class="text-lg">🏫</span>
                         <?php endif; ?>
                     </div>
                     <div>
@@ -348,10 +348,10 @@
                         <div class="footer-brand-sub"><?php echo e($namaSekolah); ?></div>
                     </div>
                 </div>
-                <p class="text-sm leading-relaxed" style="color:#6b7fa8;max-width:280px"><?php echo e($taglineFooter); ?></p>
+                <p class="text-xs leading-relaxed" style="color:#6b7fa8;max-width:280px"><?php echo e($taglineFooter); ?></p>
 
                 <?php if($kontakFooter): ?>
-                <div class="flex flex-wrap gap-2 mt-5">
+                <div class="flex flex-wrap gap-1.5 mt-3">
                     <?php if($kontakFooter->sosmed_instagram): ?>
                     <a href="<?php echo e($kontakFooter->sosmed_instagram); ?>" target="_blank" rel="noopener" title="Instagram"
                        class="footer-social-btn">
@@ -394,7 +394,7 @@
                     <span class="w-1 h-4 rounded-full inline-block shrink-0" style="background:#c8a84b"></span>
                     <span>Tautan Cepat</span>
                 </h4>
-                <ul class="space-y-3">
+                <ul class="space-y-2">
                     <?php $__currentLoopData = [
                         ['route'=>'website.home',   'label'=>'Beranda'],
                         ['route'=>'website.berita', 'label'=>'Berita'],
@@ -436,10 +436,10 @@
                     <span class="w-1 h-4 rounded-full inline-block shrink-0" style="background:#c8a84b"></span>
                     <span>Kontak</span>
                 </h4>
-                <ul class="space-y-3.5 text-sm" style="color:#6b7fa8">
+                <ul class="space-y-2 text-xs" style="color:#6b7fa8">
                     <?php if($kontakFooter?->kontak_alamat): ?>
-                    <li class="flex items-start gap-3">
-                        <svg class="w-4 h-4 mt-0.5 shrink-0" style="color:#c8a84b" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <li class="flex items-start gap-2">
+                        <svg class="w-3.5 h-3.5 mt-0.5 shrink-0" style="color:#c8a84b" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                         </svg>
@@ -447,23 +447,23 @@
                     </li>
                     <?php endif; ?>
                     <?php if($kontakFooter?->kontak_telepon): ?>
-                    <li class="flex items-start gap-3">
-                        <svg class="w-4 h-4 mt-0.5 shrink-0" style="color:#c8a84b" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <li class="flex items-start gap-2">
+                        <svg class="w-3.5 h-3.5 mt-0.5 shrink-0" style="color:#c8a84b" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                         </svg>
                         <a href="https://wa.me/<?php echo e(preg_replace('/[^0-9]/','',$kontakFooter->kontak_telepon)); ?>" class="footer-link break-all"><?php echo e($kontakFooter->kontak_telepon); ?></a>
                     </li>
                     <?php else: ?>
-                    <li class="flex items-start gap-3">
-                        <svg class="w-4 h-4 mt-0.5 shrink-0" style="color:#c8a84b" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <li class="flex items-start gap-2">
+                        <svg class="w-3.5 h-3.5 mt-0.5 shrink-0" style="color:#c8a84b" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                         </svg>
                         <span>Belum diatur</span>
                     </li>
                     <?php endif; ?>
                     <?php if($kontakFooter?->kontak_email): ?>
-                    <li class="flex items-start gap-3">
-                        <svg class="w-4 h-4 mt-0.5 shrink-0" style="color:#c8a84b" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <li class="flex items-start gap-2">
+                        <svg class="w-3.5 h-3.5 mt-0.5 shrink-0" style="color:#c8a84b" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                         </svg>
                         <a href="mailto:<?php echo e($kontakFooter->kontak_email); ?>" class="footer-link break-all" style="word-break:break-all"><?php echo e($kontakFooter->kontak_email); ?></a>
@@ -478,9 +478,9 @@
                     <span class="w-1 h-4 rounded-full inline-block shrink-0" style="background:#c8a84b"></span>
                     <span>Jam Ops</span>
                 </h4>
-                <ul class="space-y-3">
-                    <li class="flex items-start gap-2.5">
-                        <svg class="w-4 h-4 mt-0.5 shrink-0" style="color:#c8a84b" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <ul class="space-y-2">
+                    <li class="flex items-start gap-2">
+                        <svg class="w-3.5 h-3.5 mt-0.5 shrink-0" style="color:#c8a84b" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         <div>
@@ -488,8 +488,8 @@
                             <p class="footer-hours-value">07.00 – 15.30</p>
                         </div>
                     </li>
-                    <li class="flex items-start gap-2.5">
-                        <svg class="w-4 h-4 mt-0.5 shrink-0" style="color:#6b7fa8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <li class="flex items-start gap-2">
+                        <svg class="w-3.5 h-3.5 mt-0.5 shrink-0" style="color:#6b7fa8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         <div>
@@ -497,8 +497,8 @@
                             <p class="footer-hours-value">07.00 – 12.00</p>
                         </div>
                     </li>
-                    <li class="flex items-start gap-2.5">
-                        <svg class="w-4 h-4 mt-0.5 shrink-0" style="color:#6b7fa8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <li class="flex items-start gap-2">
+                        <svg class="w-3.5 h-3.5 mt-0.5 shrink-0" style="color:#6b7fa8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         <div>
@@ -511,7 +511,7 @@
 
         </div>
 
-        <div class="pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-3"
+        <div class="pt-4 border-t flex flex-col sm:flex-row items-center justify-between gap-2"
              style="border-color:rgba(255,255,255,.07)">
             <p class="footer-bottom-text text-center sm:text-left">
                 &copy; <?php echo e(date('Y')); ?> <?php echo e($namaSekolah); ?>. Hak cipta dilindungi undang-undang.

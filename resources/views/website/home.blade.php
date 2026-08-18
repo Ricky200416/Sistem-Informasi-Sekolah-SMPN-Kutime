@@ -141,14 +141,41 @@ body { font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--text); 
 /* ══════════════════════════════════════════════
    TENAGA PENDIDIK
 ══════════════════════════════════════════════ */
+.guru-grid {
+    display:grid;
+    align-items:start;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:.5rem;
+}
+@media (min-width:640px)  { .guru-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:.75rem; } }
+@media (min-width:1024px) { .guru-grid { grid-template-columns:repeat(4,minmax(0,1fr)); } }
+
+.guru-card-wrap {
+    grid-column: span 1 / span 1;
+    transition: grid-column .35s ease;
+}
+.guru-card-wrap.is-expanded {
+    grid-column: span 2 / span 2;
+}
+@media (min-width:1024px) {
+    .guru-card-wrap.is-expanded { grid-column: span 2 / span 2; }
+}
+
 .guru-card {
     background:#fff; border-radius:12px; overflow:hidden;
     border:1px solid var(--border); box-shadow:var(--sh);
-    transition:transform .22s ease, box-shadow .22s ease;
+    transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease;
     display:flex; flex-direction:column;
+    cursor:pointer;
 }
 .guru-card:hover { transform:translateY(-3px); box-shadow:var(--sh2); }
-.guru-photo { aspect-ratio:1/1; overflow:hidden; background:#eef1f6; position:relative; }
+.guru-card.is-active {
+    border-color:var(--gold);
+    box-shadow:0 10px 30px rgba(14,35,86,.18);
+    transform:translateY(-2px);
+}
+.guru-photo { aspect-ratio:1/1; overflow:hidden; background:#eef1f6; position:relative; transition:aspect-ratio .3s ease; }
+.guru-card.is-active .guru-photo { aspect-ratio:16/9; }
 .guru-photo img { width:100%; height:100%; object-fit:cover; transition:transform .35s ease; display:block; }
 .guru-card:hover .guru-photo img { transform:scale(1.05); }
 .guru-photo .guru-fallback {
@@ -170,33 +197,16 @@ body { font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--text); 
 }
 .guru-band button:hover { color:#000; }
 
-/* ── Modal overlay detail guru ── */
-.guru-modal-overlay {
-    position:fixed; inset:0; z-index:80; background:rgba(9,18,48,.55);
-    display:flex; align-items:center; justify-content:center; padding:16px;
-    backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px);
+/* ── Panel detail (expand di dalam card, BUKAN overlay) ── */
+.guru-detail-panel {
+    background:#fff;
+    border-top:1px dashed #e5e0d3;
+    padding:12px 14px 16px;
 }
-.guru-modal-box {
-    background:#fff; border-radius:16px; width:100%; max-width:360px;
-    overflow:hidden; box-shadow:0 24px 60px rgba(0,0,0,.25);
+.guru-detail-title {
+    font-size:.62rem; font-weight:800; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--navy2); margin-bottom:6px;
 }
-.guru-modal-head {
-    background:linear-gradient(135deg,var(--navy),var(--navy2));
-    padding:22px 18px 46px; text-align:center; position:relative;
-}
-.guru-modal-photo {
-    width:80px; height:80px; border-radius:50%; overflow:hidden; margin:0 auto;
-    border:3px solid var(--gold); box-shadow:0 6px 16px rgba(0,0,0,.25); background:#eef1f6;
-}
-.guru-modal-photo img { width:100%; height:100%; object-fit:cover; display:block; }
-.guru-modal-photo .guru-fallback { font-size:1.6rem; }
-.guru-modal-close {
-    position:absolute; top:10px; right:10px; width:26px; height:26px; border-radius:8px;
-    background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2); color:#fff;
-    display:flex; align-items:center; justify-content:center; cursor:pointer;
-}
-.guru-modal-close:hover { background:rgba(255,255,255,.2); }
-.guru-modal-body { padding:16px 18px 20px; }
 .guru-info-row { display:flex; gap:10px; align-items:flex-start; padding:7px 0; border-bottom:1px dashed #e5e0d3; }
 .guru-info-row:last-child { border-bottom:none; }
 .guru-info-icon {
@@ -205,6 +215,7 @@ body { font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--text); 
 }
 .guru-info-label { font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#94a3b8; }
 .guru-info-value { font-size:.78rem; font-weight:600; color:#1e293b; margin-top:1px; word-break:break-word; }
+.guru-detail-empty { font-size:.7rem; color:#94a3b8; font-style:italic; padding:6px 0; }
 </style>
 @endpush
 
@@ -530,11 +541,8 @@ body { font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--text); 
 @if($tenagaPendidik->count())
 <section style="background:var(--cream)" class="py-4 sm:py-7 lg:py-8" id="tenaga-pendidik"
           x-data='{
-              showModal:false,
-              selected:null,
-              guruList: @json($tenagaPendidik),
-              open(i){ this.selected = this.guruList[i]; this.showModal = true; },
-              close(){ this.showModal = false; }
+              expanded: null,
+              toggle(i){ this.expanded = (this.expanded === i) ? null : i; }
           }'>
     <div class="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8">
 
@@ -545,64 +553,42 @@ body { font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--text); 
             <p>Guru-guru terbaik yang membimbing dan mendampingi siswa/i kami</p>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 max-w-4xl mx-auto">
+        <div class="guru-grid max-w-4xl mx-auto">
             @foreach($tenagaPendidik as $i => $g)
-            <div class="guru-card">
-                <div class="guru-photo">
-                    @if($g['foto'])
-                        <img src="{{ $g['foto'] }}" alt="{{ $g['nama'] }}" loading="lazy">
-                    @else
-                        <div class="guru-fallback">{{ strtoupper(substr($g['nama'],0,1)) }}</div>
-                    @endif
-                </div>
-                <div class="guru-band">
-                    <p class="guru-nama lc2">{{ $g['nama'] }}</p>
-                    <p class="guru-jabatan lc2">{{ $g['jabatan'] }}</p>
-                    <button type="button" @click="open({{ $i }})">Lihat Profil</button>
-                </div>
-            </div>
-            @endforeach
-        </div>
+            <div class="guru-card-wrap" :class="expanded === {{ $i }} ? 'is-expanded' : ''">
+                <div class="guru-card" :class="expanded === {{ $i }} ? 'is-active' : ''" @click="toggle({{ $i }})">
 
-        {{-- ── Modal Detail Guru (Overlay) ── --}}
-        <div x-show="showModal" x-cloak
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100"
-             x-transition:leave-end="opacity-0"
-             class="guru-modal-overlay" @click.self="close()" @keydown.escape.window="close()">
-
-            <div x-show="showModal"
-                 x-transition:enter="transition ease-out duration-200"
-                 x-transition:enter-start="opacity-0 scale-95"
-                 x-transition:enter-end="opacity-100 scale-100"
-                 class="guru-modal-box" @click.stop>
-
-                <div class="guru-modal-head">
-                    <button type="button" class="guru-modal-close" @click="close()" aria-label="Tutup">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
-                    <div class="guru-modal-photo">
-                        <template x-if="selected && selected.foto">
-                            <img :src="selected.foto" alt="">
-                        </template>
-                        <template x-if="selected && !selected.foto">
-                            <div class="guru-fallback" x-text="selected ? selected.nama.charAt(0).toUpperCase() : ''"></div>
-                        </template>
-                    </div>
-                </div>
-
-                <div class="guru-modal-body" style="margin-top:-30px">
-                    <div class="bg-white rounded-xl shadow-sm px-3 py-2.5 mb-2 text-center" style="border:1px solid #f1f5f9">
-                        <p class="font-lora font-bold text-sm" style="color:#000" x-text="selected?.nama"></p>
-                        <p class="text-[11px] font-semibold" style="color:var(--navy2)" x-text="selected?.jabatan"></p>
+                    <div class="guru-photo">
+                        @if($g['foto'])
+                            <img src="{{ $g['foto'] }}" alt="{{ $g['nama'] }}" loading="lazy">
+                        @else
+                            <div class="guru-fallback">{{ strtoupper(substr($g['nama'],0,1)) }}</div>
+                        @endif
                     </div>
 
-                    <template x-if="selected?.mapel">
+                    <div class="guru-band">
+                        <p class="guru-nama lc2">{{ $g['nama'] }}</p>
+                        <p class="guru-jabatan lc2">{{ $g['jabatan'] }}</p>
+                        <button type="button" @click.stop="toggle({{ $i }})">
+                            <span x-text="expanded === {{ $i }} ? 'Tutup Profil' : 'Lihat Profil'"></span>
+                        </button>
+                    </div>
+
+                    {{-- Detail profil membesar di dalam card (bukan overlay) --}}
+                    <div class="guru-detail-panel"
+                         x-show="expanded === {{ $i }}"
+                         x-cloak
+                         x-transition:enter="transition ease-out duration-250"
+                         x-transition:enter-start="opacity-0 -translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 -translate-y-1"
+                         @click.stop>
+
+                        <p class="guru-detail-title">Detail Profil</p>
+
+                        @if($g['mapel'])
                         <div class="guru-info-row">
                             <div class="guru-info-icon">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -611,12 +597,12 @@ body { font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--text); 
                             </div>
                             <div>
                                 <p class="guru-info-label">Mata Pelajaran</p>
-                                <p class="guru-info-value" x-text="selected?.mapel"></p>
+                                <p class="guru-info-value">{{ $g['mapel'] }}</p>
                             </div>
                         </div>
-                    </template>
+                        @endif
 
-                    <template x-if="selected?.wali">
+                        @if($g['wali'])
                         <div class="guru-info-row">
                             <div class="guru-info-icon">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -625,12 +611,12 @@ body { font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--text); 
                             </div>
                             <div>
                                 <p class="guru-info-label">Wali Kelas</p>
-                                <p class="guru-info-value" x-text="'Kelas ' + selected?.wali"></p>
+                                <p class="guru-info-value">Kelas {{ $g['wali'] }}</p>
                             </div>
                         </div>
-                    </template>
+                        @endif
 
-                    <template x-if="selected?.email">
+                        @if($g['email'])
                         <div class="guru-info-row">
                             <div class="guru-info-icon">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -639,12 +625,12 @@ body { font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--text); 
                             </div>
                             <div>
                                 <p class="guru-info-label">Email</p>
-                                <p class="guru-info-value" x-text="selected?.email"></p>
+                                <p class="guru-info-value">{{ $g['email'] }}</p>
                             </div>
                         </div>
-                    </template>
+                        @endif
 
-                    <template x-if="selected?.telepon">
+                        @if($g['telepon'])
                         <div class="guru-info-row">
                             <div class="guru-info-icon">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -653,12 +639,20 @@ body { font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--text); 
                             </div>
                             <div>
                                 <p class="guru-info-label">Telepon / WhatsApp</p>
-                                <p class="guru-info-value" x-text="selected?.telepon"></p>
+                                <p class="guru-info-value">{{ $g['telepon'] }}</p>
                             </div>
                         </div>
-                    </template>
+                        @endif
+
+                        @if(!$g['mapel'] && !$g['wali'] && !$g['email'] && !$g['telepon'])
+                        <p class="guru-detail-empty">Belum ada informasi tambahan untuk tenaga pendidik ini.</p>
+                        @endif
+
+                    </div>
+
                 </div>
             </div>
+            @endforeach
         </div>
 
     </div>

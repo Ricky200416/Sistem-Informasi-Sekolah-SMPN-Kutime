@@ -17,10 +17,9 @@ class ProfilController extends Controller
 {
     /* ═══════════════════════════════════════════════════════════
        HELPER — Ambil kelas wali dari StudyGroup.
-       INI SATU-SATUNYA SUMBER KEBENARAN, sama persis dengan yang
+       Satu-satunya sumber kebenaran, sama persis dengan yang
        dipakai admin saat assign wali kelas lewat "Kelola Kelas"
        (StudyGroup::homeroom_teacher_id -> FK ke users.id).
-       Tidak ada lagi tebak-tebak kolom di tabel 'kelas' yang lama.
     ═══════════════════════════════════════════════════════════ */
     private function resolveKelasWali($user): ?StudyGroup
     {
@@ -42,20 +41,15 @@ class ProfilController extends Controller
     {
         $user = $request->user();
 
-        // Eager-load relasi guru saja; kelas wali di-resolve terpisah
-        // dari StudyGroup (bukan dari relasi guru->kelas yang lama).
         $user->loadMissing(['guru']);
 
-        /* ── Resolve kelas wali dari StudyGroup (sumber kebenaran) ── */
         $kelasWali = $this->resolveKelasWali($user);
-
-        /* ── Daftar kelas untuk dropdown modal ── */
         $kelasList = $this->getKelasList();
 
         return view('guru.profil', [
             'user'      => $user,
             'kelasList' => $kelasList,
-            'kelasWali' => $kelasWali,   // dipakai Blade sebagai Prioritas 2
+            'kelasWali' => $kelasWali,
         ]);
     }
 
@@ -74,56 +68,64 @@ class ProfilController extends Controller
     }
 
     /* ═══════════════════════════════════════════════════════════
-       UPDATE — Proses simpan semua section
+       UPDATE — Proses simpan, DIPECAH PER-SECTION.
+       ────────────────────────────────────────────────────────
+       PENTING: setiap modal di Blade hanya mengirim field
+       miliknya sendiri (lihat <input type="hidden" name="_section">
+       di tiap <form>). Validasi versi lama mewajibkan 'name' &
+       'email' di SEMUA section — padahal cuma form "Profil Akun"
+       yang punya field itu. Akibatnya submit modal Identitas /
+       Pribadi / Kepegawaian selalu gagal validasi ("name field
+       is required"). Sekarang validasi & penyimpanan mengikuti
+       $_section yang benar-benar dikirim.
+
+       SINKRONISASI NAMA (fix utama laporan bug):
+       - Section 'akun'    -> update users.name, DAN ikut
+                              menyinkronkan guru.nama supaya
+                              tabel admin (yang membaca $g->nama
+                              dengan prioritas utama) langsung
+                              ikut berubah.
+       - Section 'pribadi' -> update guru.nama (Nama Lengkap),
+                              DAN ikut menyinkronkan users.name
+                              supaya akun & identitas guru tetap
+                              konsisten di kedua arah.
     ═══════════════════════════════════════════════════════════ */
     public function update(Request $request): RedirectResponse
     {
-        $user = $request->user();
-        $guru = $user->guru ?? $user->guru()->firstOrCreate([]);
+        $user    = $request->user();
+        $guru    = $user->guru ?? $user->guru()->firstOrCreate([]);
+        $section = $request->input('_section', 'akun');
 
-        /* ── Validasi ── */
+        match ($section) {
+            'akun'         => $this->updateAkun($request, $user, $guru),
+            'identitas'    => $this->updateIdentitas($request, $user, $guru),
+            'pribadi'      => $this->updatePribadi($request, $user, $guru),
+            'kepegawaian'  => $this->updateKepegawaian($request, $guru),
+            default        => $this->updateAkun($request, $user, $guru),
+        };
+
+        return redirect()
+            ->route('guru.profil')
+            ->with('success', 'Profil berhasil diperbarui.')
+            ->with('_section', $section);
+    }
+
+    /* ── SECTION: Profil Akun (nama akun, email, password, foto) ── */
+    private function updateAkun(Request $request, $user, $guru): void
+    {
         $rules = [
-            // Akun
             'name'  => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255',
                         'unique:users,email,' . $user->id],
             'photo' => ['nullable', 'image', 'max:2048'],
-
-            // Identitas & tugas
-            'nip'        => ['nullable', 'string', 'max:30',
-                             'unique:guru,nip,' . $guru->id],  // tabel bisa 'guru' atau 'gurus'
-            'wali_kelas' => ['nullable', 'exists:study_groups,id'],
-
-            // Data diri
-            'nama'                => ['nullable', 'string', 'max:255'],
-            'tempat_lahir'        => ['nullable', 'string', 'max:100'],
-            'tanggal_lahir'       => ['nullable', 'date'],
-            'jk'                  => ['nullable', 'in:L,P'],
-            'pendidikan_terakhir' => ['nullable', 'string', 'max:100'],
-
-            // Kepegawaian
-            'status_pegawai'    => ['nullable', 'string', 'max:100'],
-            'pangkat_gol_ruang' => ['nullable', 'string', 'max:100'],
-            'no_sk_pertama'     => ['nullable', 'string', 'max:150'],
-            'no_sk_terakhir'    => ['nullable', 'string', 'max:150'],
         ];
 
-        // Validasi unik NIP: fallback jika tabel bernama 'gurus'
-        try {
-            if (Schema::hasTable('gurus')) {
-                $rules['nip'] = ['nullable', 'string', 'max:30',
-                                 'unique:gurus,nip,' . $guru->id];
-            }
-        } catch (\Exception $e) {}
-
         if ($request->filled('password')) {
-            $rules['password'] = ['required', 'string', 'confirmed',
-                                  Password::defaults()];
+            $rules['password'] = ['required', 'string', 'confirmed', Password::defaults()];
         }
 
         $data = $request->validate($rules);
 
-        /* ── Upload foto ── */
         if ($request->hasFile('photo')) {
             if ($user->photo) {
                 Storage::disk('public')->delete($user->photo);
@@ -131,45 +133,97 @@ class ProfilController extends Controller
             $user->photo = $request->file('photo')->store('photos', 'public');
         }
 
-        /* ── Update password ── */
         if (!empty($data['password'])) {
             $user->password = Hash::make($data['password']);
         }
 
-        /* ── Update data user ── */
         $user->name  = $data['name'];
         $user->email = $data['email'];
         $user->save();
 
-        /* ── Siapkan data guru ── */
-        $guruData = [
-            'nip'                 => $data['nip']                ?? $guru->nip,
-            'nama'                => $data['nama']               ?? $guru->nama,
-            'tempat_lahir'        => $data['tempat_lahir']        ?? $guru->tempat_lahir,
-            'tanggal_lahir'       => $data['tanggal_lahir']       ?? $guru->tanggal_lahir,
-            'jk'                  => $data['jk']                  ?? $guru->jk,
-            'pendidikan_terakhir' => $data['pendidikan_terakhir'] ?? $guru->pendidikan_terakhir,
-            'status_pegawai'      => $data['status_pegawai']      ?? $guru->status_pegawai,
-            'pangkat_gol_ruang'   => $data['pangkat_gol_ruang']   ?? $guru->pangkat_gol_ruang,
-            'no_sk_pertama'       => $data['no_sk_pertama']       ?? $guru->no_sk_pertama,
-            'no_sk_terakhir'      => $data['no_sk_terakhir']      ?? $guru->no_sk_terakhir,
+        /* ── FIX UTAMA: sinkronkan ke tabel guru ──
+         * Tabel admin (_table_guru.blade.php) menampilkan
+         * $g->nama dengan prioritas di atas $user->name, jadi
+         * kolom ini WAJIB ikut ter-update supaya perubahan nama
+         * dari halaman profil guru langsung terlihat di dashboard
+         * admin, tanpa guru harus buka modal "Data Pribadi" lagi.
+         */
+        $guru->nama = $data['name'];
+        $guru->save();
+    }
+
+    /* ── SECTION: Identitas & Tugas (NIP, wali kelas) ── */
+    private function updateIdentitas(Request $request, $user, $guru): void
+    {
+        $rules = [
+            'nip'        => ['nullable', 'string', 'max:30',
+                             'unique:guru,nip,' . $guru->id],
+            'wali_kelas' => ['nullable', 'exists:study_groups,id'],
         ];
 
-        $guru->update($guruData);
+        try {
+            if (Schema::hasTable('gurus')) {
+                $rules['nip'] = ['nullable', 'string', 'max:30',
+                                 'unique:gurus,nip,' . $guru->id];
+            }
+        } catch (\Exception $e) {}
 
-        /* ── Simpan wali kelas ke StudyGroup (sumber kebenaran) ──
-         *  homeroom_teacher_id adalah FK ke users.id (BUKAN guru.id),
-         *  jadi disimpan pakai $user->id, sama seperti yang dipakai
-         *  admin saat assign wali kelas di "Kelola Kelas".
+        $data = $request->validate($rules);
+
+        $guru->nip = $data['nip'] ?? $guru->nip;
+        $guru->save();
+
+        /* Simpan wali kelas ke StudyGroup — homeroom_teacher_id
+         * adalah FK ke users.id, jadi pakai $user->id, sama
+         * seperti mekanisme yang dipakai admin di "Kelola Kelas".
          */
-        $newKelasId = $data['wali_kelas'] ?? null; // null = bukan wali kelas
+        $newKelasId = $data['wali_kelas'] ?? null;
         $this->updateWaliOnStudyGroups($user->id, $newKelasId);
+    }
 
-        /* ── Flash section agar modal bisa re-open jika error ── */
-        return redirect()
-            ->route('guru.profil')
-            ->with('success', 'Profil berhasil diperbarui.')
-            ->with('_section', $request->input('_section', 'akun'));
+    /* ── SECTION: Data Pribadi (nama lengkap, JK, TTL, pendidikan) ── */
+    private function updatePribadi(Request $request, $user, $guru): void
+    {
+        $data = $request->validate([
+            'nama'                => ['nullable', 'string', 'max:255'],
+            'tempat_lahir'        => ['nullable', 'string', 'max:100'],
+            'tanggal_lahir'       => ['nullable', 'date'],
+            'jk'                  => ['nullable', 'in:L,P'],
+            'pendidikan_terakhir' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $guru->nama                = $data['nama']                ?? $guru->nama;
+        $guru->tempat_lahir        = $data['tempat_lahir']        ?? $guru->tempat_lahir;
+        $guru->tanggal_lahir       = $data['tanggal_lahir']       ?? $guru->tanggal_lahir;
+        $guru->jk                  = $data['jk']                  ?? $guru->jk;
+        $guru->pendidikan_terakhir = $data['pendidikan_terakhir'] ?? $guru->pendidikan_terakhir;
+        $guru->save();
+
+        /* ── Sinkron balik ke users.name ──
+         * Supaya "Nama Akun" di kartu Profil Akun & login tetap
+         * konsisten dengan Nama Lengkap yang baru diubah di sini.
+         */
+        if (!empty($data['nama'])) {
+            $user->name = $data['nama'];
+            $user->save();
+        }
+    }
+
+    /* ── SECTION: Data Kepegawaian ── */
+    private function updateKepegawaian(Request $request, $guru): void
+    {
+        $data = $request->validate([
+            'status_pegawai'    => ['nullable', 'string', 'max:100'],
+            'pangkat_gol_ruang' => ['nullable', 'string', 'max:100'],
+            'no_sk_pertama'     => ['nullable', 'string', 'max:150'],
+            'no_sk_terakhir'    => ['nullable', 'string', 'max:150'],
+        ]);
+
+        $guru->status_pegawai    = $data['status_pegawai']    ?? $guru->status_pegawai;
+        $guru->pangkat_gol_ruang = $data['pangkat_gol_ruang'] ?? $guru->pangkat_gol_ruang;
+        $guru->no_sk_pertama     = $data['no_sk_pertama']     ?? $guru->no_sk_pertama;
+        $guru->no_sk_terakhir    = $data['no_sk_terakhir']    ?? $guru->no_sk_terakhir;
+        $guru->save();
     }
 
     /* ═══════════════════════════════════════════════════════════
@@ -199,11 +253,9 @@ class ProfilController extends Controller
     private function updateWaliOnStudyGroups(int $userId, ?int $newGroupId): void
     {
         try {
-            // Kosongkan kelas lama yang punya guru ini sebagai wali
             StudyGroup::where('homeroom_teacher_id', $userId)
                 ->update(['homeroom_teacher_id' => null]);
 
-            // Pasang di kelas baru (jika dipilih)
             if ($newGroupId) {
                 StudyGroup::where('id', $newGroupId)
                     ->update(['homeroom_teacher_id' => $userId]);
